@@ -8,6 +8,13 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
 
 export async function POST(req: Request) {
   try {
+    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+      return new Response(JSON.stringify({ 
+        error: "Missing API Key", 
+        details: "الرجاء التأكد من إضافة GOOGLE_GENERATIVE_AI_API_KEY في إعدادات Vercel" 
+      }), { status: 500 });
+    }
+
     const { messages, lang } = await req.json();
     const currentLangName = lang === 'ku' ? 'Kurdish' : lang === 'en' ? 'English' : 'Arabic (Iraqi dialect)';
 
@@ -53,7 +60,7 @@ export async function POST(req: Request) {
 
     // إعداد النموذج بموديل متوفر في المفتاح الخاص بك مع التعليمات الصارمة
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash-latest",
+      model: "gemini-1.5-flash",
       systemInstruction: KODIFY_SYSTEM_PROMPT,
       generationConfig: {
         maxOutputTokens: 500,
