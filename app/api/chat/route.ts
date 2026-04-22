@@ -53,7 +53,7 @@ export async function POST(req: Request) {
 
     // إعداد النموذج بموديل متوفر في المفتاح الخاص بك مع التعليمات الصارمة
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
+      model: "gemini-1.5-flash-latest",
       systemInstruction: KODIFY_SYSTEM_PROMPT,
       generationConfig: {
         maxOutputTokens: 500,
