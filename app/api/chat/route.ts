@@ -1,38 +1,40 @@
-import { google } from '@ai-sdk/google';
-import { streamText } from 'ai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAIStream, StreamingTextResponse } from 'ai';
 
 export const maxDuration = 30;
 
+const apiKey = (process.env.GOOGLE_GENERATIVE_AI_API_KEY || "").trim();
+const genAI = new GoogleGenerativeAI(apiKey);
+
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { messages, lang } = body;
-    
-    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-      return new Response(JSON.stringify({ 
-        error: "Missing API Key" 
-      }), { status: 500 });
-    }
-
+    const { messages, lang } = await req.json();
     const currentLangName = lang === 'ku' ? 'Kurdish' : lang === 'en' ? 'English' : 'Arabic';
 
-    const result = await streamText({
-      model: google('gemini-1.5-flash'),
-      system: `You are Kody, an AI assistant for Kodify. Language: ${currentLangName}. Use Iraqi dialect for Arabic. Be professional and concise.`,
-      messages,
-      temperature: 0.4,
-    });
+    // استخدام الموديل الأكثر توافقاً حالياً
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    return result.toDataStreamResponse();
+    const prompt = messages[messages.length - 1].content;
+    const history = messages.slice(0, -1).map((m: any) => ({
+      role: m.role === "user" ? "user" : "model",
+      parts: [{ text: m.content }],
+    }));
+
+    const chat = model.startChat({ 
+      history,
+      systemInstruction: `You are Kody, official AI for Kodify. Language: ${currentLangName}. Use Iraqi dialect for Arabic.`,
+    });
+    
+    const geminiStream = await chat.sendMessageStream(prompt);
+    const stream = GoogleGenerativeAIStream(geminiStream);
+    
+    return new StreamingTextResponse(stream);
 
   } catch (error: any) {
-    console.error("Build/Runtime Error:", error);
+    console.error("CRITICAL ERROR:", error.message);
     return new Response(JSON.stringify({ 
-      error: "Error", 
+      error: "الخدمة قد تكون غير مدعومة في منطقتك حالياً أو هناك خلل في المفتاح", 
       details: error.message 
     }), { status: 500 });
   }
 }
-
-
-
