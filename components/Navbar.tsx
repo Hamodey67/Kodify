@@ -83,8 +83,8 @@ export default function Navbar() {
           className={cn(
             "mx-auto transition-all duration-500 flex items-center justify-between",
             scrolled 
-              ? "max-w-4xl bg-slate-950/60 backdrop-blur-3xl border border-white/10 rounded-3xl px-6 py-3 shadow-[0_30px_60px_rgba(0,0,0,0.5)]" 
-              : "max-w-7xl bg-white/[0.02] border border-white/5 backdrop-blur-md rounded-2xl px-6 py-2"
+              ? "max-w-4xl bg-slate-950/60 backdrop-blur-xl md:backdrop-blur-3xl border border-white/10 rounded-3xl px-6 py-3 shadow-[0_30px_60px_rgba(0,0,0,0.5)]" 
+              : "max-w-7xl bg-white/[0.02] border border-white/5 backdrop-blur-sm md:backdrop-blur-md rounded-2xl px-6 py-2"
           )}
         >
           {/* Brand */}
@@ -208,8 +208,8 @@ export default function Navbar() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[110] lg:hidden"
           >
-            {/* Backdrop with heavy blur */}
-            <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-2xl" onClick={() => setOpen(false)} />
+            {/* Backdrop with reduced blur on mobile for performance */}
+            <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-lg md:backdrop-blur-2xl" onClick={() => setOpen(false)} />
             
             <motion.div 
               initial={{ x: isRtl ? "-100%" : "100%", opacity: 0 }}

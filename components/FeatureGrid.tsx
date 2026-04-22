@@ -71,7 +71,7 @@ export default function FeatureGrid() {
             <TiltCard
               maxRotate={15}
               glare
-              className="group relative h-full flex flex-col p-8 rounded-[2.5rem] bg-white/[0.03] backdrop-blur-3xl border border-white/5 hover:border-white/10 transition-all duration-500 overflow-hidden"
+              className="group relative h-full flex flex-col p-8 rounded-[2.5rem] bg-white/[0.03] backdrop-blur-xl md:backdrop-blur-3xl border border-white/5 hover:border-white/10 transition-all duration-500 overflow-hidden"
             >
               {/* Animated hover background */}
               <div className="absolute inset-0 bg-gradient-to-br from-white/[0.05] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />

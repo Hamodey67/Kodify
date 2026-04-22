@@ -29,8 +29,8 @@ export default function Hero() {
 
   return (
     <section ref={containerRef} className="relative pt-32 md:pt-48 pb-10 overflow-hidden">
-      {/* Dynamic Background Elements */}
-      <div className="absolute inset-0 pointer-events-none">
+      {/* Dynamic Background Elements - Hidden on mobile for performance */}
+      <div className="hidden md:block absolute inset-0 pointer-events-none">
          <motion.div 
            animate={{ 
              scale: [1, 1.2, 1],
@@ -60,7 +60,7 @@ export default function Hero() {
         >
           <div className="relative group">
             {/* Main Glass Card with Animated Border */}
-            <div className="relative overflow-hidden rounded-[3rem] border border-white/10 bg-slate-900/40 backdrop-blur-3xl shadow-2xl p-8 md:p-12 lg:p-16">
+            <div className="relative overflow-hidden rounded-[3rem] border border-white/10 bg-slate-900/40 backdrop-blur-xl md:backdrop-blur-3xl shadow-2xl p-8 md:p-12 lg:p-16">
               
               {/* Glossy Overlay */}
               <div className="absolute inset-0 bg-gradient-to-br from-white/[0.05] via-transparent to-transparent pointer-events-none" />
@@ -85,10 +85,10 @@ export default function Hero() {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.3, duration: 0.8 }}
-                    className="text-4xl md:text-7xl lg:text-[80px] font-black leading-[0.95] tracking-tight text-white mb-8"
+                    className="text-4xl md:text-7xl lg:text-[80px] font-black leading-[1.1] tracking-tight text-white mb-8 pb-2"
                   >
                     {tx.heroTitle.split(" ").map((word, i) => (
-                      <span key={i} className={cn("inline-block mr-3 md:mr-6", i > 1 && "bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500")}>
+                      <span key={i} className={cn("inline-block mx-2 md:mx-3 px-1", i > 1 && "bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500")}>
                         {word}
                       </span>
                     ))}

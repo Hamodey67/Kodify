@@ -83,7 +83,7 @@ export default function CaseStudiesGrid() {
             from={idx % 2 === 0 ? "left" : "right"}
           >
             <TiltCard
-              className="group relative overflow-hidden rounded-[2rem] border border-white/10 bg-slate-900/40 backdrop-blur-3xl p-8 flex flex-col min-h-[300px] shadow-2xl transition-all duration-500 hover:border-cyan-500/30"
+              className="group relative overflow-hidden rounded-[2rem] border border-white/10 bg-slate-900/40 backdrop-blur-xl md:backdrop-blur-3xl p-8 flex flex-col min-h-[300px] shadow-2xl transition-all duration-500 hover:border-cyan-500/30"
               maxRotate={10}
               glare
             >
