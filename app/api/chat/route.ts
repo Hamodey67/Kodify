@@ -12,7 +12,13 @@ export async function POST(req: Request) {
     const currentLangName = lang === 'ku' ? 'Kurdish' : lang === 'en' ? 'English' : 'Arabic';
 
     // استخدام الموديل الأكثر توافقاً حالياً
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      systemInstruction: {
+        role: "system",
+        parts: [{ text: `You are Kody, official AI for Kodify. Language: ${currentLangName}. Use Iraqi dialect for Arabic.` }]
+      }
+    });
 
     const prompt = messages[messages.length - 1].content;
     const history = messages.slice(0, -1).map((m: any) => ({
@@ -20,10 +26,7 @@ export async function POST(req: Request) {
       parts: [{ text: m.content }],
     }));
 
-    const chat = model.startChat({ 
-      history,
-      systemInstruction: `You are Kody, official AI for Kodify. Language: ${currentLangName}. Use Iraqi dialect for Arabic.`,
-    });
+    const chat = model.startChat({ history });
     
     const geminiStream = await chat.sendMessageStream(prompt);
     const stream = GoogleGenerativeAIStream(geminiStream);
