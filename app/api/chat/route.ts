@@ -9,14 +9,15 @@ export async function POST(req: Request) {
     const prompt = messages[messages.length - 1].content;
     const apiKey = (process.env.GOOGLE_GENERATIVE_AI_API_KEY || "").trim();
 
-    // الاتصال المباشر بجوجل بدون مكتبات وسيطة
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+    // استخدام النسخة المستقرة v1 والرابط الكامل للموديل
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }]
       })
     });
+
 
     const data = await response.json();
     
