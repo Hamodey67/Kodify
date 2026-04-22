@@ -85,10 +85,10 @@ export default function Hero() {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.3, duration: 0.8 }}
-                    className="text-4xl md:text-7xl lg:text-[80px] font-black leading-[1.1] tracking-tight text-white mb-8 pb-2"
+                    className="text-4xl md:text-7xl lg:text-[80px] font-black leading-[1.3] tracking-tight text-white mb-8 pb-6"
                   >
                     {tx.heroTitle.split(" ").map((word, i) => (
-                      <span key={i} className={cn("inline-block mx-2 md:mx-3 px-1", i > 1 && "bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500")}>
+                      <span key={i} className={cn("inline-block mx-2 md:mx-3 px-1 py-3", i > 1 && "bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500")}>
                         {word}
                       </span>
                     ))}
