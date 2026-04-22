@@ -5,7 +5,8 @@ const nextConfig: NextConfig = {
   compress: true,
 
   // ✅ Static export -> generates /out
-  output: "export",
+  // ✅ Static export disabled to allow API routes to work
+  // output: "export",
 
   // ✅ Important for static hosting (Netlify): /about -> /about/
   trailingSlash: true,
