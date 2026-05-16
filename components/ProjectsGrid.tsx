@@ -2,10 +2,8 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useApp } from "@/app/providers";
-import { t } from "@/lib/i18n";
 import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
 import React from "react";
 
 const projects = [
@@ -88,7 +86,6 @@ function ProjectSlider({ images }: { images: string[] }) {
 
 export default function ProjectsGrid() {
   const { lang } = useApp();
-  const isRtl = lang === 'ar' || lang === 'ku';
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 md:gap-10">

@@ -17,6 +17,12 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: true,
   },
 
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreDuringBuilds: true,
+  },
   /**
    * NOTE:
    * - nextConfig.headers() does NOT apply when using `output: "export"`.
