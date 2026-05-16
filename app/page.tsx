@@ -5,7 +5,7 @@ import Hero from "@/components/Hero";
 import Section from "@/components/Section";
 import FeatureGrid from "@/components/FeatureGrid";
 import ServicesTabs from "@/components/ServicesTabs";
-import ProjectsSection from "@/components/projects/ProjectsSection";
+import ProjectsGrid from "@/components/ProjectsGrid";
 import CaseStudiesGrid from "@/components/CaseStudiesGrid";
 import SecurityLab from "@/components/SecurityLab";
 import Testimonials from "@/components/Testimonials";
@@ -43,7 +43,12 @@ export default function HomePage() {
       <div className="section-divider" />
 
       <Reveal delayMs={90}>
-        <ProjectsSection />
+        <Section 
+          title={lang === 'ar' ? "مشاريعنا" : lang === 'ku' ? "پڕۆژەکانمان" : "Our Projects"} 
+          desc={lang === 'ar' ? "نظرة على بعض الأعمال والحلول الرقمية التي قمنا بتنفيذها باحترافية عالية." : lang === 'ku' ? "تەماشای هەندێک لەو کارانە بکە کە ئەنجاممان داون." : "A glimpse into some of the digital works and solutions we've executed with high professionalism."}
+        >
+          <ProjectsGrid />
+        </Section>
       </Reveal>
 
       <div className="section-divider" />
