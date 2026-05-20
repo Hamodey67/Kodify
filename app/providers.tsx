@@ -3,11 +3,15 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 type Lang = "ar" | "en" | "ku";
+export type Theme = "dark" | "light";
 
 type AppCtx = {
   lang: Lang;
   setLang: (l: Lang) => void;
   toggleLang: () => void;
+  theme: Theme;
+  setTheme: (t: Theme) => void;
+  toggleTheme: () => void;
 };
 
 const Ctx = createContext<AppCtx | null>(null);
@@ -20,27 +24,45 @@ export function useApp() {
 
 const LANGS: Lang[] = ["ar", "en", "ku"];
 
+function applyTheme(theme: Theme) {
+  const root = document.documentElement;
+  root.classList.toggle("dark", theme === "dark");
+  root.classList.toggle("light", theme === "light");
+  root.style.colorScheme = theme;
+}
+
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [lang, setLang] = useState<Lang>("ar");
+  const [theme, setThemeState] = useState<Theme>("dark");
 
   useEffect(() => {
-    document.documentElement.classList.add("dark");
+    const savedLang = localStorage.getItem("lang") as Lang | null;
+    if (savedLang && LANGS.includes(savedLang)) setLang(savedLang);
 
-    const saved = localStorage.getItem("lang") as Lang | null;
-    if (saved && LANGS.includes(saved)) setLang(saved);
+    const savedTheme = localStorage.getItem("theme") as Theme | null;
+    const initial: Theme = savedTheme === "light" ? "light" : "dark";
+    setThemeState(initial);
+    applyTheme(initial);
   }, []);
 
   useEffect(() => {
     const root = document.documentElement;
 
     root.lang = lang;
-    root.dir = lang === "ar" ? "rtl" : "ltr";
+    root.dir = lang === "ar" || lang === "ku" ? "rtl" : "ltr";
 
     root.classList.toggle("is-ar", lang === "ar");
     root.classList.toggle("is-latin", lang !== "ar");
 
     localStorage.setItem("lang", lang);
   }, [lang]);
+
+  useEffect(() => {
+    applyTheme(theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  const setTheme = (t: Theme) => setThemeState(t);
 
   const value = useMemo(
     () => ({
@@ -51,8 +73,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           const i = LANGS.indexOf(p);
           return LANGS[(i + 1) % LANGS.length];
         }),
+      theme,
+      setTheme,
+      toggleTheme: () => setThemeState((p) => (p === "dark" ? "light" : "dark")),
     }),
-    [lang]
+    [lang, theme]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

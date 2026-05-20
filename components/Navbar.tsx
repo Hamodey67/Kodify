@@ -9,6 +9,7 @@ import LogoMark from "./LogoMark";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
 import { ChevronDown, Globe, Menu, X, Rocket, ShieldCheck } from "lucide-react";
+import ThemeToggle from "./ThemeToggle";
 
 type Lang = "ar" | "en" | "ku";
 
@@ -74,7 +75,7 @@ export default function Navbar() {
     <>
       <header
         className={cn(
-          "fixed left-0 right-0 z-[100] transition-all duration-700 py-4 md:py-6 px-4 md:px-0",
+          "fixed left-0 right-0 z-[100] transition-all duration-700 py-3 md:py-6 px-3 sm:px-4 md:px-0",
           scrolled ? "md:top-4" : "top-0",
           hidden ? "-translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100"
         )}
@@ -82,9 +83,9 @@ export default function Navbar() {
         <nav 
           className={cn(
             "mx-auto transition-all duration-500 flex items-center justify-between",
-            scrolled 
-              ? "max-w-4xl bg-slate-950/60 backdrop-blur-xl md:backdrop-blur-3xl border border-white/10 rounded-3xl px-6 py-3 shadow-[0_30px_60px_rgba(0,0,0,0.5)]" 
-              : "max-w-7xl bg-white/[0.02] border border-white/5 backdrop-blur-sm md:backdrop-blur-md rounded-2xl px-6 py-2"
+            scrolled
+              ? "max-w-4xl theme-nav backdrop-blur-xl md:backdrop-blur-3xl border rounded-3xl px-6 py-3 shadow-[var(--shadow)]"
+              : "max-w-7xl theme-nav border backdrop-blur-md md:backdrop-blur-md rounded-xl sm:rounded-2xl px-4 sm:px-6 py-2.5 shadow-[var(--shadow)]"
           )}
         >
           {/* Brand */}
@@ -134,7 +135,8 @@ export default function Navbar() {
           </div>
 
           {/* Right Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <ThemeToggle />
             {/* Language Switcher (Click based) */}
             <div className="relative" ref={langRef}>
                <button 
@@ -269,6 +271,12 @@ export default function Navbar() {
                </div>
 
                <div className="mt-auto relative z-10">
+                 <div className="flex items-center justify-between mb-6 px-2">
+                   <span className="theme-muted text-xs font-black uppercase tracking-widest">
+                     {lang === "ar" ? "المظهر" : lang === "ku" ? "ڕووکار" : "Theme"}
+                   </span>
+                   <ThemeToggle />
+                 </div>
                  {/* Language HUD Control */}
                  <div className="p-1.5 bg-white/5 border border-white/5 rounded-[2rem] mb-6 flex gap-1">
                     {langs.map((l) => (

@@ -151,7 +151,7 @@ export default function AboutPage() {
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-40 -top-40 h-[520px] w-[520px] rounded-full bg-emerald-400/10 blur-3xl" />
         <div className="absolute -right-40 top-10 h-[560px] w-[560px] rounded-full bg-cyan-400/10 blur-3xl" />
-        <div className="absolute left-1/3 -bottom-52 h-[720px] w-[720px] rounded-full bg-blue-500/10 blur-3xl" />
+        <div className="absolute left-1/3 -bottom-52 h-[720px] w-[720px] rounded-full bg-sky-400/10 blur-3xl" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,.06),transparent_45%),radial-gradient(circle_at_70%_30%,rgba(255,255,255,.04),transparent_42%)]" />
       </div>
 
@@ -235,7 +235,7 @@ export default function AboutPage() {
                   "transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.06]"
                 )}
               >
-                <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-blue-500/10 blur-2xl" />
+                <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-sky-400/10 blur-2xl" />
                 <div className="pointer-events-none absolute -left-24 -bottom-24 h-56 w-56 rounded-full bg-emerald-400/10 blur-2xl" />
                 <h3 className="text-lg font-black text-white">{x.t}</h3>
                 <p className="mt-3 text-sm leading-relaxed text-white/65">{x.d}</p>

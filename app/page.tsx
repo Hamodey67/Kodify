@@ -27,7 +27,7 @@ export default function HomePage() {
       <div className="section-divider" />
 
       <Reveal delayMs={60}>
-        <Section title={tx.featuresTitle} desc={tx.featuresDesc}>
+        <Section id="why-us" layout="split" accentTitle title={tx.featuresTitle} desc={tx.featuresDesc}>
           <FeatureGrid />
         </Section>
       </Reveal>
@@ -35,9 +35,7 @@ export default function HomePage() {
       <div className="section-divider" />
 
       <Reveal delayMs={80}>
-        <Section title={tx.servicesTitle} desc={tx.servicesDesc} className="pt-0">
-          <ServicesTabs />
-        </Section>
+        <ServicesTabs />
       </Reveal>
 
       <div className="section-divider" />

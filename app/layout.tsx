@@ -2,6 +2,7 @@ import { Cairo, Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 import LayoutClientWrapper from "@/components/LayoutClientWrapper";
+import CustomCursor from "@/components/CustomCursor";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -15,11 +16,14 @@ export const metadata: Metadata = {
 
 const cairo = Cairo({
   subsets: ["arabic"],
+  weight: ["200", "300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-cairo",
   display: "swap",
 });
 
 const inter = Inter({
   subsets: ["latin"],
+  variable: "--font-inter",
   display: "swap",
 });
 
@@ -35,16 +39,25 @@ export default function RootLayout({
     <html
       lang={defaultLang}
       dir={isArabic ? "rtl" : "ltr"}
+      className="dark"
       suppressHydrationWarning
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='light'){document.documentElement.classList.remove('dark');document.documentElement.classList.add('light');}else{document.documentElement.classList.add('dark');document.documentElement.classList.remove('light');}}catch(e){document.documentElement.classList.add('dark');}})();`,
+          }}
+        />
+      </head>
       <body
         className={[
           "min-h-screen antialiased overflow-x-hidden",
-          cairo.className,
-          inter.className,
+          cairo.variable,
+          inter.variable,
         ].join(" ")}
       >
         <Providers>
+          <CustomCursor />
           <LayoutClientWrapper>
             {children}
           </LayoutClientWrapper>

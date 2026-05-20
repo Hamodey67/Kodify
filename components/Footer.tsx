@@ -69,11 +69,11 @@ export default function Footer() {
   const isRtl = lang === "ar" || lang === "ku";
 
   return (
-    <footer className="relative mt-32 border-t border-white/5 bg-[#050B14]">
+    <footer className="relative mt-32 border-t border-[var(--border)] bg-[var(--bg-deep)] transition-colors duration-300">
       {/* Decorative Glows */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-24 bottom-0 h-[400px] w-[400px] rounded-full bg-cyan-500/[0.03] blur-[100px]" />
-        <div className="absolute -right-24 top-0 h-[400px] w-[400px] rounded-full bg-blue-500/[0.03] blur-[100px]" />
+        <div className="absolute -right-24 top-0 h-[400px] w-[400px] rounded-full bg-sky-400/[0.03] blur-[100px]" />
       </div>
 
       <div className="relative mx-auto max-w-7xl px-6 py-20 pb-12">

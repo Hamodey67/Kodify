@@ -73,7 +73,7 @@ export default function ChatBot() {
             <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.length === 0 && (
                 <div className="text-center py-8">
-                  <Bot className="h-10 w-10 mx-auto text-blue-500 mb-2 opacity-50" />
+                  <Bot className="h-10 w-10 mx-auto text-sky-400 mb-2 opacity-50" />
                   <p className="text-xs text-zinc-500">{tx.welcome}</p>
                 </div>
               )}
@@ -120,7 +120,7 @@ export default function ChatBot() {
                 <button
                   type="submit"
                   disabled={!input || isLoading}
-                  className="absolute right-1 top-1 bottom-1 px-3 text-blue-500 hover:text-blue-700 transition-colors disabled:opacity-50"
+                  className="absolute right-1 top-1 bottom-1 px-3 text-sky-400 hover:text-sky-500 transition-colors disabled:opacity-50"
                 >
                   <Send className="h-5 w-5 rtl:rotate-180" />
                 </button>

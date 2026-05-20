@@ -1,93 +1,101 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
-
-type Item = {
-  text: string;
-  top: string;
-  left: string;
-  size?: "sm" | "md" | "lg";
-  opacity?: number;
-  blur?: boolean;
-  speed?: number;
-  rotate?: number;
-};
+import { useEffect, useRef } from "react";
 
 export default function BackgroundCodeFX() {
-  const ref = useRef<HTMLDivElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    const coarse = window.matchMedia?.("(pointer: coarse)").matches;
-    if (reduce || coarse) return;
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
 
-    const onMove = (e: MouseEvent) => {
-      const x = (e.clientX / window.innerWidth - 0.5) * 2;
-      const y = (e.clientY / window.innerHeight - 0.5) * 2;
-      el.style.setProperty("--mx", String(x));
-      el.style.setProperty("--my", String(y));
+    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$+-*/=%\"'#&_(),.;:?!\\|{}<>[]^~";
+    const fontSize = 16;
+    let columns = Math.floor(width / fontSize);
+    
+    const drops: number[] = [];
+    const activeColumns = new Set<number>();
+    
+    for (let x = 0; x < columns; x++) {
+      drops[x] = Math.random() * height;
+      if (Math.random() < 0.2) {
+        activeColumns.add(x);
+      }
+    }
+
+    const draw = () => {
+      // Semi-transparent background for trail effect
+      ctx.fillStyle = "rgba(5, 11, 20, 0.1)"; // Matches a dark sleek background
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.font = `${fontSize}px monospace`;
+
+      for (let i = 0; i < drops.length; i++) {
+        // Create sparsity
+        if (!activeColumns.has(i)) {
+          if (Math.random() > 0.995) {
+             activeColumns.add(i);
+             drops[i] = 0;
+          }
+          continue;
+        }
+
+        const text = characters.charAt(Math.floor(Math.random() * characters.length));
+        
+        // Coloring
+        const isHead = Math.random() > 0.9;
+        ctx.fillStyle = isHead ? "#5eead4" : "#0d9488"; // teal-300 / teal-600
+        
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+        // Reset drop
+        if (drops[i] * fontSize > height && Math.random() > 0.975) {
+          drops[i] = 0;
+          if (Math.random() > 0.6) {
+            activeColumns.delete(i);
+          }
+        }
+        
+        drops[i]++;
+      }
     };
 
-    window.addEventListener("mousemove", onMove, { passive: true });
-    return () => window.removeEventListener("mousemove", onMove);
+    const intervalId = setInterval(draw, 50);
+
+    const handleResize = () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+      columns = Math.floor(width / fontSize);
+      drops.length = 0;
+      activeColumns.clear();
+      for (let x = 0; x < columns; x++) {
+        drops[x] = Math.random() * height;
+        if (Math.random() < 0.2) activeColumns.add(x);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
-  const items = useMemo<Item[]>(
-    () => [
-      { text: "< />", top: "12%", left: "8%", size: "lg", opacity: 0.12, blur: true, speed: 1.0, rotate: -8 },
-      { text: "{}", top: "20%", left: "74%", size: "lg", opacity: 0.10, blur: true, speed: 0.9, rotate: 10 },
-
-      { text: "React", top: "18%", left: "42%", size: "md", opacity: 0.10, speed: 1.2, rotate: -5 },
-      { text: "Next.js", top: "40%", left: "12%", size: "md", opacity: 0.10, speed: 1.0, rotate: 6 },
-
-      { text: "TypeScript", top: "82%", left: "46%", size: "sm", opacity: 0.10, speed: 1.3, rotate: -3 },
-      { text: "Tailwind", top: "68%", left: "78%", size: "sm", opacity: 0.09, speed: 1.1, rotate: 5 },
-
-      { text: "Node", top: "52%", left: "56%", size: "sm", opacity: 0.09, speed: 1.05, rotate: 4 },
-      { text: "API", top: "28%", left: "92%", size: "sm", opacity: 0.09, speed: 1.2, rotate: -8 },
-
-      { text: "SQL", top: "86%", left: "86%", size: "sm", opacity: 0.09, speed: 0.95, rotate: 9 },
-      { text: "git", top: "12%", left: "92%", size: "sm", opacity: 0.09, speed: 1.15, rotate: -4 },
-
-      { text: "// TODO", top: "60%", left: "26%", size: "sm", opacity: 0.09, speed: 1.0, rotate: 6 },
-      { text: "const", top: "74%", left: "6%", size: "sm", opacity: 0.09, speed: 1.0, rotate: -4 },
-      { text: "</>", top: "44%", left: "90%", size: "md", opacity: 0.09, blur: true, speed: 1.15, rotate: 8 },
-    ],
-    []
-  );
-
   return (
-    <div
-      ref={ref}
-      className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
-      aria-hidden="true"
-    >
-      <div className="codefx absolute inset-0">
-        {items.map((it, i) => (
-          <div
-            key={i}
-            className={[
-              "codefx-item",
-              it.size === "lg" ? "codefx-lg" : it.size === "md" ? "codefx-md" : "codefx-sm",
-              it.blur ? "codefx-blur" : "",
-            ].join(" ")}
-            style={{
-              top: it.top,
-              left: it.left,
-              opacity: it.opacity ?? 0.1,
-              ["--spd" as any]: String(it.speed ?? 1),
-              ["--rot" as any]: `${it.rotate ?? 0}deg`,
-            }}
-          >
-            {it.text}
-          </div>
-        ))}
-      </div>
-
-      <div className="codefx-sheen" />
-    </div>
+    <canvas
+      ref={canvasRef}
+      className="fixed inset-0 -z-10 pointer-events-none opacity-60"
+      style={{ background: "#050b14" }}
+    />
   );
 }

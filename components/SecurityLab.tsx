@@ -8,6 +8,11 @@ import Link from "next/link";
 import TiltCard from "./TiltCard";
 import Reveal from "./Reveal";
 
+const colorStyles = {
+  cyan: "bg-cyan-500/10 border-cyan-500/20 text-cyan-400",
+  blue: "bg-sky-400/10 border-sky-400/20 text-sky-300",
+};
+
 export default function SecurityLab() {
   const { lang } = useApp() as { lang: Lang };
   const tx = t[lang];
@@ -16,7 +21,7 @@ export default function SecurityLab() {
     {
       href: "/login-demo",
       icon: Fingerprint,
-      color: "cyan",
+      color: "cyan" as const,
       title: lang === "ar" ? "محاكي تسجيل الدخول السليم" : lang === "ku" ? "دیمۆی چوونەژوورەوەی تەندروست" : "Login Security Demo",
       desc: lang === "ar" ? "تعلم كيف تكتشف صفحات تسجيل الدخول المزيفة والهجمات قبل ما تقع في الفخ." : lang === "ku" ? "فێربە چۆن لاپەڕە فەیکەکان بدۆزیتەوە پێش ئەوەی بکەویتە داوەوە." : "Learn to spot fake login pages and credential harvesting attacks in a safe environment.",
       tag: "VULN_SCAN_INTERACTIVE"
@@ -24,7 +29,7 @@ export default function SecurityLab() {
     {
       href: "/phishing",
       icon: ShieldAlert,
-      color: "blue",
+      color: "blue" as const,
       title: lang === "ar" ? "محاكي رسائل الصيد" : lang === "ku" ? "فێربوونی فێڵەکانی Phishing" : "Phishing Simulator",
       desc: lang === "ar" ? "اختبر قدرتك على تمييز الرسائل والروابط المشبوهة التي قد تخترق جهازك." : lang === "ku" ? "توانای خۆت تاقیبکەرەوە لە ناسینەوەی نامە و لینکە مەترسیدارەکان." : "Test your ability to distinguish between legitimate emails and malicious phishing attempts.",
       tag: "SOCIAL_ENG_TRAINING"
@@ -48,7 +53,7 @@ export default function SecurityLab() {
 
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-8">
-                   <div className={`w-14 h-14 rounded-2xl flex items-center justify-center bg-${lab.color}-500/10 border border-${lab.color}-500/20 text-${lab.color}-400 group-hover:bg-cyan-500 group-hover:text-black transition-all duration-500`}>
+                   <div className={`w-14 h-14 rounded-2xl flex items-center justify-center group-hover:bg-cyan-500 group-hover:text-black transition-all duration-500 ${colorStyles[lab.color]}`}>
                       <lab.icon size={28} />
                    </div>
                    <div className="flex items-center gap-2 group-hover:text-cyan-400 transition-colors">

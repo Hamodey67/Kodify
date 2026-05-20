@@ -32,7 +32,7 @@ export default function BackgroundMindLike() {
       x += (tx - x) * 0.08;
       y += (ty - y) * 0.08;
 
-      // حركة خفيفة جدًا (parallax)
+      // الحركة خفيفة جدًا (parallax)
       el.style.setProperty("--mx", String(x));
       el.style.setProperty("--my", String(y));
     };
@@ -54,61 +54,66 @@ export default function BackgroundMindLike() {
         "--my": 0,
       }}
     >
-      <div className="absolute inset-0" style={{ background: "var(--bg)" }} />
+      {/* Root background color */}
+      <div className="absolute inset-0 bg-[#101a2e]" />
 
-      <div
-        className="absolute -inset-[20%] opacity-70"
+      {/* Cyber-glow header beam (shines from the top center) */}
+      <div 
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[1px] bg-gradient-to-r from-transparent via-sky-400/25 to-transparent" 
+      />
+      <div 
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-[120px] opacity-40 pointer-events-none" 
         style={{
-          transform:
-            "translate(calc(var(--mx) * -18px), calc(var(--my) * -14px))",
-          background:
-            "radial-gradient(700px 520px at 25% 20%, rgba(56,189,248,0.18), transparent 60%)," +
-            "radial-gradient(780px 560px at 75% 35%, rgba(56,189,248,0.14), transparent 60%)," +
-            "radial-gradient(900px 700px at 50% 80%, rgba(99,102,241,0.10), transparent 65%)",
+          background: "radial-gradient(50% 120px at 50% 0%, rgba(125, 211, 252, 0.18), transparent)",
         }}
       />
 
+      {/* Deep Space Interactive Nebula Gradients (Parallax) */}
       <div
-        className="absolute -inset-[30%] opacity-35 blur-2xl"
+        className="absolute -inset-[20%] opacity-80"
         style={{
           transform:
-            "translate(calc(var(--mx) * 26px), calc(var(--my) * 18px)) rotate(-6deg)",
+            "translate(calc(var(--mx) * -22px), calc(var(--my) * -18px))",
           background:
-            "conic-gradient(from 180deg at 50% 50%, rgba(34,211,238,0.14), rgba(56,189,248,0.10), rgba(99,102,241,0.10), rgba(34,211,238,0.14))",
+            "radial-gradient(850px 600px at 20% 15%, rgba(125, 211, 252, 0.1), transparent 60%)," +
+            "radial-gradient(900px 650px at 80% 30%, rgba(103, 232, 249, 0.08), transparent 60%)," +
+            "radial-gradient(1000px 800px at 45% 75%, rgba(165, 180, 252, 0.06), transparent 65%)",
+        }}
+      />
+
+      {/* Floating Conic Aura */}
+      <div
+        className="absolute -inset-[30%] opacity-25 blur-3xl"
+        style={{
+          transform:
+            "translate(calc(var(--mx) * 32px), calc(var(--my) * 24px)) rotate(-8deg)",
+          background:
+            "conic-gradient(from 180deg at 50% 50%, rgba(125, 211, 252, 0.08), rgba(103, 232, 249, 0.06), rgba(165, 180, 252, 0.05), rgba(125, 211, 252, 0.08))",
           maskImage:
-            "radial-gradient(closest-side at 50% 50%, black 0%, transparent 72%)",
+            "radial-gradient(closest-side at 50% 50%, black 0%, transparent 80%)",
           WebkitMaskImage:
-            "radial-gradient(closest-side at 50% 50%, black 0%, transparent 72%)",
+            "radial-gradient(closest-side at 50% 50%, black 0%, transparent 80%)",
         }}
       />
 
+      {/* High-Tech Premium Dotted Grid Overlay */}
       <div
-        className="absolute inset-0 opacity-[0.07]"
+        className="absolute inset-0 opacity-[0.06]"
         style={{
           backgroundImage:
-            "linear-gradient(to right, rgba(255,255,255,0.35) 1px, transparent 1px), " +
-            "linear-gradient(to bottom, rgba(255,255,255,0.35) 1px, transparent 1px)",
-          backgroundSize: "70px 70px",
+            "radial-gradient(circle, rgba(255, 255, 255, 0.3) 1px, transparent 1px)",
+          backgroundSize: "32px 32px",
           transform:
-            "translate(calc(var(--mx) * 10px), calc(var(--my) * 8px))",
+            "translate(calc(var(--mx) * 12px), calc(var(--my) * 10px))",
         }}
       />
 
-      {/* Grain / noise (Premium) */}
-      <div
-        className="absolute inset-0 opacity-[0.06] mix-blend-overlay"
-        style={{
-          backgroundImage:
-            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E\")",
-        }}
-      />
-
-      {/* vignette edges */}
+      {/* Vignette Edges (Focuses center content) */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(1200px 700px at 50% 35%, transparent 40%, rgba(0,0,0,0.65) 100%)",
+            "radial-gradient(1200px 800px at 50% 35%, transparent 35%, rgba(2, 4, 10, 0.8) 100%)",
         }}
       />
     </div>

@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
+import { useApp } from "@/app/providers";
 import BackgroundMindLike from "@/components/BackgroundMindLike";
-import BackgroundWaveLines from "@/components/BackgroundWaveLines";
-import BackgroundFX from "@/components/BackgroundFX";
 import BackgroundCodeFX from "@/components/BackgroundCodeFX";
+import BackgroundCodeSymbols from "@/components/BackgroundCodeSymbols";
+import BackgroundMobile from "@/components/BackgroundMobile";
+import BackgroundLight from "@/components/BackgroundLight";
 
 export default function BackgroundClient() {
+  const { theme } = useApp();
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -24,15 +26,18 @@ export default function BackgroundClient() {
     };
   }, []);
 
-  // ❌ نطفي الخلفيات فقط بالموبايل
-  if (isMobile) return null;
+  if (theme === "light") {
+    return <BackgroundLight />;
+  }
 
-  // ✅ بالحاسبة تبقى الأنيميشن كلها
+  if (isMobile) {
+    return <BackgroundMobile />;
+  }
+
   return (
     <>
       <BackgroundMindLike />
-      <BackgroundWaveLines />
-      <BackgroundFX />
+      <BackgroundCodeSymbols />
       <BackgroundCodeFX />
     </>
   );

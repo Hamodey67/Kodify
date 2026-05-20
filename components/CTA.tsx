@@ -38,7 +38,7 @@ export default function CTA() {
       <div className="relative group overflow-hidden rounded-[3rem] border border-white/10 bg-slate-900/40 backdrop-blur-xl md:backdrop-blur-3xl p-10 md:p-16 shadow-2xl">
         {/* Background Animation Effects */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-500/10 blur-[130px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none group-hover:bg-cyan-500/20 transition-colors duration-1000" />
-        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-600/10 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-sky-500/10 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
           <div className="flex-1 text-center md:text-start">
@@ -65,7 +65,7 @@ export default function CTA() {
               href="/contact"
               className="group/btn relative px-10 py-5 rounded-2xl bg-white text-black font-black text-sm flex items-center justify-center gap-3 overflow-hidden transition-all active:scale-95 shadow-xl shadow-white/10"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-blue-500/20 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-sky-400/20 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
               <MessageSquare size={18} />
               {btnContact}
             </Link>
