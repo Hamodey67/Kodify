@@ -33,14 +33,14 @@ function applyTheme(theme: Theme) {
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [lang, setLang] = useState<Lang>("ar");
-  const [theme, setThemeState] = useState<Theme>("dark");
+  const [theme, setThemeState] = useState<Theme>("light");
 
   useEffect(() => {
     const savedLang = localStorage.getItem("lang") as Lang | null;
     if (savedLang && LANGS.includes(savedLang)) setLang(savedLang);
 
     const savedTheme = localStorage.getItem("theme") as Theme | null;
-    const initial: Theme = savedTheme === "light" ? "light" : "dark";
+    const initial: Theme = savedTheme === "dark" ? "dark" : "light";
     setThemeState(initial);
     applyTheme(initial);
   }, []);

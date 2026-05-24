@@ -10,16 +10,16 @@ html, body {
 :root,
 html.light {
   color-scheme: light;
-  --bg: #f0f4fb;
-  --bg-deep: #e5ecf6;
+  --bg: #e2e8f4;
+  --bg-deep: #d1dceb;
   --bg-glow-a: rgba(56, 189, 248, 0.14);
   --bg-glow-b: rgba(14, 165, 233, 0.1);
   --bg-vignette: rgba(240, 244, 251, 0.5);
   --grid-line: rgba(14, 116, 144, 0.07);
-  --fg: #0f172a;
-  --heading: #0c1222;
-  --muted: rgba(15, 23, 42, 0.62);
-  --muted-2: rgba(15, 23, 42, 0.42);
+  --fg: #000080;
+  --heading: #000080;
+  --muted: rgba(0, 0, 128, 0.75);
+  --muted-2: rgba(0, 0, 128, 0.55);
   --surface: rgba(255, 255, 255, 0.92);
   --surface-muted: rgba(255, 255, 255, 0.72);
   --surface-elevated: #ffffff;
@@ -28,19 +28,19 @@ html.light {
   --shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
   --card-shadow: 0 12px 40px rgba(15, 23, 42, 0.06), 0 0 0 1px var(--border);
   --accent: #0ea5e9;
-  --accent-strong: #0284c7;
+  --accent-strong: #000080;
   --accent-soft: #38bdf8;
   --accent-muted: rgba(14, 165, 233, 0.1);
   --accent-border: rgba(14, 165, 233, 0.28);
   --accent-glow: rgba(56, 189, 248, 0.2);
   --nav-bg: rgba(255, 255, 255, 0.88);
-  --nav-border: rgba(14, 165, 233, 0.2);
+  --nav-border: #000080;
   --divider: rgba(15, 23, 42, 0.08);
   --selection-bg: rgba(14, 165, 233, 0.25);
   --selection-fg: #0c1222;
-  --hero-grad-1: #0369a1;
-  --hero-grad-2: #0284c7;
-  --hero-grad-3: #0ea5e9;
+  --hero-grad-1: #000080;
+  --hero-grad-2: #000060;
+  --hero-grad-3: #000080;
   --scrollbar-track: #e8eef6;
   --scrollbar-thumb: rgba(15, 23, 42, 0.15);
   --texture-opacity: 0.03;
@@ -186,6 +186,12 @@ html.light .border-white\/10 {
   border-color: var(--border) !important;
 }
 
+.text-brand-logo { color: #ffffff; }
+html.light .text-brand-logo { color: #000080; }
+
+.text-brand-logo-muted { color: rgba(255, 255, 255, 0.3); }
+html.light .text-brand-logo-muted { color: rgba(0, 0, 128, 0.5); }
+
 .text-gradient {
   background: linear-gradient(to right, var(--heading), var(--muted));
   -webkit-background-clip: text;
@@ -217,7 +223,7 @@ html.light .hero-card-mobile {
 }
 
 html.light .btn-hero-primary {
-  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
+  background: #000080;
   color: #ffffff;
 }
 
@@ -227,6 +233,53 @@ html.light .btn-hero-primary {
   color: var(--heading);
   box-shadow: 0 0 20px -10px var(--accent-glow);
 }
+
+html.light .btn-hero-secondary {
+  border-color: rgba(0, 0, 128, 0.3);
+  color: #000080;
+  background: rgba(0, 0, 128, 0.05);
+}
+
+.chip-theme {
+  background: rgba(14, 165, 233, 0.1);
+  border-color: rgba(56, 189, 248, 0.3);
+  color: #bae6fd;
+}
+html.light .chip-theme {
+  background: rgba(0, 0, 128, 0.08);
+  border-color: rgba(0, 0, 128, 0.25);
+  color: #000080;
+}
+
+.chip-theme-dot {
+  background: rgba(56, 189, 248, 0.6);
+}
+html.light .chip-theme-dot {
+  background: rgba(0, 0, 128, 0.6);
+}
+
+.border-brand { border-color: rgba(255, 255, 255, 0.1); }
+html.light .border-brand { border-color: rgba(0, 0, 128, 0.2); }
+
+.bg-brand-soft { background: rgba(255, 255, 255, 0.03); }
+html.light .bg-brand-soft { background: rgba(0, 0, 128, 0.05); }
+
+.bg-roadmap-card { background-color: rgba(2, 6, 23, 0.4); }
+html.light .bg-roadmap-card { background-color: rgba(0, 0, 128, 0.02); border-color: rgba(0, 0, 128, 0.1); }
+
+.bg-brand-badge { background: rgba(15, 23, 42, 0.6); color: #ffffff; border-color: rgba(255, 255, 255, 0.1); }
+html.light .bg-brand-badge { background: #ffffff; box-shadow: 0 4px 20px rgba(0, 0, 128, 0.15); border-color: rgba(0, 0, 128, 0.2); color: #000080; }
+
+.bg-brand-cyan-badge { background: rgba(6, 182, 212, 0.1); border-color: rgba(6, 182, 212, 0.2); color: #22d3ee; }
+html.light .bg-brand-cyan-badge { background: rgba(0, 0, 128, 0.1); border-color: rgba(0, 0, 128, 0.2); color: #000080; }
+
+.text-brand-cyan { color: #22d3ee; }
+html.light .text-brand-cyan { color: #000080; }
+
+.bg-brand-cyan-soft { background: rgba(6, 182, 212, 0.05); border-color: rgba(6, 182, 212, 0.1); }
+html.light .bg-brand-cyan-soft { background: rgba(0, 0, 128, 0.05); border-color: rgba(0, 0, 128, 0.15); }
+
+html.light .text-light-black { color: #000000 !important; }
 
 .scrollbar-none {
   -ms-overflow-style: none;

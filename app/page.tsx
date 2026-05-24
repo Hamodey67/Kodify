@@ -6,7 +6,7 @@ import Section from "@/components/Section";
 import FeatureGrid from "@/components/FeatureGrid";
 import ServicesTabs from "@/components/ServicesTabs";
 import ProjectsGrid from "@/components/ProjectsGrid";
-import CaseStudiesGrid from "@/components/CaseStudiesGrid";
+
 import SecurityLab from "@/components/SecurityLab";
 import Testimonials from "@/components/Testimonials";
 import CTA from "@/components/CTA";
@@ -57,15 +57,7 @@ export default function HomePage() {
         </Section>
       </Reveal>
 
-      <div className="section-divider" />
 
-      <Reveal delayMs={110}>
-        <Section title={tx.casesTitle} desc={tx.casesDesc}>
-          <CaseStudiesGrid />
-        </Section>
-      </Reveal>
-
-      <div className="section-divider" />
 
       <Reveal delayMs={90}>
         <div className="mx-auto max-w-6xl px-4 pb-16">

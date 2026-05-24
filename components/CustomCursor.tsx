@@ -32,7 +32,6 @@ export default function CustomCursor() {
     };
 
     window.addEventListener("mousemove", onMouseMove, { passive: true });
-
     let rafId = 0;
     const animate = () => {
       cursorX += (mouseX - cursorX) * ease;
@@ -47,37 +46,36 @@ export default function CustomCursor() {
 
     rafId = requestAnimationFrame(animate);
 
-    // Hover listeners
-    const handleMouseEnter = () => setHovered(true);
-    const handleMouseLeave = () => setHovered(false);
-
-    const setupListeners = () => {
-      const interactives = document.querySelectorAll(
-        "a, button, input, textarea, select, [role='button'], .group"
-      );
-      interactives.forEach((el) => {
-        el.addEventListener("mouseenter", handleMouseEnter);
-        el.addEventListener("mouseleave", handleMouseLeave);
-      });
+    // Hover listeners using event delegation
+    const onMouseOver = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target?.closest && target.closest("a, button, input, textarea, select, [role='button'], .group")) {
+        setHovered(true);
+      }
     };
 
-    setupListeners();
+    const onMouseOut = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target?.closest && target.closest("a, button, input, textarea, select, [role='button'], .group")) {
+        setHovered(false);
+      }
+    };
 
-    // Re-setup on layout mutation (dynamic elements)
-    const observer = new MutationObserver(setupListeners);
-    observer.observe(document.body, { childList: true, subtree: true });
+    document.addEventListener("mouseover", onMouseOver, { passive: true });
+    document.addEventListener("mouseout", onMouseOut, { passive: true });
 
     return () => {
       window.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseover", onMouseOver);
+      document.removeEventListener("mouseout", onMouseOut);
       cancelAnimationFrame(rafId);
-      observer.disconnect();
     };
   }, [theme]);
 
   if (!visible) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-[999999]">
+    <div id="custom-cursor" className="pointer-events-none fixed inset-0 z-[999999]">
       {/* Outer Circle */}
       <div
         ref={cursorRef}

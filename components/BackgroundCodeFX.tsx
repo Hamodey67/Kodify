@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useApp } from "@/app/providers";
 
 export default function BackgroundCodeFX() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const { theme } = useApp();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -31,8 +33,10 @@ export default function BackgroundCodeFX() {
     }
 
     const draw = () => {
-      // Semi-transparent background for trail effect
-      ctx.fillStyle = "rgba(5, 11, 20, 0.1)"; // Matches a dark sleek background
+      const isLightMode = document.documentElement.classList.contains("light");
+
+      // Semi-transparent background for trail effect (using e2e8f4 for light mode to match the theme background)
+      ctx.fillStyle = isLightMode ? "rgba(226, 232, 244, 0.12)" : "rgba(5, 11, 20, 0.12)"; 
       ctx.fillRect(0, 0, width, height);
 
       ctx.font = `${fontSize}px monospace`;
@@ -51,7 +55,11 @@ export default function BackgroundCodeFX() {
         
         // Coloring
         const isHead = Math.random() > 0.9;
-        ctx.fillStyle = isHead ? "#5eead4" : "#0d9488"; // teal-300 / teal-600
+        if (isLightMode) {
+          ctx.fillStyle = isHead ? "#000080" : "rgba(0, 0, 128, 0.55)"; 
+        } else {
+          ctx.fillStyle = isHead ? "#5eead4" : "#0d9488"; // teal-300 / teal-600
+        }
         
         ctx.fillText(text, i * fontSize, drops[i] * fontSize);
 
@@ -67,7 +75,20 @@ export default function BackgroundCodeFX() {
       }
     };
 
-    const intervalId = setInterval(draw, 50);
+    let animationFrameId: number;
+    let lastTime = 0;
+    const interval = 50;
+
+    const animate = (time: number) => {
+      animationFrameId = requestAnimationFrame(animate);
+      const elapsed = time - lastTime;
+      if (elapsed > interval) {
+        lastTime = time - (elapsed % interval);
+        draw();
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(animate);
 
     const handleResize = () => {
       width = window.innerWidth;
@@ -83,19 +104,18 @@ export default function BackgroundCodeFX() {
       }
     };
 
-    window.addEventListener("resize", handleResize);
+    window.addEventListener("resize", handleResize, { passive: true });
 
     return () => {
-      clearInterval(intervalId);
+      cancelAnimationFrame(animationFrameId);
       window.removeEventListener("resize", handleResize);
     };
-  }, []);
+  }, [theme]);
 
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 -z-10 pointer-events-none opacity-60"
-      style={{ background: "#050b14" }}
+      className="fixed inset-0 -z-10 pointer-events-none opacity-75 dark:opacity-60"
     />
   );
 }

@@ -59,7 +59,7 @@ ${msg}`;
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            className="mt-2 w-full px-4 py-3 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-black/40"
+            className="mt-2 w-full px-4 py-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] focus:border-brand-cyan outline-none transition-colors"
           />
         </div>
 
@@ -70,7 +70,7 @@ ${msg}`;
             onChange={(e) => setEmail(e.target.value)}
             required
             type="email"
-            className="mt-2 w-full px-4 py-3 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-black/40"
+            className="mt-2 w-full px-4 py-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] focus:border-brand-cyan outline-none transition-colors"
           />
         </div>
       </div>
@@ -82,7 +82,7 @@ ${msg}`;
           onChange={(e) => setMsg(e.target.value)}
           required
           rows={5}
-          className="mt-2 w-full px-4 py-3 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-black/40"
+          className="mt-2 w-full px-4 py-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] focus:border-brand-cyan outline-none transition-colors"
         />
       </div>
 

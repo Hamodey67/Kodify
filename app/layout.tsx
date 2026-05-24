@@ -39,13 +39,13 @@ export default function RootLayout({
     <html
       lang={defaultLang}
       dir={isArabic ? "rtl" : "ltr"}
-      className="dark"
+      className="light"
       suppressHydrationWarning
     >
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='light'){document.documentElement.classList.remove('dark');document.documentElement.classList.add('light');}else{document.documentElement.classList.add('dark');document.documentElement.classList.remove('light');}}catch(e){document.documentElement.classList.add('dark');}})();`,
+            __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'){document.documentElement.classList.remove('light');document.documentElement.classList.add('dark');}else{document.documentElement.classList.add('light');document.documentElement.classList.remove('dark');}}catch(e){document.documentElement.classList.add('light');}})();`,
           }}
         />
       </head>

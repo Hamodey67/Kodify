@@ -82,7 +82,7 @@ export default function ProjectsSection() {
         {/* Glow behind dashboard */}
         <div className="absolute -inset-10 bg-cyan-500/5 blur-[120px] rounded-[4rem] group-hover:bg-cyan-500/10 transition-colors duration-700" />
         
-        <div className="relative rounded-[3rem] border border-white/10 bg-slate-900/40 backdrop-blur-3xl overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.6)]">
+        <div className="relative rounded-[3rem] border border-[var(--border)] bg-[var(--surface)] backdrop-blur-3xl overflow-hidden shadow-[var(--card-shadow)]">
            <div className="grid lg:grid-cols-[1.1fr_.9fr] items-stretch">
              
              {/* Left Column: Data & Specs - Tighter padding */}
@@ -183,7 +183,7 @@ export default function ProjectsSection() {
              </div>
 
              {/* Right Column: Phone Playground - Scaled down */}
-             <div className="relative bg-slate-950/40 p-10 md:p-14 flex items-center justify-center overflow-hidden">
+             <div className="relative bg-brand-soft border-t border-[var(--border)] p-10 md:p-14 flex items-center justify-center overflow-hidden">
                 {/* Visual accents behind phone */}
                 <div className="absolute inset-0 pointer-events-none">
                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.06)_0%,transparent_70%)]" />

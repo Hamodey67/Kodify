@@ -68,33 +68,7 @@ export default function BackgroundMindLike() {
         }}
       />
 
-      {/* Deep Space Interactive Nebula Gradients (Parallax) */}
-      <div
-        className="absolute -inset-[20%] opacity-80"
-        style={{
-          transform:
-            "translate(calc(var(--mx) * -22px), calc(var(--my) * -18px))",
-          background:
-            "radial-gradient(850px 600px at 20% 15%, rgba(125, 211, 252, 0.1), transparent 60%)," +
-            "radial-gradient(900px 650px at 80% 30%, rgba(103, 232, 249, 0.08), transparent 60%)," +
-            "radial-gradient(1000px 800px at 45% 75%, rgba(165, 180, 252, 0.06), transparent 65%)",
-        }}
-      />
 
-      {/* Floating Conic Aura */}
-      <div
-        className="absolute -inset-[30%] opacity-25 blur-3xl"
-        style={{
-          transform:
-            "translate(calc(var(--mx) * 32px), calc(var(--my) * 24px)) rotate(-8deg)",
-          background:
-            "conic-gradient(from 180deg at 50% 50%, rgba(125, 211, 252, 0.08), rgba(103, 232, 249, 0.06), rgba(165, 180, 252, 0.05), rgba(125, 211, 252, 0.08))",
-          maskImage:
-            "radial-gradient(closest-side at 50% 50%, black 0%, transparent 80%)",
-          WebkitMaskImage:
-            "radial-gradient(closest-side at 50% 50%, black 0%, transparent 80%)",
-        }}
-      />
 
       {/* High-Tech Premium Dotted Grid Overlay */}
       <div

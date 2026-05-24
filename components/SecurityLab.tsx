@@ -44,7 +44,7 @@ export default function SecurityLab() {
             <TiltCard
               maxRotate={10}
               glare
-              className="relative overflow-hidden rounded-[3rem] border border-white/10 bg-slate-900/40 backdrop-blur-3xl p-10 flex flex-col h-full shadow-2xl transition-all duration-500 hover:border-cyan-500/30 hover:-translate-y-2"
+              className="relative overflow-hidden rounded-[3rem] border border-[var(--border)] bg-[var(--surface)] backdrop-blur-3xl p-10 flex flex-col h-full shadow-[var(--card-shadow)] transition-all duration-500 hover:border-cyan-500/30 hover:-translate-y-2"
             >
               {/* Animated HUD Grid overlay */}
               <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
@@ -57,8 +57,8 @@ export default function SecurityLab() {
                       <lab.icon size={28} />
                    </div>
                    <div className="flex items-center gap-2 group-hover:text-cyan-400 transition-colors">
-                      <span className="text-[10px] font-black tracking-widest uppercase text-white/20 group-hover:text-cyan-400/50">{lab.tag}</span>
-                      <ExternalLink size={14} className="text-white/20 group-hover:text-cyan-400" />
+                      <span className="text-[10px] font-black tracking-widest uppercase text-brand-logo-muted group-hover:text-cyan-400/50">{lab.tag}</span>
+                      <ExternalLink size={14} className="text-brand-logo-muted group-hover:text-cyan-400" />
                    </div>
                 </div>
 
@@ -71,8 +71,8 @@ export default function SecurityLab() {
                 </p>
 
                 <div className="flex items-center gap-4">
-                   <div className="flex-1 h-px bg-white/5" />
-                   <div className="px-5 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black text-white/30 uppercase tracking-[0.2em] group-hover:bg-cyan-500 group-hover:text-black group-hover:border-transparent transition-all">
+                   <div className="flex-1 h-px bg-[var(--border)]" />
+                   <div className="px-5 py-2 rounded-xl bg-brand-soft border border-[var(--border)] text-[10px] font-black text-brand-logo-muted uppercase tracking-[0.2em] group-hover:bg-cyan-500 group-hover:text-black group-hover:border-transparent transition-all">
                       {lang === 'ar' ? 'ابدأ المحاكي' : 'Start Simulation'}
                    </div>
                 </div>

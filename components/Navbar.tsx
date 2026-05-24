@@ -101,8 +101,8 @@ export default function Navbar() {
                <div className="absolute inset-0 bg-cyan-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             <div className="hidden sm:block leading-tight">
-              <div className="font-black text-lg text-white tracking-tight">{tx.brand}</div>
-              <div className="text-[10px] font-bold text-white/30 tracking-[0.2em] uppercase">{tagline}</div>
+              <div className="font-black text-lg text-brand-logo tracking-tight">{tx.brand}</div>
+              <div className="text-[10px] font-bold text-brand-logo-muted tracking-[0.2em] uppercase">{tagline}</div>
             </div>
           </Link>
 
@@ -159,7 +159,7 @@ export default function Navbar() {
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
                     className="absolute top-full right-0 mt-3 z-[110]"
                   >
-                    <div className="bg-slate-900/95 backdrop-blur-3xl border border-white/10 rounded-2xl p-2 shadow-[0_20px_50px_rgba(0,0,0,0.8)] min-w-[150px]">
+                    <div className="bg-[var(--surface)] backdrop-blur-3xl border border-[var(--border)] rounded-2xl p-2 shadow-[var(--card-shadow)] min-w-[150px]">
                       {langs.map((l) => (
                         <button
                           key={l.key}
@@ -211,7 +211,7 @@ export default function Navbar() {
             className="fixed inset-0 z-[110] lg:hidden"
           >
             {/* Backdrop with reduced blur on mobile for performance */}
-            <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-lg md:backdrop-blur-2xl" onClick={() => setOpen(false)} />
+            <div className="absolute inset-0 bg-black/40 dark:bg-slate-950/80 backdrop-blur-lg md:backdrop-blur-2xl" onClick={() => setOpen(false)} />
             
             <motion.div 
               initial={{ x: isRtl ? "-100%" : "100%", opacity: 0 }}
@@ -219,7 +219,7 @@ export default function Navbar() {
               exit={{ x: isRtl ? "-100%" : "100%", opacity: 0 }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
               className={cn(
-                "absolute top-0 h-full w-[85%] max-w-sm bg-slate-900/95 border-white/10 p-8 flex flex-col pt-24 shadow-[0_0_100px_rgba(0,0,0,0.8)]",
+                "absolute top-0 h-full w-[85%] max-w-sm bg-[var(--surface)] border-r border-[var(--border)] p-8 flex flex-col pt-24 shadow-[var(--card-shadow)]",
                 isRtl ? "left-0 border-r" : "right-0 border-l"
               )}
             >

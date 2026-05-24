@@ -26,19 +26,19 @@ export default function EmailCard({
     domain && /(secure|verify|login|payroll|micros0ft|apple-secure|security)\./i.test(domain);
 
   return (
-    <div className='rounded-2xl border border-white/10 bg-white/[0.03] p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.04)]'>
+    <div className='theme-surface rounded-2xl p-5 shadow-sm'>
       <div className='flex flex-col gap-3'>
         <div className='flex flex-wrap items-center justify-between gap-2'>
-          <div className='text-sm text-white/70'>
-            <div className='font-medium text-white'>{from}</div>
-            <div className='text-white/60'>{to}</div>
+          <div className='text-sm text-[var(--muted)]'>
+            <div className='font-medium text-[var(--fg)]'>{from}</div>
+            <div className='text-[var(--muted-2)]'>{to}</div>
           </div>
 
           {reveal && domain && (
             <span
               className={cn(
-                "inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs",
-                isSuspiciousDomain ? "bg-rose-500/15 text-rose-200" : "bg-emerald-500/15 text-emerald-200"
+                "inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium",
+                isSuspiciousDomain ? "bg-rose-500/15 text-rose-700 dark:text-rose-200" : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-200"
               )}
               title={domain}
             >
@@ -47,9 +47,9 @@ export default function EmailCard({
           )}
         </div>
 
-        <div className='border-t border-white/10 pt-3'>
-          <div className='text-base font-semibold text-white'>{subject}</div>
-          <div className='mt-3 space-y-2 text-sm leading-6 text-white/80'>
+        <div className='border-t border-[var(--border)] pt-3'>
+          <div className='text-base font-semibold text-[var(--fg)]'>{subject}</div>
+          <div className='mt-3 space-y-2 text-sm leading-6 text-[var(--muted)]'>
             {body.map((line, i) => (
               <p key={i}>{line}</p>
             ))}
@@ -58,7 +58,7 @@ export default function EmailCard({
           <div className='mt-4'>
             <button
               type='button'
-              className='rounded-xl bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/15 active:scale-[0.99]'
+              className='rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-2 text-sm font-medium text-[var(--fg)] hover:bg-[var(--surface-muted)] shadow-sm active:scale-[0.99]'
               onClick={() => {
                 // no-op: demo button
               }}
@@ -67,7 +67,7 @@ export default function EmailCard({
             </button>
 
             {reveal && (
-              <div className='mt-2 text-xs text-white/50'>
+              <div className='mt-2 text-xs text-[var(--muted-2)]'>
                 {scenario.ctaUrl}
               </div>
             )}

@@ -109,8 +109,8 @@ export default function LoginDemoPage() {
   return (
     <div className="min-h-screen">
       <Section title={copy.title} desc={copy.desc} className="pt-10">
-        <div className="mb-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-white/70">
-          <div className="font-semibold text-white/90">{copy.hint}</div>
+        <div className="mb-4 rounded-2xl border border-[var(--border)] bg-brand-soft p-4 text-sm text-[var(--muted)]">
+          <div className="font-semibold text-[var(--fg)]">{copy.hint}</div>
           <div className="mt-1">{copy.instruction}</div>
         </div>
 
@@ -121,8 +121,8 @@ export default function LoginDemoPage() {
             onClick={() => changeTab("login")}
             className={
               tab === "login"
-                ? "rounded-2xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-white"
-                : "rounded-2xl border border-white/10 bg-black/20 px-4 py-2 text-sm font-semibold text-white/70 hover:bg-black/30"
+                ? "rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-2 text-sm font-semibold text-[var(--fg)] shadow-sm"
+                : "rounded-2xl border border-[var(--border)] bg-brand-soft px-4 py-2 text-sm font-semibold text-[var(--muted)] hover:bg-[var(--surface-muted)]"
             }
           >
             {copy.tabs.login}
@@ -132,8 +132,8 @@ export default function LoginDemoPage() {
             onClick={() => changeTab("whatsapp")}
             className={
               tab === "whatsapp"
-                ? "rounded-2xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-white"
-                : "rounded-2xl border border-white/10 bg-black/20 px-4 py-2 text-sm font-semibold text-white/70 hover:bg-black/30"
+                ? "rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-2 text-sm font-semibold text-[var(--fg)] shadow-sm"
+                : "rounded-2xl border border-[var(--border)] bg-brand-soft px-4 py-2 text-sm font-semibold text-[var(--muted)] hover:bg-[var(--surface-muted)]"
             }
           >
             {copy.tabs.whatsapp}
@@ -175,21 +175,21 @@ export default function LoginDemoPage() {
                 wa={scenario.wa}
               />
             ) : (
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-white/70">No scenarios</div>
+              <div className="rounded-3xl border border-[var(--border)] bg-brand-soft p-6 text-[var(--muted)]">No scenarios</div>
             )}
 
             <div className="mt-4 flex flex-wrap gap-3">
               <button
                 type="button"
                 onClick={() => submitChoice("safe")}
-                className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10"
+                className="rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-3 text-sm font-semibold text-[var(--fg)] hover:bg-[var(--surface-muted)] shadow-sm"
               >
                 {copy.buttons.safe}
               </button>
               <button
                 type="button"
                 onClick={() => submitChoice("phishing")}
-                className="rounded-2xl border border-rose-400/20 bg-rose-500/10 px-5 py-3 text-sm font-semibold text-rose-200 hover:bg-rose-500/15"
+                className="rounded-2xl border border-rose-500/20 dark:border-rose-400/20 bg-rose-500/10 px-5 py-3 text-sm font-semibold text-rose-700 dark:text-rose-200 hover:bg-rose-500/15"
               >
                 {copy.buttons.phishing}
               </button>
@@ -197,28 +197,28 @@ export default function LoginDemoPage() {
               <button
                 type="button"
                 onClick={() => setInspect(true)}
-                className="ml-auto rounded-2xl border border-white/10 bg-black/20 px-5 py-3 text-sm font-semibold text-white/80 hover:bg-black/30"
+                className="ml-auto rounded-2xl border border-[var(--border)] bg-brand-soft px-5 py-3 text-sm font-semibold text-[var(--fg)] hover:bg-[var(--surface-muted)]"
               >
                 {copy.buttons.inspect}
               </button>
               <button
                 type="button"
                 onClick={resetRound}
-                className="rounded-2xl border border-white/10 bg-black/20 px-5 py-3 text-sm font-semibold text-white/70 hover:bg-black/30"
+                className="rounded-2xl border border-[var(--border)] bg-brand-soft px-5 py-3 text-sm font-semibold text-[var(--muted)] hover:bg-[var(--surface-muted)]"
               >
                 {copy.buttons.reset}
               </button>
               <button
                 type="button"
                 onClick={nextScenario}
-                className="rounded-2xl border border-white/10 bg-black/20 px-5 py-3 text-sm font-semibold text-white/70 hover:bg-black/30"
+                className="rounded-2xl border border-[var(--border)] bg-brand-soft px-5 py-3 text-sm font-semibold text-[var(--muted)] hover:bg-[var(--surface-muted)]"
               >
                 {copy.buttons.next}
               </button>
             </div>
 
             {scenario?.note ? (
-              <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-white/70">
+              <div className="mt-4 rounded-2xl border border-[var(--border)] bg-brand-soft p-4 text-sm text-[var(--muted)]">
                 {scenario.note}
               </div>
             ) : null}

@@ -80,7 +80,7 @@ export default function FlipCard({
         onMouseMove={handleMouseMove}
         onMouseEnter={() => {}}
         onMouseLeave={() => setMousePos({ x: 50, y: 50 })}
-        className="relative w-full h-full rounded-[2.5rem] overflow-hidden border border-white/10 bg-slate-900/40 backdrop-blur-md cursor-default group"
+        className="relative w-full h-full rounded-[2.5rem] overflow-hidden border border-[var(--border)] bg-[var(--surface)] backdrop-blur-md cursor-default group shadow-[var(--card-shadow)]"
         whileHover={{ y: -10 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
       >

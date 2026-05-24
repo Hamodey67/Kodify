@@ -122,7 +122,7 @@ export default function PhishingPage() {
                     type="button"
                     disabled={!!picked}
                     onClick={() => pick("safe")}
-                    className="rounded-xl bg-white/10 px-4 py-3 text-sm font-semibold text-white hover:bg-white/15 disabled:opacity-50"
+                    className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3 text-sm font-semibold text-[var(--fg)] hover:bg-[var(--surface-muted)] disabled:opacity-50 shadow-sm"
                   >
                     {safeLabel}
                   </button>
@@ -130,13 +130,13 @@ export default function PhishingPage() {
                     type="button"
                     disabled={!!picked}
                     onClick={() => pick("phish")}
-                    className="rounded-xl bg-white/10 px-4 py-3 text-sm font-semibold text-white hover:bg-white/15 disabled:opacity-50"
+                    className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3 text-sm font-semibold text-[var(--fg)] hover:bg-[var(--surface-muted)] disabled:opacity-50 shadow-sm"
                   >
                     {phishLabel}
                   </button>
                 </div>
 
-                <div className="text-xs text-white/50">
+                <div className="text-xs text-[var(--muted-2)]">
                   {lang === "ar"
                     ? "ملاحظة: هذا تدريب فقط — لا تدخل بيانات حقيقية."
                     : lang === "ku"
@@ -145,8 +145,8 @@ export default function PhishingPage() {
                 </div>
               </>
             ) : (
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-                <div className="text-2xl font-bold text-white">
+              <div className="theme-surface rounded-2xl p-6">
+                <div className="text-2xl font-bold text-[var(--fg)]">
                   {lang === "ar"
                     ? "انتهينا ✅"
                     : lang === "ku"
@@ -154,7 +154,7 @@ export default function PhishingPage() {
                     : "Done ✅"}
                 </div>
 
-                <div className="mt-2 text-sm text-white/70">
+                <div className="mt-2 text-sm text-[var(--muted)]">
                   {lang === "ar"
                     ? `نتيجتك: ${score} / ${total}`
                     : lang === "ku"
@@ -162,7 +162,7 @@ export default function PhishingPage() {
                     : `Your score: ${score} / ${total}`}
                 </div>
 
-                <div className="mt-3 text-sm text-white/70">
+                <div className="mt-3 text-sm text-[var(--muted)]">
                   {lang === "ar"
                     ? `أفضل سلسلة صحيحة: ${bestStreak}`
                     : lang === "ku"
@@ -170,14 +170,14 @@ export default function PhishingPage() {
                     : `Best streak: ${bestStreak}`}
                 </div>
 
-                <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white">
+                <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-brand-soft px-4 py-2 text-sm font-semibold text-[var(--fg)] border border-[var(--border)]">
                   {rank}
                 </div>
 
                 <button
                   type="button"
                   onClick={restart}
-                  className="mt-6 w-full rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/15"
+                  className="mt-6 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-2 text-sm font-semibold text-[var(--fg)] hover:bg-[var(--surface-muted)] shadow-sm"
                 >
                   {lang === "ar"
                     ? "ابدأ من جديد"
@@ -202,8 +202,8 @@ export default function PhishingPage() {
                 streak={streak}
               />
             ) : (
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-sm text-white/70">
-                <div className="text-base font-semibold text-white">
+              <div className="theme-surface rounded-2xl p-6 text-sm text-[var(--muted)]">
+                <div className="text-base font-semibold text-[var(--fg)]">
                   {lang === "ar"
                     ? "نصيحة سريعة 👇"
                     : lang === "ku"

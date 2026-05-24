@@ -1,9 +1,11 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Reveal from "./Reveal";
 import TiltCard from "./TiltCard";
 import { useApp } from "@/app/providers";
-import { ShieldCheck, Zap, CheckCircle2, Wrench } from "lucide-react";
+import { ShieldCheck, Zap, CheckCircle2, Wrench, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
@@ -81,7 +83,7 @@ const accent = {
       "lg:group-hover:bg-sky-400/25 lg:group-hover:border-sky-300/50 lg:group-hover:shadow-[0_0_40px_rgba(125,211,252,0.35)]",
     card: "border-sky-400/25",
     cardLg:
-      "lg:border-sky-400/20 lg:bg-slate-950/50 lg:shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_40px_-12px_rgba(103,232,249,0.2)]",
+      "lg:border-sky-400/20 lg:shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_40px_-12px_rgba(103,232,249,0.2)]",
     cardHover:
       "lg:hover:border-sky-300/40 lg:hover:-translate-y-1 lg:hover:shadow-[0_28px_70px_rgba(0,0,0,0.55),0_0_50px_-8px_rgba(125,211,252,0.35)]",
     glow: "bg-sky-400/20",
@@ -98,7 +100,7 @@ const accent = {
       "lg:group-hover:bg-cyan-500/25 lg:group-hover:border-cyan-400/50 lg:group-hover:shadow-[0_0_40px_rgba(6,182,212,0.35)]",
     card: "border-cyan-500/25",
     cardLg:
-      "lg:border-cyan-500/20 lg:bg-slate-950/50 lg:shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_40px_-12px_rgba(6,182,212,0.15)]",
+      "lg:border-cyan-500/20 lg:shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_40px_-12px_rgba(6,182,212,0.15)]",
     cardHover:
       "lg:hover:border-cyan-400/40 lg:hover:-translate-y-1 lg:hover:shadow-[0_28px_70px_rgba(0,0,0,0.55),0_0_50px_-8px_rgba(6,182,212,0.3)]",
     glow: "bg-cyan-500/20",
@@ -115,7 +117,7 @@ const accent = {
       "lg:group-hover:bg-sky-500/25 lg:group-hover:border-sky-400/50 lg:group-hover:shadow-[0_0_40px_rgba(14,165,233,0.35)]",
     card: "border-sky-500/25",
     cardLg:
-      "lg:border-sky-500/20 lg:bg-slate-950/50 lg:shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_40px_-12px_rgba(14,165,233,0.15)]",
+      "lg:border-sky-500/20 lg:shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_40px_-12px_rgba(14,165,233,0.15)]",
     cardHover:
       "lg:hover:border-sky-400/40 lg:hover:-translate-y-1 lg:hover:shadow-[0_28px_70px_rgba(0,0,0,0.55),0_0_50px_-8px_rgba(14,165,233,0.3)]",
     glow: "bg-sky-500/20",
@@ -132,7 +134,7 @@ const accent = {
       "lg:group-hover:bg-indigo-500/25 lg:group-hover:border-indigo-400/50 lg:group-hover:shadow-[0_0_40px_rgba(99,102,241,0.35)]",
     card: "border-indigo-500/25",
     cardLg:
-      "lg:border-indigo-500/20 lg:bg-slate-950/50 lg:shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_40px_-12px_rgba(99,102,241,0.15)]",
+      "lg:border-indigo-500/20 lg:shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_40px_-12px_rgba(99,102,241,0.15)]",
     cardHover:
       "lg:hover:border-indigo-400/40 lg:hover:-translate-y-1 lg:hover:shadow-[0_28px_70px_rgba(0,0,0,0.55),0_0_50px_-8px_rgba(99,102,241,0.3)]",
     glow: "bg-indigo-500/20",
@@ -236,9 +238,17 @@ function CardContent({
 
 export default function FeatureGrid() {
   const { lang } = useApp();
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (selectedIdx !== null) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
+    return () => { document.body.style.overflow = ""; };
+  }, [selectedIdx]);
 
   return (
-    <div className="relative">
+    <>
+      <div className="relative">
       {/* Connector line — desktop 2x2 grid */}
       <div
         className="hidden lg:block absolute top-[42%] left-[8%] right-[8%] h-px bg-gradient-to-r from-transparent via-sky-400/25 to-transparent pointer-events-none z-0"
@@ -272,8 +282,18 @@ export default function FeatureGrid() {
 
           return (
             <Reveal key={idx} delayMs={idx * 100} from="up">
-              <div className={cn(cardClass, "md:hidden")}>{inner}</div>
-              <TiltCard maxRotate={8} glare className={cn(cardClass, "hidden md:flex")}>
+              <div 
+                className={cn(cardClass, "md:hidden cursor-pointer active:scale-[0.98] transition-transform")} 
+                onClick={() => setSelectedIdx(idx)}
+              >
+                {inner}
+              </div>
+              <TiltCard 
+                maxRotate={8} 
+                glare 
+                className={cn(cardClass, "hidden md:flex cursor-pointer")}
+                onClick={() => setSelectedIdx(idx)}
+              >
                 {inner}
               </TiltCard>
             </Reveal>
@@ -281,5 +301,73 @@ export default function FeatureGrid() {
         })}
       </div>
     </div>
+
+      <AnimatePresence>
+        {selectedIdx !== null && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 lg:p-8" dir={lang === 'ar' || lang === 'ku' ? 'rtl' : 'ltr'}>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/40 dark:bg-slate-950/80 backdrop-blur-md"
+              onClick={() => setSelectedIdx(null)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className={cn(
+                "relative w-full max-w-3xl bg-[var(--surface)] backdrop-blur-3xl border border-[var(--border)] rounded-3xl p-6 sm:p-10 shadow-[var(--card-shadow)] overflow-hidden",
+                accent[items[selectedIdx].color as keyof typeof accent].card
+              )}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] to-transparent pointer-events-none" />
+              
+              <button
+                onClick={() => setSelectedIdx(null)}
+                className="absolute top-4 sm:top-6 end-4 sm:end-6 w-10 h-10 flex items-center justify-center rounded-full bg-brand-soft hover:bg-brand-cyan-soft text-brand-logo-muted hover:text-brand-logo transition-colors z-20"
+              >
+                <X size={20} />
+              </button>
+
+              {(() => {
+                const it = items[selectedIdx];
+                const x = lang === "ar" ? it.ar : lang === "ku" ? it.ku : it.en;
+                const Icon = it.icon;
+                const a = accent[it.color as keyof typeof accent];
+
+                return (
+                  <div className="relative z-10 flex flex-col md:flex-row gap-6 md:gap-10 items-center md:items-start text-center md:text-start">
+                    <div className={cn("w-20 h-20 sm:w-28 sm:h-28 rounded-2xl sm:rounded-3xl flex items-center justify-center shrink-0 border shadow-lg", a.icon)}>
+                      <Icon size={40} strokeWidth={1.5} className="sm:w-12 sm:h-12" />
+                    </div>
+                    <div className="flex-1 mt-2 md:mt-0">
+                      <h3 className="text-2xl sm:text-3xl md:text-4xl font-black mb-3 sm:mb-4 text-white">
+                        {x.title}
+                      </h3>
+                      <p className="text-base sm:text-lg theme-muted font-medium leading-relaxed">
+                        {x.desc}
+                      </p>
+                      
+                      <div className="mt-8 pt-6 border-t border-white/10 flex items-center gap-4 opacity-50">
+                        <div className={cn("w-2 h-2 rounded-full", a.dot)} />
+                        <span className="text-xs sm:text-sm font-mono tracking-widest uppercase text-white">
+                          MODULE_{String(selectedIdx + 1).padStart(2, '0')}
+                        </span>
+                        <div className="flex-1 h-px bg-[var(--border)]" />
+                        <span className="text-[10px] sm:text-xs font-bold text-white/60 tracking-widest uppercase">
+                          KODIFY // SYSTEM
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

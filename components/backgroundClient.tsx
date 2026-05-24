@@ -27,7 +27,12 @@ export default function BackgroundClient() {
   }, []);
 
   if (theme === "light") {
-    return <BackgroundLight />;
+    return (
+      <>
+        <BackgroundLight />
+        <BackgroundCodeFX />
+      </>
+    );
   }
 
   if (isMobile) {

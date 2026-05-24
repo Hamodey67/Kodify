@@ -35,7 +35,7 @@ export default function CTA() {
 
   return (
     <Reveal>
-      <div className="relative group overflow-hidden rounded-[3rem] border border-white/10 bg-slate-900/40 backdrop-blur-xl md:backdrop-blur-3xl p-10 md:p-16 shadow-2xl">
+      <div className="relative group overflow-hidden rounded-[3rem] border border-[var(--border)] bg-[var(--surface)] backdrop-blur-xl md:backdrop-blur-3xl p-10 md:p-16 shadow-[var(--card-shadow)]">
         {/* Background Animation Effects */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-500/10 blur-[130px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none group-hover:bg-cyan-500/20 transition-colors duration-1000" />
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-sky-500/10 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none" />

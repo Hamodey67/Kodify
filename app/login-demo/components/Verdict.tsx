@@ -33,26 +33,26 @@ export default function Verdict({
   const show = verdict !== "none";
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/5 p-4 md:p-6">
+    <div className="theme-surface rounded-3xl p-4 md:p-6">
       <div className="flex items-center justify-between">
-        <div className="text-sm text-white/70">{scoreLabel}</div>
-        <div className="text-sm text-white/70">
-          {streakLabel}: <span className="font-semibold text-white">{streak}</span>
+        <div className="text-sm text-[var(--muted)]">{scoreLabel}</div>
+        <div className="text-sm text-[var(--muted)]">
+          {streakLabel}: <span className="font-semibold text-[var(--fg)]">{streak}</span>
         </div>
       </div>
 
-      <div className="mt-2 text-3xl font-bold text-white">
-        {score} <span className="text-white/40 text-xl">/ {maxScore}</span>
+      <div className="mt-2 text-3xl font-bold text-[var(--fg)]">
+        {score} <span className="text-[var(--muted-2)] text-xl">/ {maxScore}</span>
       </div>
 
       <div
         className={cn(
           "mt-4 rounded-2xl border px-4 py-3 text-sm",
           !show
-            ? "border-white/10 bg-black/20 text-white/60"
+            ? "border-[var(--border)] bg-brand-soft text-[var(--muted)]"
             : correct
-            ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-200"
-            : "border-rose-400/30 bg-rose-500/10 text-rose-200"
+            ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-200"
+            : "border-rose-500/20 bg-rose-500/10 text-rose-700 dark:text-rose-200"
         )}
       >
         {!show ? "—" : correct ? labelCorrect : labelWrong}
@@ -63,10 +63,10 @@ export default function Verdict({
         onClick={onShare}
         disabled={shareDisabled}
         className={cn(
-          "mt-4 w-full rounded-2xl border px-4 py-3 text-sm font-semibold",
+          "mt-4 w-full rounded-2xl border px-4 py-3 text-sm font-semibold transition",
           shareDisabled
-            ? "border-white/10 bg-black/10 text-white/30"
-            : "border-white/10 bg-white/10 text-white hover:bg-white/15"
+            ? "border-[var(--border)] bg-brand-soft text-[var(--muted-2)] opacity-50 cursor-not-allowed"
+            : "border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--fg)] hover:bg-[var(--surface-muted)] shadow-sm"
         )}
       >
         {shareLabel}

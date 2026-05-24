@@ -93,7 +93,6 @@ export default function Section({
         className
       )}
     >
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-5xl bg-sky-400/8 blur-[120px] rounded-full pointer-events-none" />
       {isSplit && (
         <div
           className="hidden lg:block absolute inset-0 opacity-[0.04] pointer-events-none"

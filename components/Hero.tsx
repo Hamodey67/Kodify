@@ -60,23 +60,23 @@ export default function Hero() {
     if (lang === "ar") {
       return (
         <>
-          <span className="block theme-heading mb-1 lg:mb-3">نبني حلولًا <span className="hero-gradient">آمنة</span></span>
-          <span className="block hero-gradient">تُسرّع نمو أعمالك</span>
+          <span className="block theme-heading mb-1 lg:mb-3">نبني حلولًا <span className="text-brand-logo">آمنة</span></span>
+          <span className="block text-brand-logo">تُسرّع نمو أعمالك</span>
         </>
       );
     }
     if (lang === "ku") {
       return (
         <>
-          <span className="block theme-heading mb-1 lg:mb-3">چارەسەری <span className="hero-gradient">پارێزراو</span></span>
-          <span className="block hero-gradient">بۆ خێرایی گەشەی کاروبارت</span>
+          <span className="block theme-heading mb-1 lg:mb-3">چارەسەری <span className="text-brand-logo">پارێزراو</span></span>
+          <span className="block text-brand-logo">بۆ خێرایی گەشەی کاروبارت</span>
         </>
       );
     }
     return (
       <>
-        <span className="block theme-heading mb-1 lg:mb-3">Secure solutions <span className="hero-gradient">that accelerate</span></span>
-        <span className="block hero-gradient">your business</span>
+        <span className="block theme-heading mb-1 lg:mb-3">Secure solutions <span className="text-brand-logo">that accelerate</span></span>
+        <span className="block text-brand-logo">your business</span>
       </>
     );
   };
@@ -139,7 +139,7 @@ export default function Hero() {
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75" />
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-400" />
                     </span>
-                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-sky-300">{badge}</span>
+                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-sky-300 text-light-black">{badge}</span>
                   </motion.div>
 
                   <motion.h1 
@@ -208,10 +208,10 @@ export default function Hero() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.8 + i * 0.1 }}
-                        className="snap-start group relative shrink-0 flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-sky-500/10 border border-sky-400/30 text-[10px] sm:text-[11px] font-black text-sky-200 uppercase tracking-wide sm:tracking-widest hover:text-white hover:border-sky-300/60 hover:bg-sky-400/20 hover:shadow-[0_0_20px_-5px_rgba(56,189,248,0.4)] transition-all duration-300 cursor-pointer active:scale-95 overflow-hidden"
+                        className="snap-start group relative shrink-0 flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl chip-theme border text-[10px] sm:text-[11px] font-black uppercase tracking-wide sm:tracking-widest transition-all duration-300 cursor-pointer active:scale-95 overflow-hidden"
                       >
-                        <span className="absolute inset-0 bg-gradient-to-r from-sky-400/0 via-sky-400/10 to-sky-400/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
-                        <div className="w-1.5 h-1.5 rounded-full bg-sky-400/60 group-hover:bg-cyan-300 group-hover:shadow-[0_0_8px_rgba(103,232,249,0.8)] transition-all duration-300" />
+                        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-current to-transparent opacity-10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
+                        <div className="w-1.5 h-1.5 rounded-full chip-theme-dot transition-all duration-300" />
                         {x}
                       </motion.button>
                     ))}
@@ -255,13 +255,13 @@ export default function Hero() {
                     initial={{ opacity: 0, scale: 0.9, rotate: 2 }}
                     animate={{ opacity: 1, scale: 1, rotate: 0 }}
                     transition={{ delay: 0.4, duration: 1 }}
-                    className="relative hidden md:block rounded-[2.5rem] border border-white/[0.08] bg-slate-950/40 backdrop-blur-2xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.04)] overflow-hidden group/roadmap"
+                    className="relative hidden md:block rounded-[2.5rem] border border-brand bg-roadmap-card backdrop-blur-2xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.04)] overflow-hidden group/roadmap"
                   >
                     {/* Internal Glow */}
                     <div className="absolute top-0 right-0 w-40 h-40 bg-cyan-500/10 blur-[60px] rounded-full pointer-events-none group-hover/roadmap:bg-cyan-500/20 transition-colors duration-700" />
                     
-                    <h3 className="text-xl font-black text-white mb-8 flex items-center gap-3">
-                      <span className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400">
+                    <h3 className="text-xl font-black text-brand-logo mb-8 flex items-center gap-3">
+                      <span className="p-2 rounded-lg bg-brand-cyan-badge text-brand-cyan">
                         <Layout size={20} />
                       </span>
                       {lang === "ar" ? "خارطة التنفيذ الذكية" : lang === "ku" ? "پلانی جێبەجێکردن" : "Elite Delivery Roadmap"}
@@ -282,23 +282,23 @@ export default function Hero() {
                           className="flex items-center gap-5 group/item"
                         >
                           <div className="relative w-12 h-12 shrink-0 flex items-center justify-center">
-                            <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center text-white/40 group-hover/item:text-cyan-400 group-hover/item:border-cyan-500/30 transition-all duration-300">
+                            <div className="w-12 h-12 rounded-2xl bg-brand-soft border border-brand flex items-center justify-center text-slate-900 dark:text-brand-logo-muted group-hover/item:text-black dark:group-hover/item:text-brand-cyan group-hover/item:border-brand-cyan transition-all duration-300">
                               <step.icon size={22} strokeWidth={1.5} />
                             </div>
-                            {i < 3 && <div className="absolute top-12 left-1/2 -translate-x-1/2 w-[2px] h-6 bg-white/10 group-hover/item:bg-cyan-500/30 transition-colors" />}
+                            {i < 3 && <div className="absolute top-12 left-1/2 -translate-x-1/2 w-[2px] h-6 bg-brand-soft group-hover/item:bg-brand-cyan-soft transition-colors" />}
                           </div>
-                          <span className="text-sm font-bold text-white/50 group-hover/item:text-white transition-colors">
+                          <span className="text-sm font-bold text-slate-800 dark:text-brand-logo-muted group-hover/item:text-black dark:group-hover/item:text-brand-logo transition-colors">
                             {step.label}
                           </span>
                         </motion.div>
                       ))}
                     </div>
 
-                    <div className="mt-10 p-5 rounded-2xl bg-cyan-500/5 border border-cyan-500/10">
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-400/60 mb-2">
+                    <div className="mt-10 p-5 rounded-2xl bg-brand-cyan-soft border-brand-cyan-soft border">
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-cyan mb-2">
                         {lang === "ar" ? "ضمان الجودة" : lang === "ku" ? "تێبینی" : "Quality Assurance"}
                       </p>
-                      <p className="text-xs font-bold text-white/80 leading-relaxed">
+                      <p className="text-xs font-bold text-brand-logo leading-relaxed">
                         {lang === "ar" ? "نلتزم بأعلى معايير الأمان والأداء بنسبة 100%." : lang === "ku" ? "ئێمە پابەندین بە بەرزترین ستانداردەکان." : "We adhere to 100% security and performance SLAs from code to cloud."}
                       </p>
                     </div>
@@ -308,14 +308,14 @@ export default function Hero() {
                   <motion.div 
                     animate={{ y: [0, -10, 0] }}
                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    className="hidden md:block absolute -top-6 -left-6 px-4 py-2.5 bg-slate-950/60 backdrop-blur-md text-white border border-white/10 text-[10px] font-black rounded-xl shadow-2xl"
+                    className="hidden md:block absolute -top-6 -left-6 px-4 py-2.5 bg-brand-badge backdrop-blur-md border border-brand text-[10px] font-black rounded-xl shadow-2xl"
                   >
                     NEXT.JS 15
                   </motion.div>
                   <motion.div 
                     animate={{ y: [0, 10, 0] }}
                     transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-                    className="hidden md:block absolute -bottom-6 -right-6 px-4 py-2.5 bg-cyan-500/10 backdrop-blur-md text-cyan-400 border border-cyan-500/20 text-[10px] font-black rounded-xl shadow-2xl"
+                    className="hidden md:block absolute -bottom-6 -right-6 px-4 py-2.5 bg-brand-cyan-badge backdrop-blur-md border border-brand-cyan-soft text-[10px] font-black rounded-xl shadow-2xl"
                   >
                     SECURE_STACK
                   </motion.div>

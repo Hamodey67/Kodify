@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useApp } from "@/app/providers";
+import { useEffect, useState } from "react";
 
 type Lang = "ar" | "en" | "ku";
 
@@ -64,9 +65,16 @@ const t = {
 } as const;
 
 export default function Footer() {
-  const { lang } = useApp() as { lang: Lang };
+  const { lang, theme } = useApp() as { lang: Lang; theme: string };
   const c = t[lang ?? "ar"];
   const isRtl = lang === "ar" || lang === "ku";
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const logoSrc = mounted && theme === "light" ? "/logo1.png" : "/kodify.png";
 
   return (
     <footer className="relative mt-32 border-t border-[var(--border)] bg-[var(--bg-deep)] transition-colors duration-300">
@@ -85,10 +93,10 @@ export default function Footer() {
               <div className="flex items-center gap-3">
                 <div className="relative h-12 w-12 rounded-2xl bg-white/5 p-2 border border-white/10 shadow-2xl">
                   <Image
-                    src="/kodify.png"
+                    src={logoSrc}
                     alt="Logo"
                     fill
-                    className="object-contain p-2"
+                    className="object-contain p-2 transition-opacity duration-300"
                   />
                 </div>
                 <h2 className="text-2xl font-black text-white tracking-widest uppercase italic">

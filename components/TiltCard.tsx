@@ -7,6 +7,7 @@ type Props = {
   className?: string;
   maxRotate?: number; // degrees
   glare?: boolean;
+  onClick?: () => void;
 };
 
 export default function TiltCard({
@@ -14,6 +15,7 @@ export default function TiltCard({
   className = "",
   maxRotate = 10,
   glare = true,
+  onClick,
 }: Props) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [style, setStyle] = useState<React.CSSProperties>({});
@@ -53,6 +55,7 @@ export default function TiltCard({
       ref={ref}
       onMouseMove={onMove}
       onMouseLeave={onLeave}
+      onClick={onClick}
       className={"relative [transform-style:preserve-3d] " + className}
       style={{
         transition: "transform 250ms ease",

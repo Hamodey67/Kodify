@@ -19,7 +19,8 @@ import {
   FileSearch,
   Users,
   ArrowLeft,
-  ArrowRight
+  ArrowRight,
+  X
 } from "lucide-react";
 
 type TabKey = "dev" | "cloud" | "sec";
@@ -169,6 +170,7 @@ const cardColors = {
 export default function ServicesTabs() {
   const { lang } = useApp() as { lang: Lang };
   const [active, setActive] = useState<TabKey>("dev");
+  const [selectedCard, setSelectedCard] = useState<any>(null);
   const isRtl = lang === "ar" || lang === "ku";
 
   const tab = tabsData[active][lang];
@@ -194,14 +196,6 @@ export default function ServicesTabs() {
 
   const stats = [
     {
-      value: "+50",
-      label: {
-        ar: "مشروع منجز",
-        en: "Projects Completed",
-        ku: "پڕۆژەی تەواوکراو"
-      }[lang]
-    },
-    {
       value: "+5",
       label: {
         ar: "سنوات خبرة",
@@ -210,11 +204,11 @@ export default function ServicesTabs() {
       }[lang]
     },
     {
-      value: { ar: "٢ مدن", en: "2 Cities", ku: "٢ شار" }[lang],
+      value: { ar: "كل العراق", en: "All Iraq", ku: "هەموو عێراق" }[lang],
       label: {
-        ar: "حضور في العراق",
-        en: "Presence in Iraq",
-        ku: "ئامادەیی لە عێراق"
+        ar: "تغطية شاملة",
+        en: "Full Coverage",
+        ku: "ڕووماڵی تەواو"
       }[lang],
       isBlue: true
     }
@@ -246,8 +240,6 @@ export default function ServicesTabs() {
       />
 
       {/* Decorative colored glow orbs */}
-      <div className="absolute top-1/4 -right-20 w-96 h-96 bg-cyan-500/5 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-1/4 -left-20 w-96 h-96 bg-sky-400/5 blur-[120px] rounded-full pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
         
@@ -283,7 +275,7 @@ export default function ServicesTabs() {
                       flex items-center gap-3 px-5 py-3 rounded-full text-sm font-bold transition-all duration-300 border
                       ${isActive 
                         ? "bg-sky-500 border-sky-500 text-white shadow-[0_10px_25px_-5px_rgba(125,211,252,0.25)]" 
-                        : "bg-white/[0.02] border-white/5 text-white/50 hover:text-white hover:border-white/10 hover:bg-white/[0.04]"
+                        : "bg-brand-soft border-[var(--border)] text-brand-logo-muted hover:text-brand-logo hover:border-[var(--border-strong)]"
                       }
                     `}
                   >
@@ -303,7 +295,7 @@ export default function ServicesTabs() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -15 }}
                   transition={{ duration: 0.35, ease: "easeInOut" }}
-                  className="bg-slate-900/30 border border-white/5 rounded-[2.5rem] p-8 md:p-10 shadow-2xl relative overflow-hidden backdrop-blur-md"
+                  className="bg-[var(--surface)] border border-[var(--border)] rounded-[2.5rem] p-8 md:p-10 shadow-[var(--card-shadow)] relative overflow-hidden backdrop-blur-md"
                 >
                   {/* Subtle top-inset gloss reflection */}
                   <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
@@ -326,7 +318,8 @@ export default function ServicesTabs() {
                       return (
                         <div 
                           key={i}
-                          className="flex items-center gap-4 p-5 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all duration-300 hover:bg-white/[0.04] group"
+                          onClick={() => setSelectedCard(card)}
+                          className="flex items-center gap-4 p-5 rounded-2xl bg-brand-soft border border-[var(--border)] hover:border-[var(--border-strong)] transition-all duration-300 group cursor-pointer"
                         >
                           {/* 36x36 Icon Container */}
                           <div className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center transition-all duration-300 ${color.bg} ${color.text} ${color.border} border`}>
@@ -355,7 +348,7 @@ export default function ServicesTabs() {
                     </a>
                     <a
                       href="/projects"
-                      className="px-8 py-3.5 rounded-xl border border-white/10 hover:border-white/20 hover:bg-white/5 text-white/80 hover:text-white font-bold text-xs md:text-sm transition-all duration-300 text-center"
+                      className="px-8 py-3.5 rounded-xl border border-[var(--border)] hover:border-[var(--border-strong)] bg-brand-soft text-brand-logo hover:text-brand-cyan font-bold text-xs md:text-sm transition-all duration-300 text-center"
                     >
                       {actionButtons.projects}
                     </a>
@@ -372,10 +365,10 @@ export default function ServicesTabs() {
             {stats.map((s, idx) => (
               <div 
                 key={idx}
-                className="p-6 rounded-2xl bg-slate-900/40 border border-white/5 backdrop-blur-md hover:border-white/10 transition-all duration-300 text-start group"
+                className="p-6 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-[var(--card-shadow)] backdrop-blur-md hover:border-[var(--border-strong)] transition-all duration-300 text-start group"
               >
                 <div className={`text-4xl md:text-5xl font-black mb-2 transition-transform duration-500 group-hover:scale-105 inline-block ${
-                  s.isBlue ? "text-cyan-400" : "text-white"
+                  s.isBlue ? "text-brand-cyan" : "text-white"
                 }`}>
                   {s.value}
                 </div>
@@ -389,6 +382,61 @@ export default function ServicesTabs() {
         </div>
 
       </div>
+
+      {/* Modal */}
+      <AnimatePresence>
+        {selectedCard && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedCard(null)}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 dark:bg-slate-950/80 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-md bg-[var(--surface)] border border-[var(--border)] rounded-[2.5rem] p-8 shadow-[var(--card-shadow)] overflow-hidden"
+            >
+              <button 
+                onClick={() => setSelectedCard(null)}
+                className={`absolute top-6 ${isRtl ? 'left-6' : 'right-6'} p-2 text-brand-logo-muted hover:text-brand-logo bg-brand-soft hover:bg-brand-cyan-soft rounded-full transition-colors`}
+              >
+                <X size={20} />
+              </button>
+
+              <div className="flex flex-col items-center text-center mt-2">
+                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-6 border
+                  ${cardColors[selectedCard.color as keyof typeof cardColors].bg} 
+                  ${cardColors[selectedCard.color as keyof typeof cardColors].text} 
+                  ${cardColors[selectedCard.color as keyof typeof cardColors].border}
+                `}>
+                  <selectedCard.icon size={36} strokeWidth={1.5} />
+                </div>
+                
+                <h3 className="text-2xl font-bold text-white mb-3">{selectedCard.name}</h3>
+                
+                <p className="text-white/60 text-sm leading-relaxed mb-8">
+                  {lang === "ar" 
+                    ? `نقدم في هذه الخدمة حلولاً متقدمة لـ ${selectedCard.name} بأعلى معايير الجودة والأمان لضمان نجاح أعمالك.`
+                    : lang === "ku"
+                    ? `لە کاتی پێشکەشکردنی ئەم خزمەتگوزارییەدا، باشترین چارەسەرەکان بۆ ${selectedCard.name} دابین دەکەین بە بەرزترین کوالێتی.`
+                    : `We provide advanced solutions for ${selectedCard.name} with the highest standards of quality and security to ensure your business success.`}
+                </p>
+
+                <a
+                  href="/contact"
+                  className="w-full py-3.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-white font-bold text-sm transition-all duration-300 shadow-lg shadow-sky-500/20"
+                >
+                  {actionButtons.quote}
+                </a>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }
