@@ -1,6 +1,6 @@
 {
   "name": "kodify-system",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Premium Bilingual POS & Retail Management Desktop Application",
   "main": "dist-electron/main.js",
   "author": "Yaqoot Team",

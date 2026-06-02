@@ -152,10 +152,6 @@ export const Inventory: React.FC = () => {
     let finalPrice = Number(price);
     let finalCost = Number(cost);
 
-    // Auto convert pricing to thousands if entered as <= 100
-    if (finalPrice > 0 && finalPrice <= 100) finalPrice *= 1000;
-    if (finalCost > 0 && finalCost <= 100) finalCost *= 1000;
-
     // Business rule validation: Sales Price should cover cost
     if (user?.role === 'admin' && finalPrice <= finalCost) {
       setErrorMsg(language === 'ar' ? 'يجب أن يكون سعر البيع أكبر من سعر التكلفة' : 'Selling price must be greater than cost price');
@@ -540,11 +536,6 @@ export const Inventory: React.FC = () => {
                     step="any"
                     value={cost || ''}
                     onChange={(e) => setCost(Number(e.target.value))}
-                    onBlur={() => {
-                      if (cost > 0 && cost < 1000) {
-                        setCost(cost * 1000);
-                      }
-                    }}
                     className="bg-slate-800 border border-slate-700 text-amber-400 px-3 py-2 rounded-lg text-xs focus:border-teal-500 font-mono font-bold"
                     required
                     placeholder="0"
@@ -557,11 +548,6 @@ export const Inventory: React.FC = () => {
                     step="any"
                     value={price || ''}
                     onChange={(e) => setPrice(Number(e.target.value))}
-                    onBlur={() => {
-                      if (price > 0 && price < 1000) {
-                        setPrice(price * 1000);
-                      }
-                    }}
                     className="bg-slate-800 border border-slate-700 text-teal-400 px-3 py-2 rounded-lg text-xs focus:border-teal-500 font-mono font-bold"
                     required
                     placeholder="0"
