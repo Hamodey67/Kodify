@@ -1,0 +1,1 @@
+ALTER TABLE `products` ADD `name_ku` text;

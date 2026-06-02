@@ -1,0 +1,27 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1779744172573,
+      "tag": "0000_smiling_randall_flagg",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1780017171143,
+      "tag": "0001_serious_lorna_dane",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1780371000000,
+      "tag": "0002_price_override_audit",
+      "breakpoints": true
+    }
+  ]
+}
