@@ -183,7 +183,7 @@ function generateReceiptHtml(data: PrintReceiptData): string {
       </table>
       <div class="line"></div>
       <div class="text-center bold">Thank You</div>
-      <div style="font-size: 8px; color: #888; text-align: center; margin-top: 25px; font-weight: 500; letter-spacing: 0.5px;">SYSTEM BY KODIFY</div>
+      <div style="font-size: 7px; color: #888; text-align: center; margin-top: 25px; font-weight: 500; letter-spacing: 0.5px;">KODIFY SYSTEM</div>
     </body>
     </html>
   `;
