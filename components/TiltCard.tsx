@@ -20,6 +20,8 @@ export default function TiltCard({
   const ref = useRef<HTMLDivElement | null>(null);
   const [style, setStyle] = useState<React.CSSProperties>({});
   const [glareStyle, setGlareStyle] = useState<React.CSSProperties>({ opacity: 0 });
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
 
   const onMove = (e: React.MouseEvent) => {
     const el = ref.current;
@@ -36,11 +38,14 @@ export default function TiltCard({
       transform: `perspective(900px) rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg) translateZ(0)`,
     });
 
+    setMousePos({ x: Math.round(px * 100), y: Math.round(py * 100) });
+    setIsHovered(true);
+
     if (glare) {
       setGlareStyle({
         opacity: 0.35,
         background: `radial-gradient(600px circle at ${Math.round(px * 100)}% ${Math.round(py * 100)}%,
-          rgba(255,255,255,.35), rgba(255,255,255,0) 55%)`,
+          rgba(255,255,255,.25), rgba(255,255,255,0) 55%)`,
       });
     }
   };
@@ -48,6 +53,7 @@ export default function TiltCard({
   const onLeave = () => {
     setStyle({ transform: "perspective(900px) rotateX(0deg) rotateY(0deg)" });
     setGlareStyle({ opacity: 0 });
+    setIsHovered(false);
   };
 
   return (
@@ -62,9 +68,26 @@ export default function TiltCard({
         ...style,
       }}
     >
+      {/* Spotlight Border Glow */}
+      <div
+        className="pointer-events-none absolute -inset-[1px] rounded-[inherit] z-30"
+        style={{
+          background: `radial-gradient(300px circle at ${mousePos.x}% ${mousePos.y}%, 
+            rgba(34, 211, 238, 0.45), 
+            rgba(56, 189, 248, 0.05) 50%, 
+            transparent 100%)`,
+          padding: '1px',
+          WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+          WebkitMaskComposite: 'xor',
+          maskComposite: 'exclude',
+          opacity: isHovered ? 1 : 0,
+          transition: "opacity 300ms ease",
+        }}
+      />
+
       {glare && (
         <div
-          className="pointer-events-none absolute inset-0 rounded-[inherit]"
+          className="pointer-events-none absolute inset-0 rounded-[inherit] z-20"
           style={{
             transition: "opacity 250ms ease",
             ...glareStyle,
@@ -73,7 +96,7 @@ export default function TiltCard({
       )}
 
       {/* content layer */}
-      <div className="relative [transform:translateZ(20px)]">
+      <div className="relative [transform:translateZ(20px)] w-full h-full">
         {children}
       </div>
     </div>
