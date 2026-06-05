@@ -80,8 +80,10 @@ export default function ChatBot() {
               
               {messages.map((m) => (
                 <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`p-3 rounded-2xl text-sm max-w-[85%] ${
-                    m.role === 'user' ? 'bg-blue-600 text-white shadow-lg' : 'bg-white dark:bg-zinc-800 dark:text-white border'
+                  <div className={`p-3 rounded-2xl text-sm max-w-[85%] whitespace-pre-wrap break-words ${
+                    m.role === 'user' 
+                      ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg rounded-tr-none' 
+                      : 'bg-white/80 dark:bg-zinc-800/80 dark:text-white border border-zinc-200/40 dark:border-zinc-700/40 rounded-tl-none shadow-sm'
                   }`}>
                     {m.content}
                   </div>

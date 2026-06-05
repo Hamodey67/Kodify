@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import SplashScreen from "@/components/SplashScreen";
 import BackgroundClient from "@/components/backgroundClient";
+import ChatBot from "@/components/ChatBot";
 import { motion } from "framer-motion";
 
 export default function LayoutClientWrapper({
@@ -28,6 +29,7 @@ export default function LayoutClientWrapper({
           <main id="content" className="relative min-h-screen">
             {children}
           </main>
+          <ChatBot />
         </motion.div>
       )}
     </>
