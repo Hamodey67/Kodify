@@ -54,8 +54,8 @@ export default function BackgroundMindLike() {
         "--my": 0,
       }}
     >
-      {/* Root background color */}
-      <div className="absolute inset-0 bg-[#101a2e]" />
+      {/* Root background color transparent so Aurora shows through */}
+      <div className="absolute inset-0 bg-transparent" />
 
       {/* Cyber-glow header beam (shines from the top center) */}
       <div 
