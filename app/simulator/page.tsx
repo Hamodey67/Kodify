@@ -1,9 +1,18 @@
 "use client";
 
-import InteractiveSimulator from "@/components/InteractiveSimulator";
+import dynamic from "next/dynamic";
 import ProjectsSection from "@/components/projects/ProjectsSection";
 import Footer from "@/components/Footer";
 import Reveal from "@/components/Reveal";
+
+const InteractiveSimulator = dynamic(() => import("@/components/InteractiveSimulator"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex min-h-[320px] items-center justify-center text-sm font-semibold text-white/40">
+      Loading simulator...
+    </div>
+  ),
+});
 
 export default function SimulatorPage() {
   return (

@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import Navbar from "@/components/Navbar";
 import SplashScreen from "@/components/SplashScreen";
 import BackgroundClient from "@/components/backgroundClient";
-import ChatBot from "@/components/ChatBot";
 import { motion } from "framer-motion";
 import Lenis from "lenis";
 import gsap from "gsap";
@@ -13,18 +13,20 @@ import { useApp } from "@/app/providers";
 
 gsap.registerPlugin(ScrollTrigger);
 
+const ChatBot = dynamic(() => import("@/components/ChatBot"), { ssr: false });
+
 export default function LayoutClientWrapper({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [showContent, setShowContent] = useState(false);
+  const [splashDone, setSplashDone] = useState(false);
   const { lang } = useApp();
   const isRtl = lang === "ar" || lang === "ku";
 
-  // Initialize Lenis smooth scrolling
+  // Initialize Lenis smooth scrolling only after splash completes
   useEffect(() => {
-    if (!showContent) return;
+    if (!splashDone) return;
 
     const isTouchDevice = window.matchMedia("(hover: none), (pointer: coarse)").matches;
 
@@ -70,28 +72,26 @@ export default function LayoutClientWrapper({
       lenis.destroy();
       delete (window as any).lenis;
     };
-  }, [showContent]);
+  }, [splashDone]);
 
   return (
     <>
-      <SplashScreen onComplete={() => setShowContent(true)} />
-      
-      {showContent && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1.2, ease: "easeOut" }}
-          dir={isRtl ? "rtl" : "ltr"}
-          lang={lang === "ku" ? "ckb" : lang}
-        >
-          <BackgroundClient />
-          <Navbar />
-          <main id="content" className="relative min-h-screen">
-            {children}
-          </main>
-          <ChatBot />
-        </motion.div>
-      )}
+      <SplashScreen onComplete={() => setSplashDone(true)} />
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: splashDone ? 1 : 0 }}
+        transition={{ duration: 1.2, ease: "easeOut" }}
+        dir={isRtl ? "rtl" : "ltr"}
+        lang={lang === "ku" ? "ckb" : lang}
+      >
+        <BackgroundClient />
+        <Navbar />
+        <main id="content" className="relative min-h-screen">
+          {children}
+        </main>
+        <ChatBot />
+      </motion.div>
     </>
   );
 }

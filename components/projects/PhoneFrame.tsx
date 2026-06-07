@@ -1,11 +1,58 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const MENU_EMBED_URL = "https://spinozacafe.com/";
+const MOBILE_VIEWPORT_WIDTH = 390;
 const SCREEN_CLIP = "overflow-hidden rounded-[46px]";
 
 type PhoneTab = "store" | "menu" | "pos";
+
+function MenuLivePreview() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [layout, setLayout] = useState({ scale: 1, height: 800 });
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const update = () => {
+      const width = el.clientWidth;
+      const height = el.clientHeight;
+      if (!width || !height) return;
+
+      const scale = width / MOBILE_VIEWPORT_WIDTH;
+      setLayout({
+        scale,
+        height: height / scale,
+      });
+    };
+
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={containerRef} dir="ltr" className={cn("absolute inset-0", SCREEN_CLIP)}>
+      <iframe
+        src={MENU_EMBED_URL}
+        title="Spinoza Cafe live menu"
+        loading="lazy"
+        allow="fullscreen"
+        data-lenis-prevent
+        className="absolute top-0 left-0 block border-0 bg-[#0b1220] origin-top-left"
+        style={{
+          width: `${MOBILE_VIEWPORT_WIDTH}px`,
+          height: `${layout.height}px`,
+          transform: `scale(${layout.scale})`,
+        }}
+      />
+    </div>
+  );
+}
 
 function PhoneScreenContent({
   activeTab,
@@ -15,22 +62,7 @@ function PhoneScreenContent({
   children?: React.ReactNode;
 }) {
   if (activeTab === "menu") {
-    return (
-      <div dir="ltr" className={cn("absolute inset-0", SCREEN_CLIP)}>
-        <iframe
-          src={MENU_EMBED_URL}
-          title="Spinoza Cafe live menu"
-          loading="lazy"
-          allow="fullscreen"
-          data-lenis-prevent
-          className="absolute top-0 left-0 block h-full border-0 bg-[#0b1220]"
-          style={{
-            width: "calc(100% + 18px)",
-            maxWidth: "none",
-          }}
-        />
-      </div>
-    );
+    return <MenuLivePreview />;
   }
 
   return (

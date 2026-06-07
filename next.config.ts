@@ -12,8 +12,6 @@ const nextConfig: NextConfig = {
   trailingSlash: true,
 
   images: {
-    // ✅ Required with static export to avoid Image Optimization server
-    unoptimized: true,
     dangerouslyAllowSVG: true,
   },
 

@@ -49,7 +49,8 @@ export const t = {
       welcome: "هلا بيك حجي/حجية! شلون أكدر أساعدك؟",
       online: "متصل",
       error: "حدث خطأ بالاتصال: ",
-      offline: "الخدمة متوقفة مؤقتاً"
+      offline: "الخدمة متوقفة مؤقتاً",
+      quickReplies: ["خدماتنا", "اطلب عرض سعر", "تواصل معنا", "مشاريعنا"],
     }
   },
   en: {
@@ -102,7 +103,8 @@ export const t = {
       welcome: "Hello! How can I help you today?",
       online: "Online",
       error: "Connection error: ",
-      offline: "Service temporarily unavailable"
+      offline: "Service temporarily unavailable",
+      quickReplies: ["Our services", "Get a quote", "Contact us", "Our projects"],
     }
   },
   ku: {
@@ -155,7 +157,8 @@ export const t = {
       welcome: "سڵاو! چۆن دەتوانم یارمەتیت بدەم ئەمڕۆ؟",
       online: "چالاکە",
       error: "کێشە لە پەیوەندیکردندا هەیە: ",
-      offline: "خزمەتگوزارییەکە بە شێوەیەکی کاتی بەردەست نییە"
+      offline: "خزمەتگوزارییەکە بە شێوەیەکی کاتی بەردەست نییە",
+      quickReplies: ["خزمەتگوزارییەکانمان", "داوای نرخ", "پەیوەندی", "پڕۆژەکانمان"],
     }
   },
 } as const;
