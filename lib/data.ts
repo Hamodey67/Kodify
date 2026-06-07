@@ -84,18 +84,6 @@ export const projects = [
     href: "https://barezagroup.com/",
   },
   {
-    id: "spinoza-cafe",
-    image: "/spinoza.png",
-    arTitle: "سبينوزا كافيه (Spinoza Cafe)",
-    enTitle: "Spinoza Cafe & Restaurant",
-    kuTitle: "کافێ سبینۆزا (Spinoza Cafe)",
-    arDesc: "تجربة رقمية فريدة للمطاعم تشمل منيو تفاعلي وتصميم بصري جذاب.",
-    enDesc: "Unique digital restaurant experience with interactive menu and visual design.",
-    kuDesc: "ئەزموونێکی دیجیتاڵی نایاب بۆ چێشتخانە و کافتریایەک کە مێنیۆی کارلێکەر و دیزاینێکی سەرنجڕاکێش لەخۆدەگرێت.",
-    stack: ["UX/UI", "Responsive", "Digital Menu"],
-    href: "https://spinozacafe.com/",
-  },
-  {
     id: "adm-sport",
     image: "/adm-sport.png",
     arTitle: "ADM سبورت (ADM Sport)",

@@ -26,6 +26,8 @@ export default function LayoutClientWrapper({
   useEffect(() => {
     if (!showContent) return;
 
+    const isTouchDevice = window.matchMedia("(hover: none), (pointer: coarse)").matches;
+
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -33,7 +35,9 @@ export default function LayoutClientWrapper({
       gestureOrientation: "vertical",
       smoothWheel: true,
       wheelMultiplier: 1,
-      touchMultiplier: 2,
+      touchMultiplier: isTouchDevice ? 1 : 2,
+      syncTouch: isTouchDevice,
+      syncTouchLerp: 0.075,
     });
 
     (window as any).lenis = lenis;

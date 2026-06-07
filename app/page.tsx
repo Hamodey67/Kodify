@@ -41,9 +41,7 @@ export default function HomePage() {
 
       <div className="section-divider" />
 
-      <Reveal delayMs={80}>
-        <ServicesTabs />
-      </Reveal>
+      <ServicesTabs />
 
       <div className="section-divider" />
 

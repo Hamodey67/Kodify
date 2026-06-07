@@ -329,153 +329,220 @@ export default function Navbar() {
       {/* Mobile Sidebar */}
       <AnimatePresence>
         {open && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
             className="fixed inset-0 z-[110] lg:hidden"
           >
-            {/* Backdrop with reduced blur on mobile for performance */}
-            <div className="absolute inset-0 bg-black/40 dark:bg-slate-950/80 backdrop-blur-lg md:backdrop-blur-2xl" onClick={() => setOpen(false)} />
-            
-            <motion.div 
-              initial={{ x: isRtl ? "-100%" : "100%", opacity: 0 }}
+            <div
+              className="absolute inset-0 bg-[#020810]/70 backdrop-blur-md"
+              onClick={() => setOpen(false)}
+              aria-hidden
+            />
+
+            <motion.aside
+              initial={{ x: isRtl ? "-100%" : "100%", opacity: 0.6 }}
               animate={{ x: 0, opacity: 1 }}
-              exit={{ x: isRtl ? "-100%" : "100%", opacity: 0 }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              exit={{ x: isRtl ? "-100%" : "100%", opacity: 0.6 }}
+              transition={{ type: "spring", damping: 28, stiffness: 260 }}
               className={cn(
-                "absolute top-0 h-full w-[85%] max-w-sm bg-[var(--surface)] border-r border-[var(--border)] p-8 flex flex-col pt-24 shadow-[var(--card-shadow)]",
+                "absolute top-0 flex h-full w-[88%] max-w-[340px] flex-col",
+                "border-white/[0.08] bg-[#06111f]/92 backdrop-blur-2xl",
+                "shadow-[0_0_60px_rgba(0,0,0,0.55)]",
                 isRtl ? "left-0 border-r" : "right-0 border-l"
               )}
+              aria-label={lang === "ar" ? "القائمة" : "Navigation menu"}
             >
-               {/* Cyber Background Accent */}
-               <div className="absolute top-0 left-0 w-full h-full opacity-[0.02] pointer-events-none overflow-hidden">
-                  <div className="absolute inset-0 bg-[linear-gradient(rgba(43,127,255,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(43,127,255,0.1)_1px,transparent_1px)] bg-[size:30px_30px]" />
-               </div>
+              {/* Ambient accents */}
+              <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+                <div className="absolute -top-24 start-0 h-56 w-56 rounded-full bg-[var(--accent-primary)]/10 blur-[80px]" />
+                <div className="absolute bottom-24 end-0 h-48 w-48 rounded-full bg-cyan-400/8 blur-[70px]" />
+                <div
+                  className="absolute inset-0 opacity-[0.035]"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(rgba(91,164,255,0.45) 1px, transparent 1px), linear-gradient(90deg, rgba(91,164,255,0.45) 1px, transparent 1px)",
+                    backgroundSize: "28px 28px",
+                  }}
+                />
+              </div>
 
-               <div className="flex flex-col gap-2 relative z-10">
+              {/* Scrollable nav */}
+              <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-6 pt-[5.5rem] sm:px-6">
+                <nav className="flex flex-col gap-1.5" aria-label="Main">
                   {navItems.map((it, idx) => {
                     const active = isActive(it.href);
                     return (
                       <motion.div
                         key={it.href}
-                        initial={{ opacity: 0, x: isRtl ? -20 : 20 }}
+                        initial={{ opacity: 0, x: isRtl ? -16 : 16 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.1 + idx * 0.05 }}
+                        transition={{ delay: 0.08 + idx * 0.06, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                       >
                         <Link
                           href={it.href}
                           onClick={() => handleNavClick(it.href)}
                           className={cn(
-                            "group relative flex items-center justify-between px-6 py-5 rounded-[2rem] transition-all duration-300",
-                            active 
-                              ? "bg-[var(--accent-muted)] border border-[var(--border-strong)] shadow-md" 
-                              : "hover:bg-[var(--accent-muted)]/50"
+                            "group relative flex items-center gap-3 rounded-2xl px-4 py-3.5 transition-all duration-200 ease-out",
+                            active
+                              ? "border border-[var(--accent-primary)]/25 bg-gradient-to-r from-[var(--accent-primary)]/16 via-[var(--accent-primary)]/8 to-white/[0.02] shadow-[0_0_28px_rgba(43,127,255,0.14)] backdrop-blur-md"
+                              : "border border-transparent hover:border-white/[0.06] hover:bg-white/[0.04]"
                           )}
                         >
-                          <div className="flex items-center gap-4">
-                             <div className={cn(
-                               "w-1.5 h-1.5 rounded-full transition-all duration-500",
-                               active ? "bg-[var(--accent-primary)] scale-125" : "bg-[var(--border-strong)]"
-                             )} />
-                             <span className={cn(
-                               "text-xl font-black uppercase tracking-tight transition-colors",
-                               active ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)] group-hover:text-[var(--heading)]"
-                             )}>
-                               {it.label}
-                             </span>
-                          </div>
-                          
                           {active && (
-                            <motion.div layoutId="activeMobileDot" className="w-1.5 h-1.5 bg-[var(--accent-primary)] rounded-full" />
+                            <span
+                              className={cn(
+                                "absolute inset-y-2.5 w-[3px] rounded-full bg-gradient-to-b from-[var(--accent-primary)] to-[#85bdff] shadow-[0_0_10px_rgba(43,127,255,0.65)]",
+                                isRtl ? "right-0" : "left-0"
+                              )}
+                            />
                           )}
+                          <span className="flex w-5 shrink-0 items-center justify-center">
+                            <span
+                              className={cn(
+                                "rounded-full transition-all duration-200",
+                                active
+                                  ? "h-2 w-2 bg-[var(--accent-primary)] shadow-[0_0_10px_var(--accent-primary)]"
+                                  : "h-1.5 w-1.5 bg-white/25 group-hover:bg-white/45"
+                              )}
+                            />
+                          </span>
+                          <span
+                            className={cn(
+                              "min-w-0 flex-1 text-[15px] font-semibold leading-snug tracking-tight transition-colors duration-200",
+                              active
+                                ? "text-white"
+                                : "text-white/55 group-hover:text-white/90"
+                            )}
+                          >
+                            {it.label}
+                          </span>
                         </Link>
                       </motion.div>
                     );
                   })}
-                  <div className="my-3 h-px bg-[var(--border)]" />
-                  <p className="mb-2 px-2 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
+                </nav>
+
+                {/* Soft divider */}
+                <div
+                  className="my-6 h-px w-full bg-gradient-to-r from-transparent via-white/12 to-transparent"
+                  aria-hidden
+                />
+
+                {/* Security training */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.32, duration: 0.35 }}
+                >
+                  <p className="mb-3 px-1 text-[10px] font-bold uppercase tracking-[0.24em] text-white/38">
                     {tx.nav.securityTraining}
                   </p>
-                  {securityLinks.map((item, idx) => {
-                    const Icon = item.icon;
-                    const active = isActive(item.href);
-                    return (
-                      <motion.div
-                        key={item.href}
-                        initial={{ opacity: 0, x: isRtl ? -20 : 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.1 + (navItems.length + idx) * 0.05 }}
-                      >
-                        <Link
-                          href={item.href}
-                          onClick={() => handleNavClick(item.href)}
-                          className={cn(
-                            "group relative mb-2 flex items-center justify-between rounded-[2rem] px-6 py-4 transition-all duration-300",
-                            active
-                              ? "border border-[var(--border-strong)] bg-[var(--accent-muted)] shadow-md"
-                              : "hover:bg-[var(--accent-muted)]/50"
-                          )}
+                  <div className="flex flex-col gap-1.5">
+                    {securityLinks.map((item, idx) => {
+                      const Icon = item.icon;
+                      const active = isActive(item.href);
+                      return (
+                        <motion.div
+                          key={item.href}
+                          initial={{ opacity: 0, x: isRtl ? -16 : 16 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{
+                            delay: 0.36 + idx * 0.06,
+                            duration: 0.35,
+                            ease: [0.22, 1, 0.36, 1],
+                          }}
                         >
-                          <div className="flex items-center gap-4">
-                            <Icon size={18} className={active ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)]"} />
+                          <Link
+                            href={item.href}
+                            onClick={() => handleNavClick(item.href)}
+                            className={cn(
+                              "group relative flex items-center gap-3 rounded-2xl px-4 py-3 transition-all duration-200 ease-out",
+                              active
+                                ? "border border-[var(--accent-primary)]/25 bg-gradient-to-r from-[var(--accent-primary)]/14 via-[var(--accent-primary)]/6 to-transparent shadow-[0_0_24px_rgba(43,127,255,0.12)] backdrop-blur-md"
+                                : "border border-transparent hover:border-white/[0.06] hover:bg-white/[0.04]"
+                            )}
+                          >
+                            {active && (
+                              <span
+                                className={cn(
+                                  "absolute inset-y-2.5 w-[3px] rounded-full bg-gradient-to-b from-[var(--accent-primary)] to-[#85bdff] shadow-[0_0_10px_rgba(43,127,255,0.65)]",
+                                  isRtl ? "right-0" : "left-0"
+                                )}
+                              />
+                            )}
+                            <span className="flex w-5 shrink-0 items-center justify-center">
+                              <Icon
+                                size={17}
+                                strokeWidth={active ? 2.25 : 2}
+                                className={cn(
+                                  "transition-colors duration-200",
+                                  active ? "text-[var(--accent-primary)]" : "text-white/40 group-hover:text-white/70"
+                                )}
+                              />
+                            </span>
                             <span
                               className={cn(
-                                "text-lg font-black tracking-tight transition-colors",
-                                active ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)] group-hover:text-[var(--heading)]"
+                                "min-w-0 flex-1 text-sm font-medium leading-snug transition-colors duration-200",
+                                active ? "text-white" : "text-white/55 group-hover:text-white/90"
                               )}
                             >
                               {item.label}
                             </span>
-                          </div>
-                        </Link>
-                      </motion.div>
-                    );
-                  })}
-               </div>
+                          </Link>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              </div>
 
-               <div className="mt-auto relative z-10">
-                 {/* Language HUD Control */}
-                 <div className="p-1.5 bg-[var(--accent-muted)]/60 border border-[var(--border)] rounded-[2rem] mb-6 flex gap-1">
-                    {langs.map((l) => (
+              {/* Footer controls */}
+              <div className="relative z-10 shrink-0 border-t border-white/[0.06] bg-[#06111f]/80 px-5 py-5 backdrop-blur-xl sm:px-6">
+                {/* Language segmented control */}
+                <div className="relative mb-4 flex rounded-2xl border border-white/[0.08] bg-white/[0.04] p-1 backdrop-blur-md">
+                  {langs.map((l) => {
+                    const selected = l.key === lang;
+                    return (
                       <button
                         key={l.key}
+                        type="button"
                         onClick={() => {
                           setLang(l.key);
                           setOpen(false);
                         }}
                         className={cn(
-                          "flex-1 py-3 px-2 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all",
-                          l.key === lang 
-                            ? "bg-[var(--accent-primary)] text-white shadow-lg" 
-                            : "text-[var(--text-muted)] hover:text-[var(--heading)] hover:bg-[var(--accent-muted)]"
+                          "relative z-10 flex-1 rounded-xl px-2 py-2.5 text-[11px] font-semibold tracking-wide transition-colors duration-200",
+                          selected ? "text-white" : "text-white/45 hover:text-white/75"
                         )}
                       >
-                        {l.label.substring(0, 3)}
+                        {selected && (
+                          <motion.span
+                            layoutId="mobileSidebarLang"
+                            className="absolute inset-0 rounded-xl bg-gradient-to-b from-[var(--accent-primary)] to-[#1a5fd6] shadow-[0_4px_18px_rgba(43,127,255,0.35)]"
+                            transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                          />
+                        )}
+                        <span className="relative z-10">{l.label}</span>
                       </button>
-                    ))}
-                 </div>
+                    );
+                  })}
+                </div>
 
-                 {/* Premium Contact Button */}
-                 <Link
-                    href="/contact"
-                    onClick={() => setOpen(false)}
-                    className="group relative flex items-center justify-between w-full p-1 rounded-[2.5rem] bg-[var(--accent-primary)] text-white overflow-hidden shadow-lg active:scale-[0.98] transition-all"
-                 >
-                    <span className="ms-8 font-black text-lg uppercase tracking-wider">{tx.nav.contact}</span>
-                    <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center group-hover:bg-white/30 transition-colors">
-                       <Rocket size={24} className={cn("transition-transform duration-500 group-hover:-translate-y-1 group-hover:translate-x-1", isRtl && "rotate-[-90deg]")} />
-                    </div>
-                 </Link>
-                 
-                 <div className="mt-8 flex justify-center">
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--accent-muted)]/40 border border-[var(--border)]">
-                       <div className="w-1 h-1 bg-[var(--accent-primary)] rounded-full animate-pulse" />
-                       <span className="text-[8px] font-black text-[var(--text-muted)] uppercase tracking-[0.3em]">System_Online_v4.0</span>
-                    </div>
-                 </div>
-               </div>
-            </motion.div>
+                {/* Contact CTA */}
+                <Link
+                  href="/contact"
+                  onClick={() => setOpen(false)}
+                  className="group relative flex w-full items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-gradient-to-r from-[var(--accent-primary)] via-[#3d8bff] to-[#1c5fd6] px-5 py-3.5 text-sm font-semibold text-white shadow-[0_10px_32px_rgba(43,127,255,0.32)] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_14px_40px_rgba(43,127,255,0.42)] active:translate-y-0"
+                >
+                  <span className="absolute inset-0 bg-gradient-to-t from-white/0 to-white/10 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+                  <Rocket size={17} className="relative z-10 shrink-0" />
+                  <span className="relative z-10">{tx.nav.contact}</span>
+                </Link>
+              </div>
+            </motion.aside>
           </motion.div>
         )}
       </AnimatePresence>

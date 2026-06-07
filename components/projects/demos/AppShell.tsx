@@ -21,9 +21,9 @@ export function AppShell({
   bottom?: React.ReactNode;
 }) {
   return (
-    <div dir={dir} className="h-full text-white flex flex-col bg-[#0b1220]">
-      {/* Top app bar */}
-      <div className="px-4 pt-4 pb-3 border-b border-white/10 bg-black/30 backdrop-blur">
+    <div dir={dir} className="flex h-full min-h-0 flex-col bg-[#0b1220] text-white">
+      {/* Top app bar — solid bg + top inset for Dynamic Island; avoids corner bleed from backdrop-blur */}
+      <div className="shrink-0 border-b border-white/10 bg-[#0a1018] px-4 pb-3 pt-10">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             {logoSrc ? (
@@ -52,10 +52,10 @@ export function AppShell({
       </div>
 
       {/* Main */}
-      <div className="flex-1 overflow-hidden">{children}</div>
+      <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
 
       {/* Bottom nav (optional) */}
-      {bottom ? <div className="border-t border-white/10 bg-black/25">{bottom}</div> : null}
+      {bottom ? <div className="shrink-0 border-t border-white/10 bg-black/25">{bottom}</div> : null}
     </div>
   );
 }
@@ -98,7 +98,7 @@ export function ScreenTransition({
 }) {
 
   return (
-    <div key={k} className="h-full animate-[fadeIn_.18s_ease-out]">
+    <div key={k} className="h-full min-h-0 animate-[fadeIn_.18s_ease-out]">
       <style jsx>{`
         @keyframes fadeIn {
           from {

@@ -31,7 +31,6 @@ SERVICES:
 
 PORTFOLIO (OUR PROJECTS):
 - Bareza Group Corporate (مجموعة باريزة): Large-scale corporate portal with high technical specs and advanced CMS (Next.js, Enterprise).
-- Spinoza Cafe & Restaurant (سبينوزا كافيه): Unique digital restaurant experience with interactive menu and visual design (UX/UI, Responsive, Digital Menu).
 - ADM Sport Platform (ADM سبورت): Integrated sports store with advanced order and subscription management (E-commerce, Stripe, Logistics).
 
 KEY PEOPLE & LEADERSHIP (إدارة الشركة):

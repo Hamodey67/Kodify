@@ -60,8 +60,8 @@ export default function PosDemo() {
       rightLabel={t.common.demo}
       dir={demoDir(lang)}
     >
-      <div className="h-full">
-        <div className="px-4 pt-4">
+      <div className="flex h-full min-h-0 flex-col">
+        <div className="shrink-0 px-4 pt-4">
           <div className="flex items-center justify-between gap-2">
             <div className="text-sm text-white/70">
               {itemsCount} {t.common.items}
@@ -75,9 +75,9 @@ export default function PosDemo() {
           </div>
         </div>
 
-        <div className="px-4 pt-3 pb-4 h-[540px] overflow-hidden">
+        <div className="min-h-0 flex-1 overflow-hidden px-4 pb-4 pt-3">
           <ScreenTransition k={`${itemsCount}-${paid}-${payMethod}`}>
-            <div className="h-full grid grid-cols-1 gap-3 overflow-auto pe-1">
+            <div className="grid h-full min-h-0 grid-cols-1 gap-3 overflow-x-hidden overflow-y-auto scrollbar-none" data-lenis-prevent>
               {/* Grid of items */}
               <div className="grid grid-cols-2 gap-3">
                 {ITEMS.map((it) => (

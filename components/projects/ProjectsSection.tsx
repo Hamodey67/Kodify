@@ -204,10 +204,10 @@ export default function ProjectsSection({ embedded = false }: { embedded?: boole
                   initial={{ opacity: 0, scale: 0.85, y: 30 }}
                   animate={{ opacity: 1, scale: 0.92, y: 0 }}
                   transition={{ type: "spring", damping: 20, stiffness: 100 }}
-                  className="relative z-10"
+                  className="relative z-10 shrink-0"
                 >
-                  <PhoneFrame>
-                    {current.demo}
+                  <PhoneFrame activeTab={active}>
+                    {active !== "menu" ? current.demo : null}
                   </PhoneFrame>
                 </motion.div>
 

@@ -31,10 +31,14 @@ import {
   Users,
   ArrowLeft,
   ArrowRight,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 type TabKey = "dev" | "cloud" | "sec";
 type Lang = "ar" | "en" | "ku";
+
+const TAB_ORDER: TabKey[] = ["dev", "cloud", "sec"];
 
 const tabsData: Record<
   TabKey,
@@ -210,6 +214,15 @@ const panelVariants: Variants = {
   }),
 };
 
+const panelVariantsFlat: Variants = {
+  hidden: { opacity: 0, y: 18 },
+  show: (c: Custom) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: c.delay, duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+  }),
+};
+
 const contentStagger = {
   hidden: {},
   show: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } },
@@ -228,10 +241,10 @@ export default function ServicesTabs() {
   const reduce = useReducedMotion();
 
   const sectionRef = useRef<HTMLElement>(null);
-  const inView = useInView(sectionRef, { once: false, amount: 0.25 });
-  const started = useInView(sectionRef, { once: true, amount: 0.3 });
+  const started = useInView(sectionRef, { once: true, amount: 0.18, margin: "0px 0px -8% 0px" });
 
   const [lowPower, setLowPower] = useState(false);
+  const [scrollPaused, setScrollPaused] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 900px)");
     const update = () => setLowPower(mq.matches);
@@ -249,8 +262,28 @@ export default function ServicesTabs() {
   const rotY = useSpring(useTransform(mvX, [-0.5, 0.5], [-15, 15]), springCfg);
   const rotX = useSpring(useTransform(mvY, [-0.5, 0.5], [11, -11]), springCfg);
 
-  const handlePointer = (e: React.PointerEvent<HTMLDivElement>) => {
+  // Pause mouse parallax while scrolling — prevents jitter at section entry
+  useEffect(() => {
     if (disable3D) return;
+    let timer: ReturnType<typeof setTimeout>;
+    const pause = () => {
+      setScrollPaused(true);
+      mvX.set(0);
+      mvY.set(0);
+      clearTimeout(timer);
+      timer = setTimeout(() => setScrollPaused(false), 220);
+    };
+    window.addEventListener("wheel", pause, { passive: true });
+    window.addEventListener("touchmove", pause, { passive: true });
+    return () => {
+      window.removeEventListener("wheel", pause);
+      window.removeEventListener("touchmove", pause);
+      clearTimeout(timer);
+    };
+  }, [disable3D, mvX, mvY]);
+
+  const handlePointer = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (disable3D || scrollPaused) return;
     const r = e.currentTarget.getBoundingClientRect();
     mvX.set((e.clientX - r.left) / r.width - 0.5);
     mvY.set((e.clientY - r.top) / r.height - 0.5);
@@ -262,7 +295,12 @@ export default function ServicesTabs() {
 
   const goToProjects = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
-    startSlideTransition(isRtl, () => router.push("/our-projects"));
+    const slideLabel = {
+      ar: "مشاريعنا",
+      en: "Our Projects",
+      ku: "پڕۆژەکانمان",
+    }[lang];
+    startSlideTransition(isRtl, () => router.push("/our-projects"), slideLabel);
   };
 
   const tab = tabsData[active][lang];
@@ -290,16 +328,30 @@ export default function ServicesTabs() {
     { key: "sec" as const, label: tabsData.sec[lang].tabName, icon: ShieldCheck },
   ];
 
+  const activeIndex = TAB_ORDER.indexOf(active);
+  const goPrevTab = () => {
+    const next = (activeIndex - 1 + TAB_ORDER.length) % TAB_ORDER.length;
+    setActive(TAB_ORDER[next]);
+  };
+  const goNextTab = () => {
+    const next = (activeIndex + 1) % TAB_ORDER.length;
+    setActive(TAB_ORDER[next]);
+  };
+  const activeTabMeta = tabs.find((t) => t.key === active)!;
+  const ActiveTabIcon = activeTabMeta.icon;
+
   const animateState = started ? "show" : "hidden";
-  const idle = inView && !disable3D;
+  const idle = started && !disable3D;
   const statTilt = isRtl ? -9 : 9;
+  const panelV = disable3D ? panelVariantsFlat : panelVariants;
+  const sceneTilt = disable3D || scrollPaused ? undefined : { rotateX: rotX, rotateY: rotY };
 
   return (
     <section
       ref={sectionRef}
       id="services"
       dir={isRtl ? "rtl" : "ltr"}
-      className="services-3d w-full py-16 md:py-24 lg:py-28 relative overflow-hidden"
+      className="services-3d w-full py-12 sm:py-16 md:py-24 lg:py-28 relative"
     >
       {/* Atmospheric depth fog */}
       <div className="svc-fog" aria-hidden />
@@ -328,85 +380,135 @@ export default function ServicesTabs() {
       )}
 
       <div
-        className="svc-viewport max-w-7xl mx-auto px-5 sm:px-6 md:px-12 relative z-10"
-        onPointerMove={handlePointer}
-        onPointerLeave={resetPointer}
+        className="svc-viewport svc-interactive mx-auto w-full min-w-0 max-w-7xl px-4 sm:px-6 md:px-12 relative z-10"
+        {...(!disable3D
+          ? { onPointerMove: handlePointer, onPointerLeave: resetPointer }
+          : {})}
       >
         <motion.div
-          className="svc-scene"
+          className="svc-scene w-full max-w-full"
           variants={sceneVariants}
           initial="hidden"
           animate={animateState}
-          style={disable3D ? undefined : { rotateX: rotX, rotateY: rotY }}
+          style={sceneTilt}
         >
-          <div className="grid lg:grid-cols-12 gap-8 lg:gap-10 xl:gap-14 items-start">
-            {/* Stat panels — floating to the side, deeper + tilted */}
-            <div className="lg:col-span-4 order-1 lg:order-2 flex flex-col gap-5">
+          <div className="grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-12 lg:gap-10 xl:gap-14 items-start">
+            {/* Stat panels */}
+            <div className="order-2 lg:order-2 lg:col-span-4 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-1 lg:flex lg:flex-col lg:gap-5">
               {/* 5+ years */}
               <motion.div
-                className="svc-layer"
-                variants={panelVariants}
+                className="svc-layer min-w-0"
+                variants={panelV}
                 custom={{ z: -70, delay: 0.12, ry: statTilt }}
                 whileHover={disable3D ? undefined : { z: -20, transition: { type: "spring", stiffness: 200, damping: 20 } }}
-                style={{ transformStyle: "preserve-3d" }}
+                style={disable3D ? undefined : { transformStyle: "preserve-3d" }}
               >
                 <motion.div animate={idle ? { y: [0, -10, 0] } : { y: 0 }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}>
-                  <div className="svc-panel svc-panel-hoverable p-6 md:p-7 text-start">
-                    <div className="text-4xl md:text-[2.75rem] font-black leading-none tracking-tight mb-2.5 text-white">
+                  <div className="svc-panel svc-panel-hoverable p-4 sm:p-6 md:p-7 text-start">
+                    <div className="text-3xl sm:text-4xl md:text-[2.75rem] font-black leading-none tracking-tight mb-2 text-white">
                       <CountUp to={5} suffix="+" run={started} />
                     </div>
-                    <div className="text-sm font-semibold text-[var(--svc-text-muted)]">{yearsLabel}</div>
+                    <div className="text-xs sm:text-sm font-semibold text-[var(--svc-text-muted)]">{yearsLabel}</div>
                   </div>
                 </motion.div>
               </motion.div>
 
               {/* coverage */}
               <motion.div
-                className="svc-layer"
-                variants={panelVariants}
+                className="svc-layer min-w-0"
+                variants={panelV}
                 custom={{ z: -95, delay: 0.22, ry: statTilt }}
                 whileHover={disable3D ? undefined : { z: -30, transition: { type: "spring", stiffness: 200, damping: 20 } }}
-                style={{ transformStyle: "preserve-3d" }}
+                style={disable3D ? undefined : { transformStyle: "preserve-3d" }}
               >
                 <motion.div animate={idle ? { y: [0, 10, 0] } : { y: 0 }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}>
-                  <div className="svc-panel svc-panel-hoverable p-6 md:p-7 text-start">
-                    <div className="text-3xl md:text-4xl font-black leading-none tracking-tight mb-2.5 text-[var(--svc-accent-bright)]">
+                  <div className="svc-panel svc-panel-hoverable p-4 sm:p-6 md:p-7 text-start">
+                    <div className="text-xl sm:text-3xl md:text-4xl font-black leading-none tracking-tight mb-2 text-[var(--svc-accent-bright)]">
                       {coverageValue}
                     </div>
-                    <div className="text-sm font-semibold text-[var(--svc-text-muted)]">{coverageLabel}</div>
+                    <div className="text-xs sm:text-sm font-semibold text-[var(--svc-text-muted)]">{coverageLabel}</div>
                   </div>
                 </motion.div>
               </motion.div>
             </div>
 
-            {/* Main column */}
-            <div className="lg:col-span-8 order-2 lg:order-1 flex flex-col" style={{ transformStyle: "preserve-3d" }}>
+            {/* Main column — first on mobile */}
+            <div className="order-1 lg:order-1 lg:col-span-8 flex min-w-0 flex-col" style={disable3D ? undefined : { transformStyle: "preserve-3d" }}>
               {/* Header */}
               <motion.header
-                className="svc-layer mb-8 md:mb-9 text-start space-y-2.5 md:space-y-3"
-                variants={panelVariants}
+                className="svc-layer mb-6 sm:mb-8 md:mb-9 text-start space-y-2 sm:space-y-2.5 md:space-y-3"
+                variants={panelV}
                 custom={{ z: 25, delay: 0 }}
-                style={{ transformStyle: "preserve-3d" }}
+                style={disable3D ? undefined : { transformStyle: "preserve-3d" }}
               >
-                <span className="text-[11px] font-bold tracking-[0.22em] text-[var(--svc-accent-bright)] uppercase block">
+                <span className="text-[10px] sm:text-[11px] font-bold tracking-[0.18em] sm:tracking-[0.22em] text-[var(--svc-accent-bright)] uppercase block">
                   {labelText}
                 </span>
-                <h2 className="text-3xl sm:text-4xl md:text-[2.75rem] font-black text-white leading-[1.1] tracking-tight">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.75rem] font-black text-white leading-[1.15] tracking-tight">
                   {headerTitle}
                 </h2>
-                <p className="text-[var(--svc-text-muted)] text-sm sm:text-base md:text-lg font-medium leading-relaxed max-w-xl">
+                <p className="w-full text-[var(--svc-text-muted)] text-sm sm:text-base md:text-lg font-medium leading-relaxed max-w-xl break-words">
                   {headerDesc}
                 </p>
               </motion.header>
 
-              {/* Switcher — floats slightly forward */}
+              {/* Switcher — mobile: prev/next + dots | desktop: full tab row */}
               <motion.div
-                className="svc-layer -mx-5 px-5 sm:mx-0 sm:px-0 mb-7 md:mb-8 overflow-x-auto scrollbar-none"
-                variants={panelVariants}
+                className="svc-layer mb-5 sm:mb-7 md:mb-8 w-full min-w-0 max-w-full"
+                variants={panelV}
                 custom={{ z: 70, delay: 0.3 }}
-                style={{ transformStyle: "preserve-3d" }}
+                style={disable3D ? undefined : { transformStyle: "preserve-3d" }}
               >
-                <div className="svc-switcher-track inline-flex min-w-max sm:min-w-0 sm:w-full sm:flex-wrap gap-1 p-1.5 rounded-2xl" role="tablist" aria-label={headerTitle}>
+                {/* Mobile navigation */}
+                <div className="space-y-3 md:hidden">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={goPrevTab}
+                      aria-label={isRtl ? "الخدمة التالية" : "Previous service"}
+                      className="svc-tab-nav-btn relative z-10 grid shrink-0 place-items-center touch-manipulation"
+                    >
+                      {isRtl ? <ChevronRight size={20} strokeWidth={2.5} /> : <ChevronLeft size={20} strokeWidth={2.5} />}
+                    </button>
+
+                    <div className="svc-switcher-track flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-3 py-3">
+                      <ActiveTabIcon size={18} strokeWidth={2.5} className="shrink-0 text-[var(--svc-accent-bright)]" />
+                      <span className="truncate text-sm font-bold text-white">{activeTabMeta.label}</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={goNextTab}
+                      aria-label={isRtl ? "الخدمة السابقة" : "Next service"}
+                      className="svc-tab-nav-btn relative z-10 grid shrink-0 place-items-center touch-manipulation"
+                    >
+                      {isRtl ? <ChevronLeft size={20} strokeWidth={2.5} /> : <ChevronRight size={20} strokeWidth={2.5} />}
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-center gap-2" role="tablist" aria-label={headerTitle}>
+                    {tabs.map((t) => (
+                      <button
+                        key={t.key}
+                        type="button"
+                        role="tab"
+                        aria-selected={active === t.key}
+                        aria-label={t.label}
+                        onClick={() => setActive(t.key)}
+                        className={`relative z-10 h-2 rounded-full transition-all duration-300 touch-manipulation ${
+                          active === t.key ? "w-7 bg-[var(--svc-accent-bright)]" : "w-2 bg-white/25 hover:bg-white/40"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Desktop tabs */}
+                <div
+                  className="svc-switcher-track hidden w-full grid-cols-3 gap-1 rounded-2xl p-1.5 md:grid"
+                  role="tablist"
+                  aria-label={headerTitle}
+                >
                   {tabs.map((t) => {
                     const TabIcon = t.icon;
                     const isActive = active === t.key;
@@ -416,7 +518,7 @@ export default function ServicesTabs() {
                         role="tab"
                         aria-selected={isActive}
                         onClick={() => setActive(t.key)}
-                        className={`relative flex items-center gap-2.5 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-colors duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[var(--svc-accent-bright)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#001220] ${
+                        className={`relative flex min-w-0 items-center justify-center gap-2.5 rounded-xl px-5 py-3 text-sm font-bold transition-colors duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[var(--svc-accent-bright)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#001220] ${
                           isActive ? "text-white" : "text-white/45 hover:text-white/70"
                         }`}
                       >
@@ -437,21 +539,29 @@ export default function ServicesTabs() {
 
               {/* Focal detail panel */}
               <motion.div
-                className="svc-layer min-h-[360px] sm:min-h-[400px]"
-                variants={panelVariants}
+                className="svc-layer min-w-0 min-h-0 lg:min-h-[400px]"
+                variants={panelV}
                 custom={{ z: 10, delay: 0.42 }}
                 whileHover={disable3D ? undefined : { z: 45, transition: { type: "spring", stiffness: 180, damping: 22 } }}
-                style={{ transformStyle: "preserve-3d" }}
+                style={disable3D ? undefined : { transformStyle: "preserve-3d" }}
               >
-                <div className="svc-panel p-6 sm:p-8 md:p-10 relative overflow-hidden" style={{ transformStyle: "preserve-3d" }}>
+                <div className="svc-panel relative overflow-hidden p-4 sm:p-8 md:p-10" style={disable3D ? undefined : { transformStyle: "preserve-3d" }}>
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={active}
-                      initial={{ opacity: 0, rotateY: isRtl ? -22 : 22, z: -70 }}
-                      animate={{ opacity: 1, rotateY: 0, z: 0 }}
-                      exit={{ opacity: 0, rotateY: isRtl ? 18 : -18, z: -50 }}
-                      transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
-                      style={{ transformStyle: "preserve-3d" }}
+                      initial={
+                        disable3D
+                          ? { opacity: 0, y: 14 }
+                          : { opacity: 0, rotateY: isRtl ? -22 : 22, z: -70 }
+                      }
+                      animate={disable3D ? { opacity: 1, y: 0 } : { opacity: 1, rotateY: 0, z: 0 }}
+                      exit={
+                        disable3D
+                          ? { opacity: 0, y: -10 }
+                          : { opacity: 0, rotateY: isRtl ? 18 : -18, z: -50 }
+                      }
+                      transition={{ duration: disable3D ? 0.28 : 0.42, ease: [0.22, 1, 0.36, 1] }}
+                      style={disable3D ? undefined : { transformStyle: "preserve-3d" }}
                     >
                       <motion.div variants={contentStagger} initial="hidden" animate="show">
                         <motion.div variants={itemFade} className="mb-7 md:mb-8 text-start">
@@ -461,7 +571,7 @@ export default function ServicesTabs() {
                           </p>
                         </motion.div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-8" style={{ transformStyle: "preserve-3d" }}>
+                        <div className="grid grid-cols-2 gap-2.5 sm:gap-4 mb-6 sm:mb-8" style={disable3D ? undefined : { transformStyle: "preserve-3d" }}>
                           {tab.cards.map((card, i) => {
                             const CardIcon = card.icon;
                             return (
@@ -469,13 +579,14 @@ export default function ServicesTabs() {
                                 key={i}
                                 variants={itemFade}
                                 whileHover={disable3D ? undefined : { z: 30, transition: { type: "spring", stiffness: 220, damping: 20 } }}
-                                style={{ transformStyle: "preserve-3d" }}
-                                className="svc-feature-tile flex items-center gap-3.5 sm:gap-4 p-4 sm:p-5 rounded-2xl border border-[var(--svc-glass-border)] bg-white/[0.02] text-start"
+                                style={disable3D ? undefined : { transformStyle: "preserve-3d" }}
+                                className="svc-feature-tile flex min-w-0 flex-col items-start gap-2.5 p-3 sm:flex-row sm:items-center sm:gap-4 sm:p-5 rounded-2xl border border-[var(--svc-glass-border)] bg-white/[0.02] text-start"
                               >
-                                <div className="svc-feature-icon w-10 h-10 shrink-0 rounded-xl flex items-center justify-center bg-[var(--svc-accent-soft)] text-[var(--svc-accent-bright)] border border-[var(--svc-accent-border)] transition-all duration-300">
-                                  <CardIcon size={18} strokeWidth={2} />
+                                <div className="svc-feature-icon w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-xl flex items-center justify-center bg-[var(--svc-accent-soft)] text-[var(--svc-accent-bright)] border border-[var(--svc-accent-border)] transition-all duration-300">
+                                  <CardIcon size={16} strokeWidth={2} className="sm:hidden" />
+                                  <CardIcon size={18} strokeWidth={2} className="hidden sm:block" />
                                 </div>
-                                <span className="text-white text-sm sm:text-[15px] font-bold leading-snug">{card.name}</span>
+                                <span className="text-white text-xs sm:text-[15px] font-bold leading-snug">{card.name}</span>
                               </motion.div>
                             );
                           })}
@@ -483,10 +594,10 @@ export default function ServicesTabs() {
 
                         <motion.div variants={itemFade}>
                           <div className="h-px bg-[var(--svc-glass-border)] mb-6" aria-hidden />
-                          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                          <div className="flex flex-col gap-3 w-full sm:flex-row sm:gap-4">
                             <a
                               href="/contact"
-                              className="svc-btn-primary group/btn flex-1 sm:flex-none inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl text-white font-bold text-sm"
+                              className="svc-btn-primary group/btn relative z-10 w-full sm:w-auto sm:flex-none inline-flex items-center justify-center gap-2.5 px-6 sm:px-7 py-3.5 rounded-xl text-white font-bold text-sm touch-manipulation"
                             >
                               <span>{actionButtons.quote}</span>
                               {isRtl ? (
@@ -498,7 +609,7 @@ export default function ServicesTabs() {
                             <a
                               href="/our-projects"
                               onClick={goToProjects}
-                              className="svc-btn-ghost flex-1 sm:flex-none inline-flex items-center justify-center px-7 py-3.5 rounded-xl text-white/75 font-bold text-sm"
+                              className="svc-btn-ghost relative z-10 w-full sm:w-auto sm:flex-none inline-flex items-center justify-center px-6 sm:px-7 py-3.5 rounded-xl text-white/75 font-bold text-sm touch-manipulation"
                             >
                               {actionButtons.projects}
                             </a>

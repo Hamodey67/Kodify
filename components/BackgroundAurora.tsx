@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Renderer, Program, Mesh, Color, Triangle } from 'ogl';
 
 const VERT = `#version 300 es
@@ -117,29 +117,64 @@ interface AuroraProps {
   speed?: number;
 }
 
+function canCreateWebGL2(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl2', {
+      alpha: true,
+      premultipliedAlpha: true,
+      antialias: true,
+      failIfMajorPerformanceCaveat: false,
+    });
+    if (!gl) return false;
+    gl.getExtension('WEBGL_lose_context')?.loseContext();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export default function BackgroundAurora(props: AuroraProps) {
   const { colorStops = ['#0373FF', '#00c6fb', '#0373FF'], amplitude = 1.0, blend = 0.5 } = props;
   const propsRef = useRef<AuroraProps>(props);
   propsRef.current = props;
 
   const ctnDom = useRef<HTMLDivElement>(null);
+  const [useFallback, setUseFallback] = useState(false);
 
   useEffect(() => {
     const ctn = ctnDom.current;
     if (!ctn) return;
 
-    const renderer = new Renderer({
-      alpha: true,
-      premultipliedAlpha: true,
-      antialias: true
-    });
-    const gl = renderer.gl;
-    gl.clearColor(0, 0, 0, 0);
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-    gl.canvas.style.backgroundColor = 'transparent';
+    if (!canCreateWebGL2()) {
+      setUseFallback(true);
+      return;
+    }
 
+    let renderer: Renderer;
+    let gl: WebGL2RenderingContext;
     let program: Program | undefined;
+    let mesh: Mesh | undefined;
+    let animateId = 0;
+
+    try {
+      renderer = new Renderer({
+        alpha: true,
+        premultipliedAlpha: true,
+        antialias: true,
+        failIfMajorPerformanceCaveat: false,
+      });
+      gl = renderer.gl;
+      gl.clearColor(0, 0, 0, 0);
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+      gl.canvas.style.backgroundColor = 'transparent';
+    } catch (error) {
+      console.warn('[BackgroundAurora] WebGL unavailable, using CSS fallback.', error);
+      setUseFallback(true);
+      return;
+    }
 
     function resize() {
       if (!ctn) return;
@@ -162,22 +197,29 @@ export default function BackgroundAurora(props: AuroraProps) {
       return [c.r, c.g, c.b];
     });
 
-    program = new Program(gl, {
-      vertex: VERT,
-      fragment: FRAG,
-      uniforms: {
-        uTime: { value: 0 },
-        uAmplitude: { value: amplitude },
-        uColorStops: { value: colorStopsArray },
-        uResolution: { value: [ctn.offsetWidth, ctn.offsetHeight] },
-        uBlend: { value: blend }
-      }
-    });
+    try {
+      program = new Program(gl, {
+        vertex: VERT,
+        fragment: FRAG,
+        uniforms: {
+          uTime: { value: 0 },
+          uAmplitude: { value: amplitude },
+          uColorStops: { value: colorStopsArray },
+          uResolution: { value: [ctn.offsetWidth, ctn.offsetHeight] },
+          uBlend: { value: blend }
+        }
+      });
 
-    const mesh = new Mesh(gl, { geometry, program });
-    ctn.appendChild(gl.canvas);
+      mesh = new Mesh(gl, { geometry, program });
+      ctn.appendChild(gl.canvas);
+    } catch (error) {
+      console.warn('[BackgroundAurora] WebGL program failed, using CSS fallback.', error);
+      gl.getExtension('WEBGL_lose_context')?.loseContext();
+      setUseFallback(true);
+      window.removeEventListener('resize', resize);
+      return;
+    }
 
-    let animateId = 0;
     const update = (t: number) => {
       animateId = requestAnimationFrame(update);
       const { time = t * 0.01, speed = 0.5 } = propsRef.current;
@@ -190,7 +232,7 @@ export default function BackgroundAurora(props: AuroraProps) {
           const c = new Color(hex);
           return [c.r, c.g, c.b];
         });
-        renderer.render({ scene: mesh });
+        renderer.render({ scene: mesh! });
       }
     };
     animateId = requestAnimationFrame(update);
@@ -205,12 +247,14 @@ export default function BackgroundAurora(props: AuroraProps) {
       }
       gl.getExtension('WEBGL_lose_context')?.loseContext();
     };
-  }, [amplitude]);
+  }, []);
 
   return (
     <div
       ref={ctnDom}
       className="fixed inset-0 w-full h-full -z-20 pointer-events-none"
-    />
+    >
+      {useFallback && <div className="aurora-css-fallback absolute inset-0" aria-hidden />}
+    </div>
   );
 }

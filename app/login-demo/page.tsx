@@ -238,14 +238,15 @@ export default function LoginDemoPage() {
                     onClick={() => submitChoice("safe")}
                     disabled={choice !== "none"}
                     className={cn(
-                      "group flex items-center justify-center gap-2.5 rounded-2xl border-2 px-4 py-4 text-base font-bold transition-all duration-300 sm:py-5",
+                      "group flex flex-wrap items-center justify-center gap-2 rounded-2xl border-2 px-3 py-3.5 text-sm font-bold transition-all duration-300 sm:gap-2.5 sm:px-4 sm:py-5 sm:text-base",
                       choice === "safe"
                         ? "border-emerald-400/50 bg-emerald-500/15 text-emerald-200"
                         : "border-emerald-400/30 bg-emerald-500/[0.07] text-emerald-100 hover:border-emerald-400/50 hover:bg-emerald-500/12",
                       choice !== "none" && choice !== "safe" && "opacity-40"
                     )}
                   >
-                    <Shield size={20} aria-hidden />
+                    <Shield size={18} className="sm:hidden" aria-hidden />
+                    <Shield size={20} className="hidden sm:block" aria-hidden />
                     {copy.buttons.safe}
                   </button>
                   <button
@@ -253,14 +254,15 @@ export default function LoginDemoPage() {
                     onClick={() => submitChoice("phishing")}
                     disabled={choice !== "none"}
                     className={cn(
-                      "group flex items-center justify-center gap-2.5 rounded-2xl border-2 px-4 py-4 text-base font-bold transition-all duration-300 sm:py-5",
+                      "group flex flex-wrap items-center justify-center gap-2 rounded-2xl border-2 px-3 py-3.5 text-sm font-bold transition-all duration-300 sm:gap-2.5 sm:px-4 sm:py-5 sm:text-base",
                       choice === "phishing"
                         ? "border-amber-400/50 bg-amber-500/15 text-amber-100"
                         : "border-amber-400/30 bg-amber-500/[0.07] text-amber-100 hover:border-amber-400/50 hover:bg-amber-500/12",
                       choice !== "none" && choice !== "phishing" && "opacity-40"
                     )}
                   >
-                    <ShieldAlert size={20} aria-hidden />
+                    <ShieldAlert size={18} className="sm:hidden" aria-hidden />
+                    <ShieldAlert size={20} className="hidden sm:block" aria-hidden />
                     {copy.buttons.phishing}
                   </button>
                 </div>

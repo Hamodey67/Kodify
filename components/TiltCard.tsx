@@ -95,8 +95,8 @@ export default function TiltCard({
         />
       )}
 
-      {/* content layer */}
-      <div className="relative [transform:translateZ(20px)] w-full h-full">
+      {/* content layer — 3D lift disabled on mobile to prevent edge clipping */}
+      <div className="relative w-full h-full max-md:transform-none md:[transform:translateZ(20px)]">
         {children}
       </div>
     </div>

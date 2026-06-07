@@ -2,56 +2,126 @@
 
 import { cn } from "@/lib/utils";
 
+const MENU_EMBED_URL = "https://spinozacafe.com/";
+const SCREEN_CLIP = "overflow-hidden rounded-[46px]";
+
+type PhoneTab = "store" | "menu" | "pos";
+
+function PhoneScreenContent({
+  activeTab,
+  children,
+}: {
+  activeTab: PhoneTab;
+  children?: React.ReactNode;
+}) {
+  if (activeTab === "menu") {
+    return (
+      <div dir="ltr" className={cn("absolute inset-0", SCREEN_CLIP)}>
+        <iframe
+          src={MENU_EMBED_URL}
+          title="Spinoza Cafe live menu"
+          loading="lazy"
+          allow="fullscreen"
+          data-lenis-prevent
+          className="absolute top-0 left-0 block h-full border-0 bg-[#0b1220]"
+          style={{
+            width: "calc(100% + 18px)",
+            maxWidth: "none",
+          }}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div dir="ltr" className={cn("absolute inset-0 h-full w-full", SCREEN_CLIP)}>
+      <div className="absolute inset-0 flex h-full w-full min-h-0 min-w-0 flex-col overflow-hidden">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export default function PhoneFrame({
+  activeTab,
   children,
   className,
 }: {
-  children: React.ReactNode;
+  activeTab: PhoneTab;
+  children?: React.ReactNode;
   className?: string;
 }) {
   return (
-    <div className={cn("mx-auto w-[320px] sm:w-[360px]", className)}>
+    <div
+      dir="ltr"
+      className={cn(
+        "mx-auto shrink-0 w-[280px] sm:w-[320px] md:w-[360px]",
+        className
+      )}
+    >
       <div className="relative">
-        {/* Ambient glow */}
-        <div className="pointer-events-none absolute -inset-8 rounded-[70px] bg-cyan-500/10 blur-3xl" />
+        {/* Titanium frame — iPhone 17 Pro Max */}
+        <div
+          className={cn(
+            "relative rounded-[55px] p-[3px]",
+            "bg-gradient-to-br from-[#d4d4d8] via-[#98989d] to-[#636366]",
+            "shadow-[0_28px_70px_rgba(0,0,0,0.42),0_12px_28px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.55)]",
+            "ring-1 ring-black/20"
+          )}
+        >
+          {/* Metallic edge highlights */}
+          <div className="pointer-events-none absolute inset-0 rounded-[55px] ring-1 ring-inset ring-white/35" />
+          <div className="pointer-events-none absolute inset-[1px] rounded-[54px] bg-gradient-to-tr from-white/20 via-transparent to-transparent opacity-70" />
+          <div className="pointer-events-none absolute inset-[1px] rounded-[54px] bg-gradient-to-bl from-transparent via-transparent to-black/25" />
 
-        {/* Metal body */}
-        <div className="relative rounded-[54px] p-[10px] bg-gradient-to-b from-[#1a2233] via-[#0b0f18] to-[#05070c] shadow-[0_45px_140px_rgba(0,0,0,0.9)] ring-1 ring-white/10">
-          {/* Metal edge highlight */}
-          <div className="pointer-events-none absolute inset-[6px] rounded-[48px] ring-1 ring-white/8" />
+          {/* Left side — Action + volume buttons */}
+          <div
+            className="pointer-events-none absolute -left-[2px] z-10 w-[3px] rounded-full bg-gradient-to-r from-[#8e8e93] to-[#aeaeb2] shadow-[0_0_4px_rgba(0,0,0,0.35)]"
+            style={{ top: "17.5%", height: "3.8%" }}
+          />
+          <div
+            className="pointer-events-none absolute -left-[2px] z-10 w-[3px] rounded-full bg-gradient-to-r from-[#8e8e93] to-[#aeaeb2] shadow-[0_0_4px_rgba(0,0,0,0.35)]"
+            style={{ top: "24.5%", height: "5.8%" }}
+          />
+          <div
+            className="pointer-events-none absolute -left-[2px] z-10 w-[3px] rounded-full bg-gradient-to-r from-[#8e8e93] to-[#aeaeb2] shadow-[0_0_4px_rgba(0,0,0,0.35)]"
+            style={{ top: "32.5%", height: "5.8%" }}
+          />
 
-          {/* Side buttons (decorative) */}
-          <div className="pointer-events-none absolute left-[-3px] top-[120px] h-12 w-[5px] rounded-full bg-white/12 shadow-[0_0_10px_rgba(0,0,0,0.6)]" />
-          <div className="pointer-events-none absolute left-[-3px] top-[178px] h-16 w-[5px] rounded-full bg-white/10 shadow-[0_0_10px_rgba(0,0,0,0.6)]" />
-          <div className="pointer-events-none absolute right-[-3px] top-[150px] h-20 w-[5px] rounded-full bg-white/10 shadow-[0_0_10px_rgba(0,0,0,0.6)]" />
+          {/* Right side — power button */}
+          <div
+            className="pointer-events-none absolute -right-[2px] z-10 w-[3px] rounded-full bg-gradient-to-l from-[#8e8e93] to-[#aeaeb2] shadow-[0_0_4px_rgba(0,0,0,0.35)]"
+            style={{ top: "22%", height: "8.5%" }}
+          />
 
-          {/* Screen bezel */}
-          <div className="relative overflow-hidden rounded-[46px] bg-black ring-1 ring-white/10">
-            {/* Glass reflection */}
-            <div className="pointer-events-none absolute inset-0">
-              <div className="absolute -left-24 -top-28 h-96 w-96 rotate-12 rounded-full bg-white/6 blur-3xl" />
-              <div className="absolute -right-24 top-24 h-80 w-80 -rotate-12 rounded-full bg-cyan-300/10 blur-3xl" />
-              <div className="absolute inset-0 bg-gradient-to-b from-white/6 via-transparent to-black/10" />
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.07),transparent_55%)]" />
-            </div>
+          {/* Inner bezel + screen */}
+          <div className="relative overflow-hidden rounded-[48px] bg-[#1c1c1e] p-[2px] ring-1 ring-black/50">
+            <div className="relative overflow-hidden rounded-[46px] bg-black">
+              {/* 19.5:9 screen canvas */}
+              <div className={cn("relative isolate aspect-[9/19.5] w-full bg-[#0b1220]", SCREEN_CLIP)}>
+                <PhoneScreenContent activeTab={activeTab}>{children}</PhoneScreenContent>
 
-            {/* Notch / island */}
-            <div className="pointer-events-none absolute left-1/2 top-3 z-20 -translate-x-1/2">
-              <div className="relative h-8 w-40 rounded-full bg-black/85 ring-1 ring-white/10">
-                {/* tiny camera dot */}
-                <div className="absolute right-6 top-2 h-2 w-2 rounded-full bg-cyan-300/35 blur-[0.5px]" />
-                {/* speaker hint */}
-                <div className="absolute left-10 top-[13px] h-[2px] w-10 rounded-full bg-white/10" />
+                {/* Dynamic Island — fixed overlay, explicit size (aspect-ratio was collapsing) */}
+                <div className="pointer-events-none absolute inset-x-0 top-0 z-[100] flex justify-center pt-[10px]">
+                  <div
+                    className="relative shrink-0 rounded-full bg-[#000000] shadow-[0_3px_14px_rgba(0,0,0,0.95),inset_0_0_0_1px_rgba(255,255,255,0.2)]"
+                    style={{
+                      width: "36%",
+                      minWidth: "96px",
+                      maxWidth: "130px",
+                      height: "26px",
+                      minHeight: "22px",
+                    }}
+                  >
+                    <div className="absolute right-[18px] top-1/2 h-[11px] w-[11px] -translate-y-1/2 rounded-full bg-[#14141c] ring-1 ring-[#3a3a48]/90" />
+                    <div className="absolute right-[21px] top-1/2 h-[6px] w-[6px] -translate-y-1/2 rounded-full bg-[#252532]" />
+                  </div>
+                </div>
+
+                {/* Home indicator */}
+                <div className="pointer-events-none absolute bottom-[1.1%] left-1/2 z-30 h-[4px] w-[32%] min-w-[96px] max-w-[128px] -translate-x-1/2 rounded-full bg-white/28" />
               </div>
             </div>
-
-            {/* Screen (✅ نفس القياس السابق حتى ما يأثر على الترتيب) */}
-            <div className="relative pt-12">
-              <div className="h-[640px] bg-[#0b1220]">{children}</div>
-            </div>
-
-            {/* Home indicator */}
-            <div className="pointer-events-none absolute bottom-3 left-1/2 z-20 h-1.5 w-32 -translate-x-1/2 rounded-full bg-white/25" />
           </div>
         </div>
       </div>

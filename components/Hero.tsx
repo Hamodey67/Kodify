@@ -91,71 +91,89 @@ export default function Hero() {
                 {/* Left Content */}
                 <div className="lg:col-span-7 flex flex-col items-center text-center lg:items-start lg:text-start w-full min-w-0">
                   <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-[var(--accent-primary)]/30 bg-[var(--accent-primary)]/10 mb-5 sm:mb-8"
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    className="inline-flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2 rounded-full border border-[var(--accent-primary)]/35 bg-[var(--accent-primary)]/12 mb-6 sm:mb-8 backdrop-blur-sm"
                   >
-                    <span className="relative flex h-2 w-2">
+                    <span className="relative flex h-2 w-2 shrink-0">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent-bright)] opacity-75" />
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--accent-bright)]" />
                     </span>
-                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-[var(--accent-glow)]">{badge}</span>
+                    <span className="hero-mobile-badge-text text-[10px] sm:text-[10px] font-bold uppercase tracking-[0.12em] sm:tracking-[0.2em] text-[var(--accent-glow)] md:text-[var(--accent-glow)]">{badge}</span>
                   </motion.div>
 
                   <motion.h1 
-                    initial={{ opacity: 0, y: 16 }}
+                    initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.25, duration: 0.7 }}
-                    className="text-2xl leading-[1.3] sm:text-4xl md:text-6xl lg:text-7xl xl:text-[76px] font-black tracking-tight mb-4 sm:mb-8 md:leading-[1.3]"
+                    transition={{ delay: 0.28, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                    className={cn(
+                      "text-[1.65rem] sm:text-4xl md:text-6xl lg:text-7xl xl:text-[76px] font-black tracking-tight mb-5 sm:mb-8",
+                      "leading-[1.55] md:leading-[1.3]",
+                      (lang === "ar" || lang === "ku") && "font-[family-name:var(--font-cairo)]",
+                      "hero-mobile-headline"
+                    )}
                   >
                     {renderTitle()}
                   </motion.h1>
 
                   <motion.p 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.4 }}
-                    className="theme-muted text-sm sm:text-lg md:text-xl font-medium leading-relaxed max-w-2xl mb-6 sm:mb-10 md:mb-12"
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.42, duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+                    className={cn(
+                      "text-sm sm:text-lg md:text-xl font-medium max-w-2xl mb-8 sm:mb-10 md:mb-12",
+                      "hero-mobile-desc theme-muted md:theme-muted",
+                      (lang === "ar" || lang === "ku") && "font-[family-name:var(--font-cairo)] leading-[1.85] md:leading-relaxed"
+                    )}
                   >
                     {tx.heroDesc}
                   </motion.p>
 
                   {/* Stats — mobile power */}
                   <motion.div
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.45 }}
-                    className="grid grid-cols-3 gap-2 sm:gap-3 mb-6 sm:mb-8 md:hidden w-full max-w-sm"
+                    transition={{ delay: 0.52, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    className="grid grid-cols-3 gap-2.5 sm:gap-3 mb-8 sm:mb-8 md:hidden w-full max-w-sm"
                   >
-                    {stats.map((s) => (
-                      <div
+                    {stats.map((s, i) => (
+                      <motion.div
                         key={s.l}
-                        className="rounded-xl border border-[var(--accent-primary)]/20 bg-[var(--accent-primary)]/5 px-2 py-3 text-center"
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.58 + i * 0.07, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                        className="hero-stat-card rounded-xl px-2.5 py-3.5 text-center flex flex-col items-center justify-center gap-1"
                       >
-                        <div className="text-lg sm:text-xl font-black text-[var(--accent-glow)]">{s.v}</div>
-                        <div className="text-[9px] sm:text-[10px] font-bold text-white/40 mt-0.5">{s.l}</div>
-                      </div>
+                        <div className="hero-stat-value text-xl sm:text-2xl font-black leading-none">{s.v}</div>
+                        <div className="hero-stat-label text-[10px] sm:text-[11px] font-semibold leading-snug">{s.l}</div>
+                      </motion.div>
                     ))}
                   </motion.div>
   
                   <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 18 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="flex flex-col gap-3 w-full max-w-sm sm:max-w-none sm:w-auto sm:flex-row sm:gap-5"
+                    transition={{ delay: 0.62, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex flex-col gap-3.5 w-full max-w-sm sm:max-w-none sm:w-auto sm:flex-row sm:gap-5 mb-2 md:mb-0"
                   >
                     <Link
                       href="/contact"
-                      className="btn-hero-primary group relative w-full sm:w-auto px-8 py-4 sm:px-10 sm:py-5 rounded-xl sm:rounded-2xl text-black font-black text-sm flex items-center justify-center gap-3 overflow-hidden transition-all active:scale-[0.98]"
+                      className="btn-hero-primary btn-hero-primary-mobile group relative w-full sm:w-auto px-8 py-4 sm:px-10 sm:py-5 rounded-xl sm:rounded-2xl text-white font-black text-sm flex items-center justify-center gap-2.5 overflow-hidden transition-all active:scale-[0.98]"
                     >
-                      {tx.heroCTA1}
-                      <ArrowRight size={20} className={cn("transition-transform", lang === "ar" || lang === "ku" ? "rotate-180 group-hover:-translate-x-1" : "group-hover:translate-x-1")} />
+                      <span className="relative z-10">{tx.heroCTA1}</span>
+                      <ArrowRight
+                        size={20}
+                        className={cn(
+                          "relative z-10 shrink-0 transition-transform",
+                          lang === "ar" || lang === "ku" ? "rotate-180 ms-2 group-hover:-translate-x-1" : "ms-0 me-0 group-hover:translate-x-1"
+                        )}
+                      />
                     </Link>
   
                     <Link
                       href="/simulator/"
-                      className="btn-hero-secondary w-full sm:w-auto px-8 py-4 sm:px-10 sm:py-5 rounded-xl sm:rounded-2xl border text-white font-black text-sm flex items-center justify-center gap-3 hover:bg-[var(--accent-primary)]/15 transition-all active:scale-[0.98]"
+                      className="btn-hero-secondary btn-hero-secondary-mobile w-full sm:w-auto px-8 py-4 sm:px-10 sm:py-5 rounded-xl sm:rounded-2xl border text-sm font-bold flex items-center justify-center transition-all active:scale-[0.98]"
                     >
                       {tx.heroCTA2}
                     </Link>
@@ -168,31 +186,37 @@ export default function Hero() {
                 <div className="lg:col-span-5 relative w-full min-w-0">
                   {/* Mobile: horizontal steps */}
                   <motion.div
-                    initial={{ opacity: 0, y: 12 }}
+                    initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.55 }}
-                    className="md:hidden -mx-1"
+                    transition={{ delay: 0.72, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    className="md:hidden mt-8 w-full"
                   >
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--accent-glow)]/70 mb-3 flex justify-center items-center gap-2">
-                      <Layout size={14} />
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#a8d4ff] mb-4 flex justify-center items-center gap-2">
+                      <Layout size={14} className="text-[var(--accent-bright)]" />
                       {lang === "ar" ? "خارطة التنفيذ" : lang === "ku" ? "پلانی جێبەجێکردن" : "Delivery Roadmap"}
                     </p>
-                    <div className="flex justify-center gap-2 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none w-full">
+                    <div className="grid grid-cols-4 gap-2 w-full max-w-sm mx-auto">
                       {[
                         { icon: Zap, label: lang === "ar" ? "تحليل" : lang === "ku" ? "پێداچوون" : "Plan" },
                         { icon: Shield, label: lang === "ar" ? "تطوير" : lang === "ku" ? "دیزاین" : "Build" },
                         { icon: Globe, label: lang === "ar" ? "اختبار" : lang === "ku" ? "تاقی" : "Test" },
                         { icon: CheckCircle2, label: lang === "ar" ? "إطلاق" : lang === "ku" ? "دەستپێ" : "Launch" },
                       ].map((step, i) => (
-                        <div
+                        <motion.div
                           key={i}
-                          className="snap-start shrink-0 flex flex-col items-center gap-2 min-w-[4.5rem] rounded-xl border border-[var(--accent-primary)]/25 bg-[var(--accent-primary)]/5 px-3 py-3"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.78 + i * 0.06, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                          className="hero-feature-card flex flex-col items-center gap-2 rounded-xl px-2 py-3 min-w-0"
                         >
-                          <div className="w-10 h-10 rounded-lg bg-[var(--accent-primary)]/15 border border-[var(--accent-primary)]/30 flex items-center justify-center text-[var(--accent-glow)]">
-                            <step.icon size={18} strokeWidth={1.5} />
+                          <div className="hero-feature-icon w-9 h-9 rounded-lg flex items-center justify-center shrink-0">
+                            <step.icon size={17} strokeWidth={2} />
                           </div>
-                          <span className="text-[9px] font-bold text-white/60 text-center leading-tight">{step.label}</span>
-                        </div>
+                          <span className={cn(
+                            "hero-feature-label text-[9px] font-bold text-center leading-snug",
+                            (lang === "ar" || lang === "ku") && "font-[family-name:var(--font-cairo)]"
+                          )}>{step.label}</span>
+                        </motion.div>
                       ))}
                     </div>
                   </motion.div>

@@ -34,7 +34,7 @@ export default function LoginPageMock({
       notSecureLabel={notSecureLabel}
       secureLabel={secureLabel}
     >
-      <div className="px-6 py-8 sm:px-10 sm:py-10" dir="ltr">
+      <div className="px-4 py-6 sm:px-10 sm:py-10" dir="ltr">
         <div className="mx-auto max-w-sm">
           <h2 className="text-xl font-semibold tracking-tight text-slate-900">{strings.heading}</h2>
 

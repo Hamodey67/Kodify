@@ -98,14 +98,14 @@ export default function BrowserChrome({
       {verdict && (
         <div
           className={cn(
-            "flex items-center gap-2 border-b px-4 py-2.5 text-sm font-semibold",
+            "flex items-start gap-2 border-b px-4 py-2.5 text-sm font-semibold",
             verdict.correct
               ? "border-emerald-400/15 bg-emerald-500/10 text-emerald-200"
               : "border-amber-400/15 bg-amber-500/10 text-amber-100"
           )}
         >
-          <span aria-hidden>{verdict.correct ? "✓" : "✗"}</span>
-          <span>{verdict.message}</span>
+          <span className="mt-0.5 shrink-0" aria-hidden>{verdict.correct ? "✓" : "✗"}</span>
+          <span className="min-w-0 break-words">{verdict.message}</span>
         </div>
       )}
 

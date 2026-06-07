@@ -34,9 +34,9 @@ export default function WhatsAppScamMock({
       secureLabel={secureLabel}
     >
       <div className="min-h-[280px] bg-[#efeae2]" dir="ltr">
-        <div className="flex items-center justify-between border-b border-[#d1d7db] bg-[#f0f2f5] px-4 py-3">
-          <div className="text-sm font-semibold text-[#111b21]">{wa.header}</div>
-          <div className="text-xs text-[#667781]">{wa.fromMeta}</div>
+        <div className="flex items-center justify-between gap-2 border-b border-[#d1d7db] bg-[#f0f2f5] px-4 py-3">
+          <div className="min-w-0 flex-1 truncate text-sm font-semibold text-[#111b21]">{wa.header}</div>
+          <div className="shrink-0 text-xs text-[#667781]">{wa.fromMeta}</div>
         </div>
 
         <div className="p-4 sm:p-5">

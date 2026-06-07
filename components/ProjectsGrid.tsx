@@ -46,7 +46,15 @@ const projects = [
     ku: { title: "ئەدم سپۆرت", category: "فرۆشگای وەرزشی", desc: "سەکۆیەکی بازرگانی ئەلیکترۆنی بۆ فرۆشتنی جلوبەرگ و پێداویستییە وەرزشییەکان." },
     images: ["/admsop1.png"],
     link: "https://admspoort.com/",
-  }
+  },
+  {
+    id: 5,
+    ar: { title: "نظام POS", category: "مبيعات وكاشير", desc: "نظام مبيعات عالي الأداء للموبايل والتابلت مع حساب ضرائب فوري وواجهة تاتش." },
+    en: { title: "Sales POS", category: "Retail & POS", desc: "High-performance POS for mobile and tablet with instant tax calculation and touch UI." },
+    ku: { title: "سیستەمی POS", category: "فرۆشتن و کاشێر", desc: "سیستەمی فرۆشتنی خێرا بۆ مۆبایل و تابلێت لەگەڵ حیسابکردنی خێرای باج." },
+    images: ["/demos/pos/i1.webp", "/demos/pos/i2.webp", "/demos/pos/i3.webp"],
+    link: "/simulator/",
+  },
 ];
 
 function ProjectSlider({ images }: { images: string[] }) {
@@ -152,51 +160,57 @@ function ProjectCard({
       ref={cardRef}
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
-      className="pg-card group w-full aspect-[4/5] [will-change:transform,opacity]"
+      className="pg-card group flex h-full w-full min-w-[260px] flex-col lg:min-w-0 [will-change:transform,opacity]"
     >
       <TiltCard
         maxRotate={4}
         glare={true}
-        className="h-full w-full rounded-[2rem] bg-[var(--surface)] border border-[var(--border)] shadow-[var(--card-shadow)] overflow-hidden cursor-pointer flex flex-col relative"
+        className="flex h-full w-full max-md:h-auto flex-col rounded-[2rem] bg-[var(--surface)] border border-[var(--border)] shadow-[var(--card-shadow)] overflow-hidden cursor-pointer relative"
       >
-        <div className="relative flex h-full w-full flex-col [transform:translateZ(30px)]">
+        <div className="relative flex h-full max-md:h-auto w-full flex-col max-md:transform-none md:[transform:translateZ(30px)]">
           {/* Image — fixed ratio, fills container edge-to-edge */}
           <div className="pg-image relative aspect-[4/3] w-full shrink-0 overflow-hidden rounded-t-[2rem] bg-[#0a1424]">
-            <div className="pg-parallax absolute inset-0 size-full [will-change:transform]">
-              <div className="pg-hoverzoom absolute inset-0 size-full transition-[transform,filter] duration-500 ease-out group-hover:scale-[1.04]">
+            <div className="pg-parallax absolute inset-0 h-full w-full [will-change:transform]">
+              <div className="pg-hoverzoom absolute inset-0 h-full w-full transition-[transform,filter] duration-500 ease-out max-md:scale-100 group-hover:max-md:scale-100 group-hover:scale-[1.04]">
                 <ProjectSlider images={project.images} />
               </div>
             </div>
           </div>
 
           {/* Content panel */}
-          <div className="relative z-20 flex min-h-[220px] flex-1 flex-col justify-between bg-[#020B18] p-6 md:p-8">
-            <div>
-              <span className="pg-reveal inline-flex px-4 py-1.5 rounded-full bg-white/5 border border-white/10 shadow-2xl backdrop-blur-md text-[var(--accent-glow)] text-[10px] font-extrabold uppercase tracking-widest">
-                {content.category}
-              </span>
-            </div>
+          <div className="relative z-20 flex flex-1 flex-col bg-[#020B18] border-t border-white/[0.06] p-4 sm:p-5 lg:p-5">
+            <span className="pg-reveal mb-3 inline-flex w-fit px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[var(--accent-glow)] text-[9px] font-extrabold uppercase tracking-[0.14em]">
+              {content.category}
+            </span>
 
-            <div className="space-y-3">
-              <h3 className="pg-reveal text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-white/75 group-hover:from-white group-hover:to-[var(--accent-glow)] transition-all duration-700 tracking-tight line-clamp-2">
-                {content.title}
-              </h3>
+            <h3
+              className={cn(
+                "pg-reveal mb-2.5 text-lg lg:text-xl font-extrabold text-white tracking-tight leading-snug",
+                isRtl && "font-[family-name:var(--font-cairo)]"
+              )}
+            >
+              {content.title}
+            </h3>
 
-              <p className="pg-reveal text-white/70 text-sm md:text-base font-medium leading-relaxed line-clamp-2">
-                {content.desc}
-              </p>
+            <p
+              className={cn(
+                "pg-reveal mb-4 flex-1 text-xs lg:text-sm font-medium text-white/62 leading-[1.7] text-start",
+                isRtl && "font-[family-name:var(--font-cairo)] leading-[1.85]"
+              )}
+            >
+              {content.desc}
+            </p>
 
-              <a
-                href={project.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="pg-reveal pg-explore inline-flex items-center gap-3 px-6 py-3 rounded-xl bg-white/10 text-white border border-white/20 font-bold text-sm hover:bg-white hover:text-slate-950 hover:border-transparent transition-colors duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.15)] group/btn"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {lang === "ar" ? "استكشف المشروع" : lang === "ku" ? "پڕۆژەکە ببینە" : "Explore Project"}
-                <ArrowUpRight size={18} className="pg-arrow" />
-              </a>
-            </div>
+            <a
+              href={project.link}
+              target={project.link.startsWith("http") ? "_blank" : undefined}
+              rel={project.link.startsWith("http") ? "noopener noreferrer" : undefined}
+              className="pg-reveal pg-explore mt-auto inline-flex w-full items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white/10 text-white border border-white/20 font-bold text-xs hover:bg-white hover:text-slate-950 hover:border-transparent transition-colors duration-300"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {lang === "ar" ? "استكشف المشروع" : lang === "ku" ? "پڕۆژەکە ببینە" : "Explore Project"}
+              <ArrowUpRight size={15} className="pg-arrow shrink-0" />
+            </a>
           </div>
 
           {/* Decorative ambience elements (slow floating) */}
@@ -283,36 +297,37 @@ export default function ProjectsGrid() {
           },
         });
 
-        // ---- Per-card background parallax (image area only) ----
-        cards.forEach((card) => {
-          const parallax = card.querySelector<HTMLElement>(".pg-parallax");
-          if (parallax) {
-            gsap.fromTo(
-              parallax,
-              { yPercent: -4, scale: 1.08 },
-              {
-                yPercent: 4,
-                scale: 1.04,
-                ease: "none",
-                scrollTrigger: {
-                  trigger: card,
-                  start: "top bottom",
-                  end: "bottom top",
-                  scrub: true,
-                },
-              }
-            );
-          }
+        // ---- Per-card background parallax (desktop only — scale causes mobile clipping) ----
+        mm.add("(min-width: 768px)", () => {
+          cards.forEach((card) => {
+            const parallax = card.querySelector<HTMLElement>(".pg-parallax");
+            if (parallax) {
+              gsap.fromTo(
+                parallax,
+                { yPercent: -4, scale: 1.08 },
+                {
+                  yPercent: 4,
+                  scale: 1.04,
+                  ease: "none",
+                  scrollTrigger: {
+                    trigger: card,
+                    start: "top bottom",
+                    end: "bottom top",
+                    scrub: true,
+                  },
+                }
+              );
+            }
 
-          // ---- Continuous, very subtle floating ambience ----
-          card.querySelectorAll<HTMLElement>(".pg-float").forEach((f, i) => {
-            gsap.to(f, {
-              y: i % 2 === 0 ? -16 : 16,
-              x: i % 2 === 0 ? 8 : -8,
-              duration: 5 + i * 1.5,
-              ease: "sine.inOut",
-              repeat: -1,
-              yoyo: true,
+            card.querySelectorAll<HTMLElement>(".pg-float").forEach((f, i) => {
+              gsap.to(f, {
+                y: i % 2 === 0 ? -16 : 16,
+                x: i % 2 === 0 ? 8 : -8,
+                duration: 5 + i * 1.5,
+                ease: "sine.inOut",
+                repeat: -1,
+                yoyo: true,
+              });
             });
           });
         });
@@ -342,9 +357,9 @@ export default function ProjectsGrid() {
       ref={rootRef}
       id="our-projects"
       dir={isRtl ? "rtl" : "ltr"}
-      className="pg-section pt-16 sm:pt-24 md:pt-32 pb-12 md:pb-20 relative scroll-mt-48"
+      className="pg-section pt-16 sm:pt-24 md:pt-32 pb-12 md:pb-20 relative scroll-mt-48 overflow-x-clip"
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="mx-auto max-w-[90rem] w-full min-w-0 px-4 sm:px-6 lg:px-10 relative z-10">
         {/* Section header */}
         <div className="max-w-3xl mb-8 sm:mb-10 md:mb-12">
           <div className="pg-accent-line h-1 sm:h-1.5 w-16 sm:w-[72px] mb-5 sm:mb-6 rounded-full bg-gradient-to-r from-[var(--accent-soft)] via-[var(--accent)] to-[var(--accent-strong)] shadow-[0_0_16px_var(--accent-glow)]" />
@@ -358,11 +373,13 @@ export default function ProjectsGrid() {
           </p>
         </div>
 
-        {/* Equal 2×2 grid — 1 col mobile, 2 cols tablet & desktop */}
-        <div className="relative">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8 w-full">
+        {/* Single row — 5 columns desktop, horizontal scroll mobile */}
+        <div className="relative -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div className="flex gap-5 md:gap-6 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none lg:grid lg:grid-cols-5 lg:items-stretch lg:overflow-visible w-full min-w-0">
             {projects.map((project) => (
-              <ProjectCard key={project.id} project={project} lang={lang} isRtl={isRtl} />
+              <div key={project.id} className="flex snap-start shrink-0 w-[78vw] max-w-[320px] sm:w-[300px] lg:w-auto lg:min-w-0 lg:shrink h-full">
+                <ProjectCard project={project} lang={lang} isRtl={isRtl} />
+              </div>
             ))}
           </div>
         </div>

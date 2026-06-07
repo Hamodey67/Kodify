@@ -76,9 +76,9 @@ export default function StoreDemo() {
         />
       }
     >
-      <div className="h-full">
+      <div className="flex h-full min-h-0 flex-col">
         {/* Top quick actions داخل التطبيق */}
-        <div className="px-4 pt-4">
+        <div className="shrink-0 px-4 pt-4">
           <div className="flex items-center justify-between gap-2">
             <button
               onClick={() => {
@@ -99,11 +99,11 @@ export default function StoreDemo() {
           </div>
         </div>
 
-        <div className="px-4 pt-3 pb-4 h-[540px] overflow-hidden">
+        <div className="min-h-0 flex-1 overflow-hidden px-4 pb-4 pt-3">
           <ScreenTransition k={`${tab}-${screen}-${selectedId ?? "x"}`}>
             {/* HOME */}
             {tab === "store" && screen === "home" && (
-              <div className="h-full overflow-auto pe-1 space-y-3">
+              <div className="h-full min-h-0 overflow-x-hidden overflow-y-auto scrollbar-none space-y-3" data-lenis-prevent>
                 <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
                   <div className="text-sm text-white/70">{t.store.welcome}</div>
                   <div className="text-xl font-extrabold">{t.store.welcomeText}</div>
@@ -133,7 +133,7 @@ export default function StoreDemo() {
 
             {/* DETAILS */}
             {tab === "store" && screen === "details" && selected && (
-              <div className="h-full overflow-auto pe-1">
+              <div className="h-full min-h-0 overflow-x-hidden overflow-y-auto scrollbar-none" data-lenis-prevent>
                 <button
                   onClick={() => setScreen("home")}
                   className="mb-3 h-9 px-3 rounded-2xl bg-white/5 border border-white/10 text-sm font-bold hover:bg-white/10"
@@ -171,7 +171,7 @@ export default function StoreDemo() {
 
             {/* CART */}
             {screen === "cart" && (
-              <div className="h-full overflow-auto pe-1">
+              <div className="h-full min-h-0 overflow-x-hidden overflow-y-auto scrollbar-none" data-lenis-prevent>
                 <div className="flex items-center justify-between">
                   <div className="text-xl font-extrabold">{t.store.cart}</div>
                   <button
@@ -241,7 +241,7 @@ export default function StoreDemo() {
 
             {/* CHECKOUT */}
             {screen === "checkout" && (
-              <div className="h-full overflow-auto pe-1">
+              <div className="h-full min-h-0 overflow-x-hidden overflow-y-auto scrollbar-none" data-lenis-prevent>
                 <button
                   onClick={() => setScreen("cart")}
                   className="mb-3 h-9 px-3 rounded-2xl bg-white/5 border border-white/10 text-sm font-bold hover:bg-white/10"
@@ -283,7 +283,7 @@ export default function StoreDemo() {
 
             {/* ORDERS / PROFILE Tabs */}
             {tab === "orders" && (
-              <div className="h-full p-4 overflow-auto">
+              <div className="h-full min-h-0 overflow-x-hidden overflow-y-auto scrollbar-none p-4" data-lenis-prevent>
                 <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
                   <div className="font-extrabold">{t.store.ordersTab}</div>
                   <div className="text-white/70 text-sm mt-1">
@@ -298,7 +298,7 @@ export default function StoreDemo() {
             )}
 
             {tab === "profile" && (
-              <div className="h-full p-4 overflow-auto">
+              <div className="h-full min-h-0 overflow-x-hidden overflow-y-auto scrollbar-none p-4" data-lenis-prevent>
                 <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
                   <div className="font-extrabold">{t.store.profileTab}</div>
                   <div className="text-white/70 text-sm mt-1">
