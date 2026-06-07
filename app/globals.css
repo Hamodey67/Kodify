@@ -471,6 +471,18 @@ a:hover, button:hover, [role="button"]:hover {
 }
 .scrollbar-none::-webkit-scrollbar { display: none; }
 
+.pg-projects-track {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  scroll-behavior: smooth;
+}
+
+@media (max-width: 1023px) {
+  .pg-projects-track .pg-card {
+    transform: none !important;
+  }
+}
+
 /* ─── Premium footer ─── */
 .footer-premium {
   background: linear-gradient(180deg, #000810 0%, #001018 35%, #001220 70%, #001829 100%);

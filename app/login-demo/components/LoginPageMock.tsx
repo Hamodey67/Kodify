@@ -34,25 +34,27 @@ export default function LoginPageMock({
       notSecureLabel={notSecureLabel}
       secureLabel={secureLabel}
     >
-      <div className="px-4 py-6 sm:px-10 sm:py-10" dir="ltr">
-        <div className="mx-auto max-w-sm">
-          <h2 className="text-xl font-semibold tracking-tight text-slate-900">{strings.heading}</h2>
+      <div className="w-full min-w-0 px-3 py-5 sm:px-10 sm:py-10" dir="ltr">
+        <div className="mx-auto w-full min-w-0 max-w-sm">
+          <h2 className="text-lg font-semibold leading-snug tracking-tight text-slate-900 sm:text-xl">
+            {strings.heading}
+          </h2>
 
-          <div className="mt-6 space-y-4">
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-medium text-slate-600">{strings.email}</span>
+          <div className="mt-5 space-y-3 sm:mt-6 sm:space-y-4">
+            <label className="block min-w-0">
+              <span className="mb-1.5 block text-[11px] font-medium text-slate-600 sm:text-xs">{strings.email}</span>
               <input
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm"
+                className="w-full min-w-0 max-w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm"
                 placeholder={strings.email}
                 disabled
                 readOnly
                 tabIndex={-1}
               />
             </label>
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-medium text-slate-600">{strings.password}</span>
+            <label className="block min-w-0">
+              <span className="mb-1.5 block text-[11px] font-medium text-slate-600 sm:text-xs">{strings.password}</span>
               <input
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm"
+                className="w-full min-w-0 max-w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm"
                 placeholder={strings.password}
                 disabled
                 readOnly
@@ -62,13 +64,13 @@ export default function LoginPageMock({
             </label>
           </div>
 
-          <div className="mt-4 flex items-center justify-between gap-3">
+          <div className="mt-4 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
             <button type="button" className="text-xs font-medium text-[#0070ba]" disabled tabIndex={-1}>
               {strings.forgot}
             </button>
             <button
               type="button"
-              className="rounded-full bg-[#0070ba] px-6 py-2 text-sm font-semibold text-white shadow-sm"
+              className="w-full rounded-full bg-[#0070ba] px-6 py-2.5 text-sm font-semibold text-white shadow-sm sm:w-auto"
               disabled
               tabIndex={-1}
             >
@@ -76,7 +78,7 @@ export default function LoginPageMock({
             </button>
           </div>
 
-          <p className="mt-8 text-center text-[11px] text-slate-500">{strings.footer}</p>
+          <p className="mt-6 text-center text-[10px] leading-relaxed text-slate-500 sm:mt-8 sm:text-[11px]">{strings.footer}</p>
         </div>
       </div>
     </BrowserChrome>

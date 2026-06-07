@@ -109,10 +109,12 @@ function ProjectCard({
   project,
   lang,
   isRtl,
+  touchDevice,
 }: {
   project: Project;
   lang: string;
   isRtl: boolean;
+  touchDevice: boolean;
 }) {
   const cardRef = useRef<HTMLDivElement | null>(null);
   const content = lang === "ar" ? project.ar : lang === "ku" ? project.ku : project.en;
@@ -122,6 +124,7 @@ function ProjectCard({
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const handleEnter = () => {
+    if (touchDevice) return;
     const card = cardRef.current;
     if (!card || prefersReduced()) return;
     gsap.to(card, { y: -10, duration: 0.45, ease: "back.out(2.2)", overwrite: "auto" });
@@ -142,6 +145,7 @@ function ProjectCard({
   };
 
   const handleLeave = () => {
+    if (touchDevice) return;
     const card = cardRef.current;
     if (!card || prefersReduced()) return;
     gsap.to(card, { y: 0, duration: 0.5, ease: "power3.out", overwrite: "auto" });
@@ -158,9 +162,12 @@ function ProjectCard({
   return (
     <div
       ref={cardRef}
-      onMouseEnter={handleEnter}
-      onMouseLeave={handleLeave}
-      className="pg-card group flex h-full w-full min-w-[260px] flex-col lg:min-w-0 [will-change:transform,opacity]"
+      onMouseEnter={touchDevice ? undefined : handleEnter}
+      onMouseLeave={touchDevice ? undefined : handleLeave}
+      className={cn(
+        "pg-card group flex h-full w-full min-w-0 flex-col lg:min-w-0",
+        !touchDevice && "[will-change:transform,opacity]"
+      )}
     >
       <TiltCard
         maxRotate={4}
@@ -229,6 +236,15 @@ export default function ProjectsGrid() {
   const { lang } = useApp();
   const isRtl = lang === "ar" || lang === "ku";
   const rootRef = useRef<HTMLElement | null>(null);
+  const [touchDevice, setTouchDevice] = React.useState(false);
+
+  React.useEffect(() => {
+    const mq = window.matchMedia("(hover: none), (pointer: coarse)");
+    const update = () => setTouchDevice(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   const heading = lang === "ar" ? "مشاريعنا" : lang === "ku" ? "پڕۆژەکانمان" : "Our Projects";
   const subtitle =
@@ -255,49 +271,58 @@ export default function ProjectsGrid() {
         const sub = root.querySelector<HTMLElement>(".pg-subtitle");
         const cards = q(".pg-card");
 
-        // ---- Initial hidden states (transform + opacity only) ----
-        if (line) gsap.set(line, { scaleX: 0, transformOrigin: isRtl ? "right center" : "left center" });
-        if (head) gsap.set(head, { autoAlpha: 0, y: 30, filter: "blur(12px)" });
-        if (sub) gsap.set(sub, { autoAlpha: 0, y: 20 });
-        gsap.set(cards, { autoAlpha: 0, y: 60, scale: 0.94 });
-        gsap.set(q(".pg-reveal"), { autoAlpha: 0, y: 24 });
-
-        // ---- Section header entrance ----
-        const headerTl = gsap.timeline({
-          scrollTrigger: { trigger: root, start: "top 78%" },
-        });
-        if (line) headerTl.to(line, { scaleX: 1, duration: 0.7, ease: "power3.out" });
-        if (head)
-          headerTl.to(
-            head,
-            { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 0.8, ease: "power3.out" },
-            "-=0.2"
-          );
-        if (sub)
-          headerTl.to(
-            sub,
-            { autoAlpha: 1, y: 0, duration: 0.6, ease: "power2.out" },
-            "-=0.45"
-          );
-
-        // ---- Project cards reveal (batched, equal grid) ----
-        ScrollTrigger.batch(cards, {
-          start: "top 85%",
-          onEnter: (batch) => {
-            batch.forEach((card, i) => {
-              const inner = card.querySelectorAll(".pg-reveal");
-              const tl = gsap.timeline({ delay: i * 0.12 });
-              tl.to(card, { autoAlpha: 1, y: 0, scale: 1, duration: 0.9, ease: "power3.out" })
-                .to(
-                  inner,
-                  { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.1, ease: "power2.out" },
-                  "-=0.42"
-                );
-            });
-          },
+        // Mobile / tablet: static cards — no scroll-driven transforms during horizontal swipe
+        mm.add("(max-width: 1023px)", () => {
+          if (line) gsap.set(line, { scaleX: 1, transformOrigin: isRtl ? "right center" : "left center" });
+          if (head) gsap.set(head, { autoAlpha: 1, y: 0, filter: "blur(0px)" });
+          if (sub) gsap.set(sub, { autoAlpha: 1, y: 0 });
+          gsap.set(cards, { autoAlpha: 1, y: 0, scale: 1, clearProps: "transform" });
+          gsap.set(q(".pg-reveal"), { autoAlpha: 1, y: 0 });
         });
 
-        // ---- Per-card background parallax (desktop only — scale causes mobile clipping) ----
+        // Desktop: full entrance animations
+        mm.add("(min-width: 1024px)", () => {
+          if (line) gsap.set(line, { scaleX: 0, transformOrigin: isRtl ? "right center" : "left center" });
+          if (head) gsap.set(head, { autoAlpha: 0, y: 30, filter: "blur(12px)" });
+          if (sub) gsap.set(sub, { autoAlpha: 0, y: 20 });
+          gsap.set(cards, { autoAlpha: 0, y: 60, scale: 0.94 });
+          gsap.set(q(".pg-reveal"), { autoAlpha: 0, y: 24 });
+
+          const headerTl = gsap.timeline({
+            scrollTrigger: { trigger: root, start: "top 78%" },
+          });
+          if (line) headerTl.to(line, { scaleX: 1, duration: 0.7, ease: "power3.out" });
+          if (head)
+            headerTl.to(
+              head,
+              { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 0.8, ease: "power3.out" },
+              "-=0.2"
+            );
+          if (sub)
+            headerTl.to(
+              sub,
+              { autoAlpha: 1, y: 0, duration: 0.6, ease: "power2.out" },
+              "-=0.45"
+            );
+
+          ScrollTrigger.batch(cards, {
+            start: "top 85%",
+            onEnter: (batch) => {
+              batch.forEach((card, i) => {
+                const inner = card.querySelectorAll(".pg-reveal");
+                const tl = gsap.timeline({ delay: i * 0.12 });
+                tl.to(card, { autoAlpha: 1, y: 0, scale: 1, duration: 0.9, ease: "power3.out" })
+                  .to(
+                    inner,
+                    { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.1, ease: "power2.out" },
+                    "-=0.42"
+                  );
+              });
+            },
+          });
+        });
+
+        // ---- Per-card background parallax (desktop only) ----
         mm.add("(min-width: 768px)", () => {
           cards.forEach((card) => {
             const parallax = card.querySelector<HTMLElement>(".pg-parallax");
@@ -373,12 +398,18 @@ export default function ProjectsGrid() {
           </p>
         </div>
 
-        {/* Single row — 5 columns desktop, horizontal scroll mobile */}
-        <div className="relative -mx-4 px-4 sm:mx-0 sm:px-0">
-          <div className="flex gap-5 md:gap-6 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none lg:grid lg:grid-cols-5 lg:items-stretch lg:overflow-visible w-full min-w-0">
+        {/* Single row — 5 columns desktop, smooth horizontal scroll mobile */}
+        <div className="relative min-w-0">
+          <div
+            data-lenis-prevent
+            className="pg-projects-track flex w-full min-w-0 gap-4 overflow-x-auto overscroll-x-contain pb-3 snap-x snap-proximity scrollbar-none sm:gap-5 lg:grid lg:grid-cols-5 lg:items-stretch lg:overflow-visible lg:gap-6 lg:snap-none lg:pb-0"
+          >
             {projects.map((project) => (
-              <div key={project.id} className="flex snap-start shrink-0 w-[78vw] max-w-[320px] sm:w-[300px] lg:w-auto lg:min-w-0 lg:shrink h-full">
-                <ProjectCard project={project} lang={lang} isRtl={isRtl} />
+              <div
+                key={project.id}
+                className="flex h-full w-[85vw] max-w-[300px] shrink-0 snap-center sm:w-[280px] lg:w-auto lg:max-w-none lg:shrink"
+              >
+                <ProjectCard project={project} lang={lang} isRtl={isRtl} touchDevice={touchDevice} />
               </div>
             ))}
           </div>

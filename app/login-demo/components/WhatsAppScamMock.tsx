@@ -33,16 +33,16 @@ export default function WhatsAppScamMock({
       notSecureLabel={notSecureLabel}
       secureLabel={secureLabel}
     >
-      <div className="min-h-[280px] bg-[#efeae2]" dir="ltr">
-        <div className="flex items-center justify-between gap-2 border-b border-[#d1d7db] bg-[#f0f2f5] px-4 py-3">
+      <div className="min-h-[240px] w-full min-w-0 overflow-x-hidden bg-[#efeae2] sm:min-h-[280px]" dir="ltr">
+        <div className="flex min-w-0 items-center justify-between gap-2 border-b border-[#d1d7db] bg-[#f0f2f5] px-3 py-2.5 sm:px-4 sm:py-3">
           <div className="min-w-0 flex-1 truncate text-sm font-semibold text-[#111b21]">{wa.header}</div>
-          <div className="shrink-0 text-xs text-[#667781]">{wa.fromMeta}</div>
+          <div className="shrink-0 text-[10px] text-[#667781] sm:text-xs">{wa.fromMeta}</div>
         </div>
 
-        <div className="p-4 sm:p-5">
+        <div className="p-3 sm:p-5">
           <p className="text-xs font-medium text-[#667781]">{wa.fromName}</p>
 
-          <div className="mt-3 max-w-md rounded-lg rounded-tl-none bg-white p-4 shadow-sm">
+          <div className="mt-3 w-full min-w-0 max-w-md rounded-lg rounded-tl-none bg-white p-3 shadow-sm sm:p-4">
             <p className="whitespace-pre-line text-sm leading-relaxed text-[#111b21]">{wa.message}</p>
 
             <button

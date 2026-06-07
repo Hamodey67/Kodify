@@ -114,11 +114,11 @@ export default function LoginDemoPage() {
   };
 
   return (
-    <div className="min-h-screen" dir={isRtl ? "rtl" : "ltr"}>
-      <section className="mx-auto max-w-6xl px-4 pb-16 pt-10 sm:px-6 md:pt-14">
-        <div className="overflow-hidden rounded-[1.75rem] border border-white/[0.08] bg-[#071525]/95 shadow-[0_40px_100px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.05)]">
+    <div className="min-h-screen overflow-x-clip" dir={isRtl ? "rtl" : "ltr"}>
+      <section className="mx-auto w-full min-w-0 max-w-6xl px-3 pb-16 pt-10 sm:px-6 md:pt-14">
+        <div className="min-w-0 overflow-hidden rounded-[1.25rem] border border-white/[0.08] bg-[#071525]/95 shadow-[0_40px_100px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.05)] sm:rounded-[1.75rem]">
           {/* Header */}
-          <div className="border-b border-white/[0.06] px-5 py-6 sm:px-8">
+          <div className="border-b border-white/[0.06] px-4 py-5 sm:px-8 sm:py-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-3">
@@ -193,9 +193,9 @@ export default function LoginDemoPage() {
           </div>
 
           {/* Main grid */}
-          <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-[minmax(240px,280px)_1fr] lg:p-8">
+          <div className="grid min-w-0 gap-5 p-4 sm:gap-6 sm:p-6 lg:grid-cols-[minmax(240px,280px)_1fr] lg:p-8">
             {/* Challenge — first on mobile */}
-            <div className="order-1 lg:order-2 lg:col-start-2">
+            <div className="order-1 min-w-0 w-full lg:order-2 lg:col-start-2">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={scenario?.id ?? "empty"}
@@ -229,16 +229,16 @@ export default function LoginDemoPage() {
               </AnimatePresence>
 
               {/* Verdict controls */}
-              <div className="mt-6">
-                <p className="mb-4 text-sm font-medium text-white/50">{copy.instruction}</p>
+              <div className="mt-5 min-w-0 sm:mt-6">
+                <p className="mb-3 text-sm font-medium leading-relaxed text-white/50 sm:mb-4">{copy.instruction}</p>
 
-                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                <div className="grid min-w-0 grid-cols-2 gap-2.5 sm:gap-4">
                   <button
                     type="button"
                     onClick={() => submitChoice("safe")}
                     disabled={choice !== "none"}
                     className={cn(
-                      "group flex flex-wrap items-center justify-center gap-2 rounded-2xl border-2 px-3 py-3.5 text-sm font-bold transition-all duration-300 sm:gap-2.5 sm:px-4 sm:py-5 sm:text-base",
+                      "group flex min-w-0 items-center justify-center gap-1.5 rounded-xl border-2 px-2 py-3 text-xs font-bold transition-all duration-300 sm:gap-2.5 sm:rounded-2xl sm:px-4 sm:py-5 sm:text-base",
                       choice === "safe"
                         ? "border-emerald-400/50 bg-emerald-500/15 text-emerald-200"
                         : "border-emerald-400/30 bg-emerald-500/[0.07] text-emerald-100 hover:border-emerald-400/50 hover:bg-emerald-500/12",
@@ -254,7 +254,7 @@ export default function LoginDemoPage() {
                     onClick={() => submitChoice("phishing")}
                     disabled={choice !== "none"}
                     className={cn(
-                      "group flex flex-wrap items-center justify-center gap-2 rounded-2xl border-2 px-3 py-3.5 text-sm font-bold transition-all duration-300 sm:gap-2.5 sm:px-4 sm:py-5 sm:text-base",
+                      "group flex min-w-0 items-center justify-center gap-1.5 rounded-xl border-2 px-2 py-3 text-xs font-bold transition-all duration-300 sm:gap-2.5 sm:rounded-2xl sm:px-4 sm:py-5 sm:text-base",
                       choice === "phishing"
                         ? "border-amber-400/50 bg-amber-500/15 text-amber-100"
                         : "border-amber-400/30 bg-amber-500/[0.07] text-amber-100 hover:border-amber-400/50 hover:bg-amber-500/12",
@@ -267,7 +267,7 @@ export default function LoginDemoPage() {
                   </button>
                 </div>
 
-                <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-white/[0.06] pt-4">
+                <div className="mt-3 flex min-w-0 flex-wrap items-center gap-2 border-t border-white/[0.06] pt-3 sm:mt-4 sm:pt-4">
                   <button
                     type="button"
                     onClick={() => setInspect(true)}
@@ -297,7 +297,7 @@ export default function LoginDemoPage() {
             </div>
 
             {/* Sidebar */}
-            <div className="order-2 flex flex-col gap-5 lg:order-1 lg:col-start-1 lg:row-start-1">
+            <div className="order-2 flex min-w-0 flex-col gap-5 lg:order-1 lg:col-start-1 lg:row-start-1">
               <ScorePanel
                 scoreLabel={copy.result.scoreLabel}
                 score={correctCount}
