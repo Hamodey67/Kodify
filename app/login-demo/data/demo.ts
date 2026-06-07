@@ -41,15 +41,18 @@ export type DemoScenario = {
 export type LoginDemoCopy = {
   title: string;
   desc: string;
+  demoBadge: string;
   hint: string;
   instruction: string;
+  bannerDismiss: string;
 
   tabs: {
     login: string;
     whatsapp: string;
   };
 
-  urlLabel: string;
+  notSecure: string;
+  secure: string;
   fakeTag: string;
   legitTag: string;
 
@@ -78,9 +81,11 @@ export type LoginDemoCopy = {
     streakLabel: string;
   };
 
+  roundLabel: string;
   cluesTitle: string;
-  statusFound: string;
-  statusHidden: string;
+  cluesLocked: string;
+  statusPresent: string;
+  statusAbsent: string;
 
   shareText: (args: { score: number; max: number; streak: number; brand: string; kind: DemoScenarioKind }) => string;
 
@@ -89,12 +94,15 @@ export type LoginDemoCopy = {
 
 const COPY: Record<Lang, LoginDemoCopy> = {
   ar: {
-    title: "Fake Login Detector (Demo)",
-    desc: "تجربة تعليمية تفاعلية: قرر إذا الشي طبيعي لو مزوّر، وبعدين افحص الأدلة بنفسك.",
-    hint: "ملاحظة: هذا ديمو تعليمي — لا تدخل بياناتك الحقيقية.",
-    instruction: "شوف السيناريو واضغط: (Safe) إذا تشوفه طبيعي أو (Phishing) إذا تشك إنه مزوّر.",
+    title: "Fake Login Detector",
+    desc: "قرر إذا كان السيناريو آمنًا أو تصيّدًا، ثم راجع الأدلة.",
+    demoBadge: "Demo",
+    hint: "ديمو تعليمي — لا تدخل بياناتك الحقيقية.",
+    instruction: "اختر Safe أو Phishing بناءً على ما تراه.",
+    bannerDismiss: "إغلاق",
     tabs: { login: "صفحة تسجيل دخول", whatsapp: "احتيال واتساب" },
-    urlLabel: "الرابط",
+    notSecure: "Not secure",
+    secure: "Secure",
     fakeTag: "مشبوه",
     legitTag: "يبدو طبيعي",
     hotspots: {
@@ -114,14 +122,16 @@ const COPY: Record<Lang, LoginDemoCopy> = {
       copied: "تم النسخ ✅",
     },
     result: {
-      correct: "صح ✅",
-      wrong: "مو صحيح ❌",
-      scoreLabel: "نقاطك",
+      correct: "إجابة صحيحة",
+      wrong: "إجابة غير صحيحة",
+      scoreLabel: "النتيجة",
       streakLabel: "Streak",
     },
+    roundLabel: "تقدم الجولة",
     cluesTitle: "الأدلة اللي لازم تنتبه إلها",
-    statusFound: "مكتشف",
-    statusHidden: "مخفي",
+    cluesLocked: "اختر حكمك أو اضغط «افحص الأدلة» لعرض قائمة الأدلة.",
+    statusPresent: "موجود",
+    statusAbsent: "غير موجود",
     shareText: ({ score, max, streak, brand, kind }) =>
       `اختبرت نفسي بـ ${kind === "login" ? "فاحص تسجيل الدخول" : "احتيال واتساب"} (${brand}) — نتيجتي ${score}/${max} و Streak ${streak}. جرّبها!`,
     clues: [
@@ -154,12 +164,15 @@ const COPY: Record<Lang, LoginDemoCopy> = {
   },
 
   en: {
-    title: "Fake Login Detector (Demo)",
-    desc: "A fast interactive learning game: decide if it looks legit, then inspect the red flags yourself.",
-    hint: "Learning demo — don’t enter real credentials.",
-    instruction: "Review the scenario and choose (Safe) if it looks normal or (Phishing) if you suspect it.",
+    title: "Fake Login Detector",
+    desc: "Decide if the scenario is safe or phishing, then review the clues.",
+    demoBadge: "Demo",
+    hint: "Educational demo — don't enter real credentials.",
+    instruction: "Choose Safe or Phishing based on what you see.",
+    bannerDismiss: "Dismiss",
     tabs: { login: "Login page", whatsapp: "WhatsApp scam" },
-    urlLabel: "URL",
+    notSecure: "Not secure",
+    secure: "Secure",
     fakeTag: "suspicious",
     legitTag: "looks normal",
     hotspots: { domain: "Domain", http: "HTTPS", branding: "Brand", cta: "CTA/Link", pressure: "Pressure" },
@@ -173,14 +186,16 @@ const COPY: Record<Lang, LoginDemoCopy> = {
       copied: "Copied ✅",
     },
     result: {
-      correct: "Correct ✅",
-      wrong: "Not quite ❌",
+      correct: "Correct",
+      wrong: "Not quite",
       scoreLabel: "Score",
       streakLabel: "Streak",
     },
-    cluesTitle: "Red flags to watch for",
-    statusFound: "Found",
-    statusHidden: "Hidden",
+    roundLabel: "Round progress",
+    cluesTitle: "Clues to watch for",
+    cluesLocked: "Submit your verdict or tap Reveal clues to see the checklist.",
+    statusPresent: "Present",
+    statusAbsent: "Not present",
     shareText: ({ score, max, streak, brand, kind }) =>
       `I tried the ${kind === "login" ? "Fake Login Detector" : "WhatsApp Scam"} (${brand}) — scored ${score}/${max} with a streak of ${streak}. Try it!`,
     clues: [
@@ -193,41 +208,46 @@ const COPY: Record<Lang, LoginDemoCopy> = {
   },
 
   ku: {
-    title: "Fake Login Detector (Demo)",
-    desc: "یارییەکی فێرکاری: دەستنیشان بکە ئەمە ڕاستە یان فێڵە، پاشان بە چاودێری دۆڵەکان.",
-    hint: "ئەمە دیمۆی فێرکارییە — هیچ زانیارییەکی ڕاستی مەنووسە.",
-    instruction: "سیناریۆکە ببینە و (Safe) هەڵبژێرە ئەگەر ڕاستە، یان (Phishing) ئەگەر گومانەت هەیە.",
+    title: "ئاشکراکەری چوونەژوورەوەی ساختە",
+    desc: "بڕیار بدە ئایا سیناریۆکە سەلامەتە یان فیشینگ، پاشان بەڵگەکان بپشکنە.",
+    demoBadge: "Demo",
+    hint: "دیمۆی فێرکاری — هیچ زانیارییەکی ڕاستەقینە مەنووسە.",
+    instruction: "Safe یان Phishing هەڵبژێرە بەپێی ئەوەی دەبینیت.",
+    bannerDismiss: "داخستن",
     tabs: { login: "پەڕەی چوونەژوورەوە", whatsapp: "فێڵی واتساپ" },
-    urlLabel: "URL",
-    fakeTag: "گومانە",
-    legitTag: "وەک ڕاست دەردەکەوێت",
-    hotspots: { domain: "دۆمەین", http: "HTTPS", branding: "برانډ", cta: "لینک/دوگمە", pressure: "فشار" },
+    notSecure: "Not secure",
+    secure: "Secure",
+    fakeTag: "گوماناوی",
+    legitTag: "ڕاستەقینە",
+    hotspots: { domain: "دۆمەین", http: "HTTPS", branding: "براند (نیشانە)", cta: "لینک/دوگمە", pressure: "فشار" },
     buttons: {
-      phishing: "Phishing",
-      safe: "Safe",
-      inspect: "چاودێری دۆڵەکان",
+      phishing: "ساختەکاری (Phishing)",
+      safe: "سەلامەت (Safe)",
+      inspect: "پشکنینی بەڵگەکان",
       reset: "دووبارە",
-      next: "داهاتوو",
-      share: "هاوبەشی ئەنجامەکەم",
+      next: "دواتر",
+      share: "هاوبەشکردنی ئەنجامەکەم",
       copied: "کۆپی کرا ✅",
     },
     result: {
-      correct: "ڕاست ✅",
-      wrong: "هەڵە ❌",
+      correct: "ڕاستە",
+      wrong: "هەڵەیە",
       scoreLabel: "نمرە",
       streakLabel: "Streak",
     },
-    cluesTitle: "دۆڵەکان کە دەبێت ئاگاداربیت",
-    statusFound: "دۆزرایەوە",
-    statusHidden: "شاراوە",
+    roundLabel: "پێشکەوتنی گۆڕ",
+    cluesTitle: "ئەو نیشانە گوماناوییانەی پێویستە ئاگاداریان بیت",
+    cluesLocked: "بڕیارەکەت بدە یان «پشکنینی بەڵگەکان» بکە بۆ بینینی لیستەکە.",
+    statusPresent: "هەیە",
+    statusAbsent: "نییە",
     shareText: ({ score, max, streak, brand, kind }) =>
-      `من تاقیکردنەوەم کرد بە ${kind === "login" ? "دیمۆی چوونەژوورەوە" : "فێڵی واتساپ"} (${brand}) — نمرەم ${score}/${max} و Streak ${streak}. تاقیبکەرەوە!`,
+      `من تاقیکردنەوەم کرد بۆ دۆزینەوەی لایەنە ساختەکان لە پەڕەی (${brand}) لە ڕێگەی ${kind === "login" ? "تاقیکردنەوەی چوونەژوورەوە" : "فێڵی واتساپ"} — نمرەم ${score}/${max} بوو لەگەڵ ڕێژەی سەرکەوتنی ${streak}. تۆش تاقی بکەرەوە!`,
     clues: [
-      { id: "domain", title: "URL/دۆمەین گومانە", detail: "دڵنیابە لە دۆمەینی ڕاست. ئاگاداری دۆمەینی هاوشێوە بە." },
-      { id: "http", title: "HTTPS دیار نییە", detail: "نەبوونی HTTPS/قوفڵ نیشانەی مەترسییە بە تایبەتی لە چوونەژوورەوە." },
-      { id: "pressure", title: "فشار/خێرایی", detail: "وتەی وەک “هەژمارەکەت دەداخڕێت” تۆ دەخاتە ژێر فشار." },
-      { id: "branding", title: "برانډ ناهاوشێوەیە", detail: "گۆڕانی بچووک لە لۆگۆ/فۆنت/ڕێکخستن دەکرێت نیشانەی فێڵ بێت." },
-      { id: "cta", title: "لینک/دوگمەی گومانە", detail: "لە لینکە کورتکراوەکان ئاگاداربە و لە داوای زانیاری زیات." },
+      { id: "domain", title: "دۆمەین/ناونیشانی URL گوماناوییە", detail: "دڵنیابە لە ناونیشانی دۆمەینی فەرمی. ئاگاداری پیتە هاوشێوەکان و کۆتاییە سەیرەکانی دۆمەین بە." },
+      { id: "http", title: "پڕۆتۆکۆلی HTTPS بەردەست نییە", detail: "نەبوونی نیشانەی قوفڵ یان HTTPS نیشانەیەکی گوماناوی بەهێزە بۆ لاپەڕەکانی چوونەژوورەوە." },
+      { id: "pressure", title: "زمانی فشارخستنەسەر و پەلەکردن", detail: "هەڕەشە و ئاگادارکردنەوەی وەک “حیسابەکەت دادەخرێت” دەیەوێت بە پەلە بڕیار بدەیت." },
+      { id: "branding", title: "نەگونجانی نیشانەی بازرگانی (Branding)", detail: "هەر جیاوازییەکی بچووک لە لۆگۆ، فۆنت، یان شێوازی ڕێکخستنی لاپەڕەکە نیشانەی ساختەکارییە." },
+      { id: "cta", title: "دوگمە یان لینکی گوماناوی", detail: "ئاگاداری لینکە کورتکراوەکان بە یان ئەو پەڕانەی کە داوای زانیاری زیاتری بێهوودە دەکەن." },
     ],
   },
 };

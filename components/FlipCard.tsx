@@ -23,8 +23,8 @@ const defaultLabelsByLang: Record<Lang, FlipCardLabels> = {
     comingSoon: "Coming soon",
   },
   ku: {
-    hoverHint: "بینینی وردەکاری",
-    openCta: "بینینی ماڵپەڕ ↗",
+    hoverHint: "بینینی وردەکارییەکان",
+    openCta: "سەردانکردنی ماڵپەڕ ↗",
     comingSoon: "بەم زووانە",
   },
 };
@@ -103,12 +103,12 @@ export default function FlipCard({
           <div 
             className="absolute inset-0 z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
             style={{
-              background: `radial-gradient(circle 250px at ${mousePos.x}% ${mousePos.y}%, rgba(34, 211, 238, 0.1), transparent)`
+              background: `radial-gradient(circle 250px at ${mousePos.x}% ${mousePos.y}%, rgba(43, 127, 255, 0.1), transparent)`
             }}
           />
         )}
         
-        <div className="absolute inset-0 z-10 border border-transparent group-hover:border-cyan-500/20 rounded-[2.5rem] transition-colors duration-500" />
+        <div className="absolute inset-0 z-10 border border-transparent group-hover:border-[var(--accent-bright)]/20 rounded-[2.5rem] transition-colors duration-500" />
 
         {/* Content Container */}
         <div className="absolute inset-0 z-20 flex flex-col justify-between p-8 text-right">
@@ -117,7 +117,7 @@ export default function FlipCard({
             {chips.map((chip, i) => (
               <span 
                 key={i}
-                className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] font-black text-cyan-400 backdrop-blur-xl uppercase tracking-widest shadow-lg"
+                className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] font-black text-[var(--accent-glow)] backdrop-blur-xl uppercase tracking-widest shadow-lg"
               >
                 {chip}
               </span>
@@ -126,7 +126,7 @@ export default function FlipCard({
 
           {/* Bottom Section: Info */}
           <div className="relative">
-            <h3 className="text-3xl font-black text-white tracking-tight mb-4 group-hover:text-cyan-400 transition-colors duration-300">
+            <h3 className="text-3xl font-black text-white tracking-tight mb-4 group-hover:text-[var(--accent-bright)] transition-colors duration-300">
               {title}
             </h3>
             
@@ -141,7 +141,7 @@ export default function FlipCard({
                   href={href}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-8 py-4 rounded-2xl bg-cyan-500 text-black font-black text-sm uppercase tracking-widest transition-all shadow-[0_10px_30px_rgba(34,211,238,0.2)] hover:shadow-[0_15px_40px_rgba(34,211,238,0.4)] hover:bg-cyan-400 hover:-translate-y-1 active:translate-y-0"
+                  className="px-8 py-4 rounded-2xl bg-[var(--accent-primary)] text-white font-black text-sm uppercase tracking-widest transition-all shadow-[0_10px_30px_rgba(43,127,255,0.2)] hover:shadow-[0_15px_40px_rgba(43,127,255,0.4)] hover:bg-[var(--accent-bright)] hover:text-white hover:-translate-y-1 active:translate-y-0"
                 >
                   {ui.openCta}
                 </a>
@@ -151,7 +151,7 @@ export default function FlipCard({
                 </div>
               )}
 
-              <div className="w-12 h-[2px] bg-cyan-500/30 group-hover:w-20 transition-all duration-500 rounded-full" />
+              <div className="w-12 h-[2px] bg-[var(--accent-bright)]/30 group-hover:w-20 transition-all duration-500 rounded-full" />
             </div>
           </div>
         </div>

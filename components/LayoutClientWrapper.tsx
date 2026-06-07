@@ -7,6 +7,11 @@ import BackgroundClient from "@/components/backgroundClient";
 import ChatBot from "@/components/ChatBot";
 import { motion } from "framer-motion";
 import Lenis from "lenis";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useApp } from "@/app/providers";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function LayoutClientWrapper({
   children,
@@ -14,6 +19,8 @@ export default function LayoutClientWrapper({
   children: React.ReactNode;
 }) {
   const [showContent, setShowContent] = useState(false);
+  const { lang } = useApp();
+  const isRtl = lang === "ar" || lang === "ku";
 
   // Initialize Lenis smooth scrolling
   useEffect(() => {
@@ -29,17 +36,35 @@ export default function LayoutClientWrapper({
       touchMultiplier: 2,
     });
 
-    let rafId: number;
-    function raf(time: number) {
-      lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
+    (window as any).lenis = lenis;
+
+    // Keep GSAP ScrollTrigger in sync with Lenis' smooth scroll so scroll-driven
+    // animations (reveals, parallax) fire at the correct positions.
+    lenis.on("scroll", ScrollTrigger.update);
+
+    const tickerCb = (time: number) => {
+      lenis.raf(time * 1000);
+    };
+    gsap.ticker.add(tickerCb);
+    gsap.ticker.lagSmoothing(0);
+
+    // Positions can be off until the page is fully laid out / images decode.
+    ScrollTrigger.refresh();
+
+    const hash = window.location.hash;
+    if (hash) {
+      const scrollToHash = () => {
+        const el = document.querySelector(hash);
+        if (el) lenis.scrollTo(el, { offset: -120 });
+      };
+      requestAnimationFrame(() => requestAnimationFrame(scrollToHash));
     }
 
-    rafId = requestAnimationFrame(raf);
-
     return () => {
-      cancelAnimationFrame(rafId);
+      lenis.off("scroll", ScrollTrigger.update);
+      gsap.ticker.remove(tickerCb);
       lenis.destroy();
+      delete (window as any).lenis;
     };
   }, [showContent]);
 
@@ -52,6 +77,8 @@ export default function LayoutClientWrapper({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1.2, ease: "easeOut" }}
+          dir={isRtl ? "rtl" : "ltr"}
+          lang={lang === "ku" ? "ckb" : lang}
         >
           <BackgroundClient />
           <Navbar />

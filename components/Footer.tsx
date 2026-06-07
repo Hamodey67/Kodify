@@ -80,8 +80,8 @@ export default function Footer() {
     <footer className="relative mt-32 border-t border-[var(--border)] bg-[var(--bg-deep)] transition-colors duration-300">
       {/* Decorative Glows */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-24 bottom-0 h-[400px] w-[400px] rounded-full bg-cyan-500/[0.03] blur-[100px]" />
-        <div className="absolute -right-24 top-0 h-[400px] w-[400px] rounded-full bg-sky-400/[0.03] blur-[100px]" />
+        <div className="absolute -left-24 bottom-0 h-[400px] w-[400px] rounded-full bg-[var(--accent-primary)]/[0.03] blur-[100px]" />
+        <div className="absolute -right-24 top-0 h-[400px] w-[400px] rounded-full bg-[var(--accent-glow)]/[0.03] blur-[100px]" />
       </div>
 
       <div className="relative mx-auto max-w-7xl px-6 py-20 pb-12">
@@ -110,8 +110,8 @@ export default function Footer() {
 
             <div className="inline-flex items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-2">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent-bright)] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--accent-primary)]"></span>
               </span>
               <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">
                 {c.status}
@@ -121,7 +121,7 @@ export default function Footer() {
 
           {/* Section 2: Contact List (Clean Layout) */}
           <div className="lg:col-span-5 space-y-8">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-400/60 pb-2 border-b border-white/5 inline-block">
+            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--accent-bright)]/60 pb-2 border-b border-white/5 inline-block">
               {c.contact}
             </h4>
 
@@ -131,7 +131,7 @@ export default function Footer() {
                 href={`mailto:${c.email}`}
                 className="group flex items-center gap-5 p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.06] hover:border-white/10 transition-all"
               >
-                <div className="h-10 w-10 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center text-white/40 group-hover:text-cyan-400 group-hover:border-cyan-400/30 transition-all shrink-0">
+                <div className="h-10 w-10 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center text-white/40 group-hover:text-[var(--accent-bright)] group-hover:border-[var(--accent-bright)]/30 transition-all shrink-0">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
@@ -147,7 +147,7 @@ export default function Footer() {
                 href={`tel:${c.phone}`}
                 className="group flex items-center gap-5 p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.06] hover:border-white/10 transition-all"
               >
-                <div className="h-10 w-10 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center text-white/40 group-hover:text-cyan-400 group-hover:border-cyan-400/30 transition-all shrink-0">
+                <div className="h-10 w-10 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center text-white/40 group-hover:text-[var(--accent-bright)] group-hover:border-[var(--accent-bright)]/30 transition-all shrink-0">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
@@ -163,7 +163,7 @@ export default function Footer() {
                 href={`tel:${c.phone2}`}
                 className="group flex items-center gap-5 p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.06] hover:border-white/10 transition-all"
               >
-                <div className="h-10 w-10 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center text-white/40 group-hover:text-cyan-400 group-hover:border-cyan-400/30 transition-all shrink-0">
+                <div className="h-10 w-10 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center text-white/40 group-hover:text-[var(--accent-bright)] group-hover:border-[var(--accent-bright)]/30 transition-all shrink-0">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
@@ -192,7 +192,7 @@ export default function Footer() {
 
           {/* Section 3: Links (Modern Sidebar style) */}
           <div className="lg:col-span-3 space-y-8">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-400/60 pb-2 border-b border-white/5 inline-block">
+            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--accent-bright)]/60 pb-2 border-b border-white/5 inline-block">
               {c.quick}
             </h4>
             <ul className="space-y-3">
@@ -203,7 +203,7 @@ export default function Footer() {
                     className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/5 text-sm text-white/50 hover:text-white hover:bg-white/[0.07] hover:border-white/10 transition-all group"
                   >
                     <span>{link.label}</span>
-                    <svg className="w-3.5 h-3.5 text-white/20 group-hover:text-cyan-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-3.5 h-3.5 text-white/20 group-hover:text-[var(--accent-bright)] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </Link>

@@ -108,10 +108,10 @@ export default function BackgroundInteractiveLines() {
         const x2 = px + Math.cos(ang) * L;
         const y2 = py + Math.sin(ang) * L;
 
-        // subtle gradient color
+        // subtle gradient color (brand blue/ice blue)
         const g = ctx.createLinearGradient(px, py, x2, y2);
-        g.addColorStop(0, `rgba(34,211,238,${l.a})`); // cyan
-        g.addColorStop(1, `rgba(16,185,129,${l.a * 0.9})`); // emerald
+        g.addColorStop(0, `rgba(43,127,255,${l.a})`); // var(--accent-primary)
+        g.addColorStop(1, `rgba(133,189,255,${l.a * 0.9})`); // var(--accent-glow)
 
         ctx.strokeStyle = g;
         ctx.lineWidth = l.w;

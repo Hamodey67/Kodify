@@ -33,9 +33,9 @@ export default function ChatBot() {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             onClick={() => setIsOpen(true)}
-            className="group relative flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-cyan-600 text-white shadow-2xl hover:bg-cyan-700 transition-all duration-300"
+            className="group relative flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-[var(--accent-primary)] text-white shadow-2xl hover:scale-105 transition-all duration-300"
           >
-            <div className="absolute inset-0 rounded-full bg-blue-400 blur-lg opacity-20 group-hover:opacity-40 transition-opacity" />
+            <div className="absolute inset-0 rounded-full bg-[var(--accent-bright)] blur-lg opacity-20 group-hover:opacity-40 transition-opacity" />
             <MessageCircle className="h-7 w-7 sm:h-8 sm:w-8 relative z-10" />
           </motion.button>
         )}
@@ -50,7 +50,7 @@ export default function ChatBot() {
             className="flex h-[500px] max-h-[calc(100vh-120px)] w-[calc(100vw-32px)] sm:w-[380px] flex-col overflow-hidden rounded-2xl border border-white/20 bg-white/70 backdrop-blur-xl dark:bg-black/70 shadow-2xl"
           >
             {/* Header - Forced LTR to keep logo on left */}
-            <div dir="ltr" className="flex items-center justify-between border-b border-white/10 bg-cyan-500/5 p-4 backdrop-blur-md">
+            <div dir="ltr" className="flex items-center justify-between border-b border-white/10 bg-[var(--accent-primary)]/5 p-4 backdrop-blur-md">
               <div className="flex items-center gap-3 text-left">
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/5 border border-white/10 text-white overflow-hidden shadow-md">
                   <img src="/kodify.png" alt="Kodify" className="h-full w-full object-contain p-1" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.removeAttribute('style'); }} />
@@ -59,7 +59,7 @@ export default function ChatBot() {
                 <div>
                   <h3 className="text-lg font-black tracking-widest dark:text-white uppercase">KODIFY</h3>
                   <div className="flex items-center gap-1">
-                    <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                    <span className="h-2 w-2 rounded-full bg-[var(--accent-bright)] animate-pulse" />
                     <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">{tx.online}</span>
                   </div>
                 </div>
@@ -73,7 +73,7 @@ export default function ChatBot() {
             <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.length === 0 && (
                 <div className="text-center py-8">
-                  <Bot className="h-10 w-10 mx-auto text-sky-400 mb-2 opacity-50" />
+                  <Bot className="h-10 w-10 mx-auto text-[var(--accent-bright)] mb-2 opacity-50" />
                   <p className="text-xs text-zinc-500">{tx.welcome}</p>
                 </div>
               )}
@@ -82,7 +82,7 @@ export default function ChatBot() {
                 <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`p-3 rounded-2xl text-sm max-w-[85%] whitespace-pre-wrap break-words ${
                     m.role === 'user' 
-                      ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg rounded-tr-none' 
+                      ? 'bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-bright)] text-white shadow-lg rounded-tr-none' 
                       : 'bg-white/80 dark:bg-zinc-800/80 dark:text-white border border-zinc-200/40 dark:border-zinc-700/40 rounded-tl-none shadow-sm'
                   }`}>
                     {m.content}
@@ -117,14 +117,14 @@ export default function ChatBot() {
                   value={input}
                   onChange={handleInputChange}
                   placeholder={tx.placeholder}
-                  className="w-full bg-white/50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl py-3 pl-4 pr-12 text-sm dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full bg-white/50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl py-3 pl-4 pr-12 rtl:pl-12 rtl:pr-4 text-sm dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <button
                   type="submit"
                   disabled={!input || isLoading}
-                  className="absolute right-1 top-1 bottom-1 px-3 text-sky-400 hover:text-sky-500 transition-colors disabled:opacity-50"
+                  className="absolute right-1 rtl:right-auto rtl:left-1 top-1 bottom-1 px-3 text-[var(--accent-bright)] hover:text-[var(--accent-glow)] transition-colors disabled:opacity-50"
                 >
-                  <Send className="h-5 w-5 rtl:rotate-180" />
+                  <Send className="h-5 w-5 rtl:-scale-x-100" />
                 </button>
               </div>
             </form>

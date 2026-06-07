@@ -79,14 +79,14 @@ export default function CustomCursor() {
       {/* Outer Circle */}
       <div
         ref={cursorRef}
-        className={`fixed top-0 left-0 -ml-[13px] -mt-[13px] h-[26px] w-[26px] rounded-full border border-cyan-400/50 bg-cyan-400/0 will-change-transform transition-[width,height,background-color,border-color] duration-300 ${
-          hovered ? "h-[48px] w-[48px] -ml-[24px] -mt-[24px] bg-cyan-400/10 border-cyan-400" : ""
+        className={`fixed top-0 left-0 -ml-[13px] -mt-[13px] h-[26px] w-[26px] rounded-full border border-[var(--accent-bright)]/50 bg-transparent will-change-transform transition-[width,height,background-color,border-color] duration-300 ${
+          hovered ? "h-[48px] w-[48px] -ml-[24px] -mt-[24px] bg-[var(--accent-primary)]/10 border-[var(--accent-bright)]" : ""
         }`}
       />
       {/* Inner Dot */}
       <div
         ref={dotRef}
-        className="fixed top-0 left-0 -ml-[3px] -mt-[3px] h-[6px] w-[6px] rounded-full bg-cyan-400 will-change-transform"
+        className="fixed top-0 left-0 -ml-[3px] -mt-[3px] h-[6px] w-[6px] rounded-full bg-[var(--accent-bright)] will-change-transform"
       />
     </div>
   );

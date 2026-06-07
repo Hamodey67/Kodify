@@ -103,7 +103,7 @@ export default function StoreDemo() {
           <ScreenTransition k={`${tab}-${screen}-${selectedId ?? "x"}`}>
             {/* HOME */}
             {tab === "store" && screen === "home" && (
-              <div className="h-full overflow-auto pr-1 space-y-3">
+              <div className="h-full overflow-auto pe-1 space-y-3">
                 <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
                   <div className="text-sm text-white/70">{t.store.welcome}</div>
                   <div className="text-xl font-extrabold">{t.store.welcomeText}</div>
@@ -133,7 +133,7 @@ export default function StoreDemo() {
 
             {/* DETAILS */}
             {tab === "store" && screen === "details" && selected && (
-              <div className="h-full overflow-auto pr-1">
+              <div className="h-full overflow-auto pe-1">
                 <button
                   onClick={() => setScreen("home")}
                   className="mb-3 h-9 px-3 rounded-2xl bg-white/5 border border-white/10 text-sm font-bold hover:bg-white/10"
@@ -171,7 +171,7 @@ export default function StoreDemo() {
 
             {/* CART */}
             {screen === "cart" && (
-              <div className="h-full overflow-auto pr-1">
+              <div className="h-full overflow-auto pe-1">
                 <div className="flex items-center justify-between">
                   <div className="text-xl font-extrabold">{t.store.cart}</div>
                   <button
@@ -241,7 +241,7 @@ export default function StoreDemo() {
 
             {/* CHECKOUT */}
             {screen === "checkout" && (
-              <div className="h-full overflow-auto pr-1">
+              <div className="h-full overflow-auto pe-1">
                 <button
                   onClick={() => setScreen("cart")}
                   className="mb-3 h-9 px-3 rounded-2xl bg-white/5 border border-white/10 text-sm font-bold hover:bg-white/10"

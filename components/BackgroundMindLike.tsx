@@ -59,12 +59,12 @@ export default function BackgroundMindLike() {
 
       {/* Cyber-glow header beam (shines from the top center) */}
       <div 
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[1px] bg-gradient-to-r from-transparent via-sky-400/25 to-transparent" 
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[1px] bg-gradient-to-r from-transparent via-[rgba(43,127,255,0.25)] to-transparent" 
       />
       <div 
         className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-[120px] opacity-40 pointer-events-none" 
         style={{
-          background: "radial-gradient(50% 120px at 50% 0%, rgba(125, 211, 252, 0.18), transparent)",
+          background: "radial-gradient(50% 120px at 50% 0%, rgba(43, 127, 255, 0.12), transparent)",
         }}
       />
 
@@ -87,7 +87,7 @@ export default function BackgroundMindLike() {
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(1200px 800px at 50% 35%, transparent 35%, rgba(2, 4, 10, 0.8) 100%)",
+            "radial-gradient(1200px 800px at 50% 35%, transparent 35%, rgba(2, 11, 24, 0.90) 100%)",
         }}
       />
     </div>

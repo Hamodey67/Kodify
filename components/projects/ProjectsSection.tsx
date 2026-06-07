@@ -14,7 +14,7 @@ import PosDemo from "./demos/PosDemo";
 
 type TabKey = "store" | "menu" | "pos";
 
-export default function ProjectsSection() {
+export default function ProjectsSection({ embedded = false }: { embedded?: boolean }) {
   const { lang } = useApp() as { lang: Lang };
   const tx = t[lang ?? "ar"];
   const isRtl = lang === "ar" || lang === "ku";
@@ -59,20 +59,27 @@ export default function ProjectsSection() {
   const current = tabs[active];
 
   return (
-    <section className="relative mx-auto max-w-5xl px-4 pt-32 pb-16 scroll-mt-48" id="projects">
-      {/* HUD Style Section Header - More compact */}
+    <section
+      className={cn(
+        "relative z-10 mx-auto max-w-5xl px-4 pb-16 scroll-mt-48",
+        embedded ? "pt-0" : "pt-16 sm:pt-24 md:pt-32"
+      )}
+      id="projects"
+    >
+      {/* HUD Style Section Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
         <div className="relative">
-          <motion.div 
+          <motion.div
             initial={{ width: 0 }}
             whileInView={{ width: 30 }}
-            className="h-1 bg-cyan-500 rounded-full mb-3" 
+            viewport={{ once: true }}
+            className="h-1 bg-cyan-500 rounded-full mb-3"
           />
-          <h2 className="text-3xl md:text-5xl font-black text-white tracking-tighter leading-none">
+          <h2 className="text-3xl md:text-5xl font-black theme-heading tracking-tighter leading-none">
             {tx.projectsPage.title}
           </h2>
-          <p className="mt-3 text-white/40 font-medium text-base max-w-lg">
-             {tx.projectsPage.desc}
+          <p className="mt-3 theme-muted font-medium text-base max-w-lg">
+            {tx.projectsPage.desc}
           </p>
         </div>
       </div>
@@ -85,8 +92,8 @@ export default function ProjectsSection() {
         <div className="relative rounded-[3rem] border border-[var(--border)] bg-[var(--surface)] backdrop-blur-3xl overflow-hidden shadow-[var(--card-shadow)]">
            <div className="grid lg:grid-cols-[1.1fr_.9fr] items-stretch">
              
-             {/* Left Column: Data & Specs - Tighter padding */}
-             <div className="p-8 md:p-12 lg:p-14 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-white/5">
+             {/* Left Column: Data & Specs — always dark for contrast with phone preview */}
+             <div className="p-8 md:p-12 lg:p-14 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-white/5 bg-[#0a1220] text-white">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={active}
@@ -182,8 +189,8 @@ export default function ProjectsSection() {
                 </AnimatePresence>
              </div>
 
-             {/* Right Column: Phone Playground - Scaled down */}
-             <div className="relative bg-brand-soft border-t border-[var(--border)] p-10 md:p-14 flex items-center justify-center overflow-hidden">
+             {/* Right Column: Phone Playground */}
+             <div className="relative min-h-[520px] bg-[#060d18] border-t lg:border-t-0 border-white/5 p-10 md:p-14 flex items-center justify-center overflow-hidden">
                 {/* Visual accents behind phone */}
                 <div className="absolute inset-0 pointer-events-none">
                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.06)_0%,transparent_70%)]" />

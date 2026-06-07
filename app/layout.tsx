@@ -1,7 +1,8 @@
-import { Cairo, Inter } from "next/font/google";
+import { Cairo, Inter, Noto_Sans_Arabic } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 import LayoutClientWrapper from "@/components/LayoutClientWrapper";
+import CodeRain from "@/components/CodeRain";
 import CustomCursor from "@/components/CustomCursor";
 import type { Metadata } from "next";
 
@@ -27,6 +28,13 @@ const inter = Inter({
   display: "swap",
 });
 
+const notoSansArabic = Noto_Sans_Arabic({
+  subsets: ["arabic"],
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-noto-arabic",
+  display: "swap",
+});
+
 export default function RootLayout({
   children,
 }: {
@@ -39,13 +47,13 @@ export default function RootLayout({
     <html
       lang={defaultLang}
       dir={isArabic ? "rtl" : "ltr"}
-      className="light"
+      className="dark"
       suppressHydrationWarning
     >
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'){document.documentElement.classList.remove('light');document.documentElement.classList.add('dark');}else{document.documentElement.classList.add('light');document.documentElement.classList.remove('dark');}}catch(e){document.documentElement.classList.add('light');}})();`,
+            __html: `(function(){try{document.documentElement.classList.remove('light');document.documentElement.classList.add('dark');localStorage.setItem('theme','dark');}catch(e){}})();`,
           }}
         />
       </head>
@@ -54,10 +62,12 @@ export default function RootLayout({
           "min-h-screen antialiased overflow-x-hidden",
           cairo.variable,
           inter.variable,
+          notoSansArabic.variable,
         ].join(" ")}
       >
         <Providers>
-          <CustomCursor />
+          {/* <CustomCursor /> */}
+          <CodeRain />
           <LayoutClientWrapper>
             {children}
           </LayoutClientWrapper>

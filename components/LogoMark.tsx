@@ -3,8 +3,9 @@
 import Image from "next/image";
 import { useApp } from "@/app/providers";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
-export default function LogoMark() {
+export default function LogoMark({ compact = false }: { compact?: boolean }) {
   const { theme } = useApp();
   const [mounted, setMounted] = useState(false);
 
@@ -23,7 +24,10 @@ export default function LogoMark() {
       width={40}
       height={20}
       priority
-      className="h-12 w-auto transition-opacity duration-300"
+      className={cn(
+        "w-auto transition-[height,opacity] duration-300",
+        compact ? "h-9" : "h-12"
+      )}
     />
   );
 }

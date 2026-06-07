@@ -23,9 +23,9 @@ const items = [
       tags: ["Next.js", "فوترة", "واتساب"],
     },
     ku: {
-      title: "پلاتفۆرمی ئیشتراکە وەرزشی",
-      desc: "بنیاتنانی سیستەمێکی پارەدان کە کاری دەستی بە رێژەی %60 کەمکردەوە.",
-      tags: ["Next.js", "داشبۆرد", "WhatsApp"],
+      title: "پلاتفۆرمی بەشداریکردنی وەرزشی",
+      desc: "بونیادنانی سیستەمێکی پارەدان کە کارە دەستییەکانی بە ڕێژەی %60 کەمکردەوە.",
+      tags: ["Next.js", "داشبۆرد", "واتساپ"],
     },
   },
   {
@@ -42,9 +42,9 @@ const items = [
       tags: ["ERP", "صلاحيات", "سجلات مبيعات"],
     },
     ku: {
-      title: "سیستەمی کۆگا و فرۆشتن",
-      desc: "سیستەمی ERP گشتگیر لەگەڵ ڕاپۆرتی کاتی و هاوکاتکردنی کۆگاکان.",
-      tags: ["Admin ERP", "دەسەڵات", "Audit"],
+      title: "سیستەمی بەڕێوەبردنی کۆگا و فرۆشتن",
+      desc: "سیستەمێکی گشتگیری ERP لەگەڵ شیکاریی ساتبەسات و هاوکاتکردنی فرەکۆگا.",
+      tags: ["ERP", "کۆنترۆڵی دەسەڵاتەکان", "لۆگی چاودێری"],
     },
   },
   {
@@ -61,9 +61,9 @@ const items = [
       tags: ["أمن سيبراني", "تحصين", "VAPT"],
     },
     ku: {
-      title: "ئاسایشی تۆڕی کۆمپانیا",
-      desc: "بەهێزکردنی ئاسایشی تۆڕ بۆ کۆمپانیایەکی دارایی و داخستنی 12 کەلێن.",
-      tags: ["CyberSec", "Hardening", "VAPT"],
+      title: "بونیادنانەوەی ئاسایشی تۆڕ",
+      desc: "بەهێزکردنی ئاسایشی هەمەلایەنە بۆ کۆمپانیایەکی دارایی و داخستنی ١٢ کەلێنی ئەمنیی مەترسیدار.",
+      tags: ["ئاسایشی سایبەری", "بەهێزکردنی تۆڕ", "VAPT"],
     },
   },
 ];
@@ -92,13 +92,13 @@ export default function CaseStudiesGrid() {
               </div>
 
               <div className="flex items-center gap-4 mb-6">
-                 <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:bg-cyan-500 group-hover:text-black transition-all duration-500 shadow-inner">
+                 <div className="w-12 h-12 rounded-2xl bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/20 flex items-center justify-center text-[var(--accent-bright)] group-hover:bg-[var(--accent-primary)] group-hover:text-black transition-all duration-500 shadow-inner">
                     <it.icon size={24} />
                  </div>
                  <div className="h-px flex-1 bg-white/5" />
               </div>
 
-              <div className="text-xl font-black text-white mb-3 tracking-tight group-hover:text-cyan-400 transition-colors">
+              <div className="text-xl font-black text-white mb-3 tracking-tight group-hover:text-[var(--accent-bright)] transition-colors">
                 {x.title}
               </div>
               

@@ -33,10 +33,8 @@ export default function BackgroundCodeFX() {
     }
 
     const draw = () => {
-      const isLightMode = document.documentElement.classList.contains("light");
-
-      // Semi-transparent background for trail effect (using e2e8f4 for light mode to match the theme background)
-      ctx.fillStyle = isLightMode ? "rgba(226, 232, 244, 0.12)" : "rgba(5, 11, 20, 0.12)"; 
+      // Semi-transparent background for trail effect matching the deep space background
+      ctx.fillStyle = "rgba(2, 11, 24, 0.12)";
       ctx.fillRect(0, 0, width, height);
 
       ctx.font = `${fontSize}px monospace`;
@@ -55,11 +53,7 @@ export default function BackgroundCodeFX() {
         
         // Coloring
         const isHead = Math.random() > 0.9;
-        if (isLightMode) {
-          ctx.fillStyle = isHead ? "#000080" : "rgba(0, 0, 128, 0.55)"; 
-        } else {
-          ctx.fillStyle = isHead ? "#5eead4" : "#0d9488"; // teal-300 / teal-600
-        }
+        ctx.fillStyle = isHead ? "#85BDFF" : "rgba(43, 127, 255, 0.20)";
         
         ctx.fillText(text, i * fontSize, drops[i] * fontSize);
 

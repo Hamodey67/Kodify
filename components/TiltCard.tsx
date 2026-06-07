@@ -73,8 +73,8 @@ export default function TiltCard({
         className="pointer-events-none absolute -inset-[1px] rounded-[inherit] z-30"
         style={{
           background: `radial-gradient(300px circle at ${mousePos.x}% ${mousePos.y}%, 
-            rgba(34, 211, 238, 0.45), 
-            rgba(56, 189, 248, 0.05) 50%, 
+            rgba(133, 189, 255, 0.45), 
+            rgba(43, 127, 255, 0.05) 50%, 
             transparent 100%)`,
           padding: '1px',
           WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',

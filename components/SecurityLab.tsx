@@ -9,8 +9,8 @@ import TiltCard from "./TiltCard";
 import Reveal from "./Reveal";
 
 const colorStyles = {
-  cyan: "bg-cyan-500/10 border-cyan-500/20 text-cyan-400",
-  blue: "bg-sky-400/10 border-sky-400/20 text-sky-300",
+  cyan: "bg-[var(--accent-bright)]/10 border-[var(--accent-bright)]/20 text-[var(--accent-glow)]",
+  blue: "bg-[var(--accent-primary)]/10 border-[var(--accent-primary)]/20 text-[var(--accent-bright)]",
 };
 
 export default function SecurityLab() {
@@ -44,25 +44,25 @@ export default function SecurityLab() {
             <TiltCard
               maxRotate={10}
               glare
-              className="relative overflow-hidden rounded-[3rem] border border-[var(--border)] bg-[var(--surface)] backdrop-blur-3xl p-10 flex flex-col h-full shadow-[var(--card-shadow)] transition-all duration-500 hover:border-cyan-500/30 hover:-translate-y-2"
+              className="relative overflow-hidden rounded-[3rem] border border-[var(--border)] bg-[var(--surface)] backdrop-blur-3xl p-10 flex flex-col h-full shadow-[var(--card-shadow)] transition-all duration-500 hover:border-[var(--accent-bright)]/30 hover:-translate-y-2"
             >
               {/* Animated HUD Grid overlay */}
               <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
-                 <div className="h-full w-full bg-[linear-gradient(rgba(34,211,238,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,0.1)_1px,transparent_1px)] bg-[size:20px_20px]" />
+                 <div className="h-full w-full bg-[linear-gradient(rgba(43,127,255,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(43,127,255,0.1)_1px,transparent_1px)] bg-[size:20px_20px]" />
               </div>
 
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-8">
-                   <div className={`w-14 h-14 rounded-2xl flex items-center justify-center group-hover:bg-cyan-500 group-hover:text-black transition-all duration-500 ${colorStyles[lab.color]}`}>
+                   <div className={`w-14 h-14 rounded-2xl flex items-center justify-center group-hover:bg-[var(--accent-bright)] group-hover:text-black transition-all duration-500 ${colorStyles[lab.color]}`}>
                       <lab.icon size={28} />
                    </div>
-                   <div className="flex items-center gap-2 group-hover:text-cyan-400 transition-colors">
-                      <span className="text-[10px] font-black tracking-widest uppercase text-brand-logo-muted group-hover:text-cyan-400/50">{lab.tag}</span>
-                      <ExternalLink size={14} className="text-brand-logo-muted group-hover:text-cyan-400" />
+                   <div className="flex items-center gap-2 group-hover:text-[var(--accent-bright)] transition-colors">
+                      <span className="text-[10px] font-black tracking-widest uppercase text-brand-logo-muted group-hover:text-[var(--accent-bright)]/50">{lab.tag}</span>
+                      <ExternalLink size={14} className="text-brand-logo-muted group-hover:text-[var(--accent-bright)]" />
                    </div>
                 </div>
 
-                <h3 className="text-2xl font-black text-white mb-4 group-hover:text-cyan-400 transition-colors">
+                <h3 className="text-2xl font-black text-white mb-4 group-hover:text-[var(--accent-bright)] transition-colors">
                   {lab.title}
                 </h3>
                 
@@ -72,14 +72,14 @@ export default function SecurityLab() {
 
                 <div className="flex items-center gap-4">
                    <div className="flex-1 h-px bg-[var(--border)]" />
-                   <div className="px-5 py-2 rounded-xl bg-brand-soft border border-[var(--border)] text-[10px] font-black text-brand-logo-muted uppercase tracking-[0.2em] group-hover:bg-cyan-500 group-hover:text-black group-hover:border-transparent transition-all">
+                   <div className="px-5 py-2 rounded-xl bg-brand-soft border border-[var(--border)] text-[10px] font-black text-brand-logo-muted uppercase tracking-[0.2em] group-hover:bg-[var(--accent-bright)] group-hover:text-black group-hover:border-transparent transition-all">
                       {lang === 'ar' ? 'ابدأ المحاكي' : 'Start Simulation'}
                    </div>
                 </div>
               </div>
 
               {/* Interaction Detail */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.05)_0%,transparent_70%)] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-[radial-gradient(circle_at_center,rgba(43,127,255,0.05)_0%,transparent_70%)] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
             </TiltCard>
           </Link>
         </Reveal>

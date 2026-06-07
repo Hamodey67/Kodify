@@ -9,6 +9,8 @@ export default function Section({
   className,
   accentTitle = false,
   layout = "default",
+  headerAlign = "start",
+  dir,
 }: {
   id?: string;
   title: string;
@@ -17,16 +19,18 @@ export default function Section({
   className?: string;
   accentTitle?: boolean;
   layout?: "default" | "split";
+  headerAlign?: "start" | "center";
+  dir?: "rtl" | "ltr";
 }) {
   const isSplit = layout === "split";
+  const centered = headerAlign === "center";
 
   const headerBlock = (
     <div
       className={cn(
         "group",
-        isSplit
-          ? "lg:sticky lg:top-28 lg:self-start max-w-xl"
-          : "max-w-3xl mb-8 sm:mb-12 md:mb-16"
+        isSplit ? "max-w-xl" : "max-w-3xl mb-8 sm:mb-10 md:mb-12",
+        centered && "mx-auto text-center"
       )}
     >
       <motion.div
@@ -35,7 +39,8 @@ export default function Section({
         viewport={{ once: true }}
         className={cn(
           "h-1 sm:h-1.5 bg-gradient-to-r from-[var(--accent-soft)] via-[var(--accent)] to-[var(--accent-strong)] rounded-full shadow-[0_0_16px_var(--accent-glow)]",
-          isSplit ? "mb-8 lg:mb-10" : "mb-5 sm:mb-8"
+          isSplit ? "mb-8 lg:mb-10" : "mb-5 sm:mb-6",
+          centered && "mx-auto"
         )}
       />
 
@@ -54,14 +59,14 @@ export default function Section({
       {desc && (
         <p
           className={cn(
-            "leading-relaxed font-medium",
+            "leading-relaxed font-medium theme-muted",
             isSplit
-              ? "text-lg lg:text-xl theme-muted border-s-2 border-[var(--accent-border)] ps-5 lg:ps-6"
+              ? "text-lg lg:text-xl border-s-2 border-[var(--accent-border)] ps-5 lg:ps-6"
               : cn(
-                  "text-base sm:text-lg md:text-xl max-w-2xl",
-                  accentTitle
-                    ? "theme-muted border-s-2 border-[var(--accent-border)] ps-4 sm:ps-5"
-                    : "theme-muted"
+                  "text-base sm:text-lg max-w-2xl",
+                  centered
+                    ? "mx-auto"
+                    : "border-s-2 border-[var(--accent-border)] ps-4 sm:ps-5"
                 )
           )}
         >
@@ -87,15 +92,16 @@ export default function Section({
   return (
     <section
       id={id}
+      dir={dir}
       className={cn(
-        "pt-16 sm:pt-24 md:pt-32 pb-12 md:pb-20 relative overflow-hidden scroll-mt-48",
+        "pt-16 sm:pt-24 md:pt-32 pb-12 md:pb-20 relative scroll-mt-48",
         isSplit && "lg:pb-24",
         className
       )}
     >
       {isSplit && (
         <div
-          className="hidden lg:block absolute inset-0 opacity-[0.04] pointer-events-none"
+          className="hidden lg:block absolute inset-0 opacity-[0.04] pointer-events-none overflow-hidden"
           style={{
             backgroundImage:
               "linear-gradient(rgba(125,211,252,0.25) 1px, transparent 1px), linear-gradient(90deg, rgba(125,211,252,0.25) 1px, transparent 1px)",
@@ -104,11 +110,11 @@ export default function Section({
         />
       )}
 
-      <div className="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 relative z-10">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         {isSplit ? (
-          <div className="lg:grid lg:grid-cols-12 lg:gap-14 xl:gap-20 items-start">
-            <div className="lg:col-span-4 mb-8 sm:mb-10 lg:mb-0">{headerBlock}</div>
-            <div className="lg:col-span-8 relative">{children}</div>
+          <div className="lg:grid lg:grid-cols-12 lg:gap-10 xl:gap-16 items-center">
+            <div className="lg:col-span-5 xl:col-span-4 mb-8 sm:mb-10 lg:mb-0 min-w-0">{headerBlock}</div>
+            <div className="lg:col-span-7 xl:col-span-8 relative min-w-0">{children}</div>
           </div>
         ) : (
           <>

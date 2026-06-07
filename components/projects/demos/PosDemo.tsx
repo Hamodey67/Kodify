@@ -77,7 +77,7 @@ export default function PosDemo() {
 
         <div className="px-4 pt-3 pb-4 h-[540px] overflow-hidden">
           <ScreenTransition k={`${itemsCount}-${paid}-${payMethod}`}>
-            <div className="h-full grid grid-cols-1 gap-3 overflow-auto pr-1">
+            <div className="h-full grid grid-cols-1 gap-3 overflow-auto pe-1">
               {/* Grid of items */}
               <div className="grid grid-cols-2 gap-3">
                 {ITEMS.map((it) => (
@@ -117,7 +117,7 @@ export default function PosDemo() {
 
                 <div className="mt-3 space-y-2">
                   {itemsCount === 0 ? (
-                    <div className="text-white/60 text-sm">{lang === "ar" ? "اضف عناصر حتى يبين الوصل." : lang === "ku" ? "دانە زیاد بکە بۆ وەسڵ." : "Add items to see the receipt."}</div>
+                    <div className="text-white/60 text-sm">{lang === "ar" ? "اضف عناصر حتى يبين الوصل." : lang === "ku" ? "دانە زیاد بکە بۆ پسوڵە." : "Add items to see the receipt."}</div>
                   ) : (
                     Object.entries(cart).map(([id, qty]) => {
                       const it = ITEMS.find((x) => x.id === Number(id));

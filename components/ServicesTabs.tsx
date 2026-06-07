@@ -1,8 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  useSpring,
+  useTransform,
+  useReducedMotion,
+  useInView,
+  type Variants,
+} from "framer-motion";
 import { useApp } from "@/app/providers";
+import { startSlideTransition } from "@/lib/pageTransition";
 import {
   Code,
   Cloud,
@@ -20,7 +31,6 @@ import {
   Users,
   ArrowLeft,
   ArrowRight,
-  X
 } from "lucide-react";
 
 type TabKey = "dev" | "cloud" | "sec";
@@ -29,414 +39,480 @@ type Lang = "ar" | "en" | "ku";
 const tabsData: Record<
   TabKey,
   {
-    icon: any;
-    ar: {
-      tabName: string;
-      title: string;
-      desc: string;
-      cards: { name: string; icon: any; color: "cyan" | "blue" | "purple" | "coral" }[];
-    };
-    en: {
-      tabName: string;
-      title: string;
-      desc: string;
-      cards: { name: string; icon: any; color: "cyan" | "blue" | "purple" | "coral" }[];
-    };
-    ku: {
-      tabName: string;
-      title: string;
-      desc: string;
-      cards: { name: string; icon: any; color: "cyan" | "blue" | "purple" | "coral" }[];
-    };
+    ar: { tabName: string; title: string; desc: string; cards: { name: string; icon: typeof Code }[] };
+    en: { tabName: string; title: string; desc: string; cards: { name: string; icon: typeof Code }[] };
+    ku: { tabName: string; title: string; desc: string; cards: { name: string; icon: typeof Code }[] };
   }
 > = {
   dev: {
-    icon: Code,
     ar: {
       tabName: "تطوير برمجيات",
       title: "تطوير البرمجيات والنظم",
       desc: "حلول متكاملة تشمل تطبيقات الويب، أنظمة ERP، إدارة الموارد، ولوحات التحكم المخصصة.",
       cards: [
-        { name: "لوحات تحكم ذكية", icon: LayoutDashboard, color: "cyan" },
-        { name: "مواقع وتطبيقات", icon: Globe, color: "blue" },
-        { name: "أنظمة ERP/CRM", icon: Layers, color: "purple" },
-        { name: "تكامل APIs", icon: Cpu, color: "coral" }
-      ]
+        { name: "مواقع وتطبيقات", icon: Globe },
+        { name: "لوحات تحكم ذكية", icon: LayoutDashboard },
+        { name: "تكامل APIs", icon: Cpu },
+        { name: "أنظمة ERP/CRM", icon: Layers },
+      ],
     },
     en: {
       tabName: "Software Dev",
       title: "Software & Systems Development",
       desc: "Comprehensive solutions including web applications, ERP systems, resource management, and custom dashboards.",
       cards: [
-        { name: "Smart Dashboards", icon: LayoutDashboard, color: "cyan" },
-        { name: "Web & Mobile Apps", icon: Globe, color: "blue" },
-        { name: "ERP/CRM Systems", icon: Layers, color: "purple" },
-        { name: "API Integrations", icon: Cpu, color: "coral" }
-      ]
+        { name: "Web & Mobile Apps", icon: Globe },
+        { name: "Smart Dashboards", icon: LayoutDashboard },
+        { name: "API Integrations", icon: Cpu },
+        { name: "ERP/CRM Systems", icon: Layers },
+      ],
     },
     ku: {
       tabName: "گەشەپێدانی سۆفتوێر",
       title: "گەشەپێدانی سۆفتوێر و سیستەم",
       desc: "چارەسەری تەواو لە بیرۆکەوە بۆ جێبەجێکردن و پشتگیری سیستەمی کۆمپانیاکان.",
       cards: [
-        { name: "داشبۆردی زیرەک", icon: LayoutDashboard, color: "cyan" },
-        { name: "ماڵپەڕ و ئەپڵیکەیشن", icon: Globe, color: "blue" },
-        { name: "سیستەمی ERP/CRM", icon: Layers, color: "purple" },
-        { name: "یەکخستنی API", icon: Cpu, color: "coral" }
-      ]
-    }
+        { name: "ماڵپەڕ و ئەپڵیکەیشن", icon: Globe },
+        { name: "داشبۆردی زیرەک", icon: LayoutDashboard },
+        { name: "یەکخستنی API", icon: Cpu },
+        { name: "سیستەمی ERP/CRM", icon: Layers },
+      ],
+    },
   },
   cloud: {
-    icon: Cloud,
     ar: {
       tabName: "تقنية سحابية",
       title: "التقنية السحابية",
       desc: "بنية تحتية سحابية موثوقة، نشر تطبيقات، إدارة خوادم، ونسخ احتياطي آلي.",
       cards: [
-        { name: "إدارة خوادم", icon: Server, color: "cyan" },
-        { name: "نشر تطبيقات", icon: Terminal, color: "blue" },
-        { name: "نسخ احتياطي", icon: Database, color: "purple" },
-        { name: "مراقبة الأداء", icon: Activity, color: "coral" }
-      ]
+        { name: "إدارة خوادم", icon: Server },
+        { name: "نشر تطبيقات", icon: Terminal },
+        { name: "نسخ احتياطي", icon: Database },
+        { name: "مراقبة الأداء", icon: Activity },
+      ],
     },
     en: {
       tabName: "Cloud Tech",
       title: "Cloud Infrastructure",
       desc: "Reliable cloud infrastructure, application deployment, server management, and automated backups.",
       cards: [
-        { name: "Server Management", icon: Server, color: "cyan" },
-        { name: "App Deployment", icon: Terminal, color: "blue" },
-        { name: "Automated Backup", icon: Database, color: "purple" },
-        { name: "Performance Monitor", icon: Activity, color: "coral" }
-      ]
+        { name: "Server Management", icon: Server },
+        { name: "App Deployment", icon: Terminal },
+        { name: "Automated Backup", icon: Database },
+        { name: "Performance Monitor", icon: Activity },
+      ],
     },
     ku: {
       tabName: "تەکنەلۆژیای سحابی",
       title: "تەکنەلۆژیای سحابی و کلۆود",
       desc: "ژێرخانی کلۆودی باوەڕپێکراو، بڵاوکردنەوەی ئەپ، بەڕێوەبردنی سێرڤەر، و کۆپی یەدەگ.",
       cards: [
-        { name: "بەڕێوەبردنی سێرڤەر", icon: Server, color: "cyan" },
-        { name: "بڵاوکردنەوەی ئەپ", icon: Terminal, color: "blue" },
-        { name: "کۆپی یەدەگی ئۆتۆماتیکی", icon: Database, color: "purple" },
-        { name: "چاودێری کردنی ئەدا", icon: Activity, color: "coral" }
-      ]
-    }
+        { name: "بەڕێوەبردنی سێرڤەر", icon: Server },
+        { name: "بڵاوکردنەوەی ئەپ", icon: Terminal },
+        { name: "کۆپی یەدەگی ئۆتۆماتیکی", icon: Database },
+        { name: "چاودێریکردنی کارایی", icon: Activity },
+      ],
+    },
   },
   sec: {
-    icon: ShieldCheck,
     ar: {
       tabName: "أمن سيبراني",
       title: "الأمن السيبراني",
       desc: "حماية شاملة لبنيتك الرقمية، اختبار اختراق، وتدريب الفرق على الأمن المعلوماتي.",
       cards: [
-        { name: "حماية شبكات", icon: ShieldCheck, color: "cyan" },
-        { name: "اختبار اختراق", icon: Fingerprint, color: "blue" },
-        { name: "تدقيق أمني", icon: FileSearch, color: "purple" },
-        { name: "تدريب الفرق", icon: Users, color: "coral" }
-      ]
+        { name: "حماية شبكات", icon: ShieldCheck },
+        { name: "اختبار اختراق", icon: Fingerprint },
+        { name: "تدقيق أمني", icon: FileSearch },
+        { name: "تدريب الفرق", icon: Users },
+      ],
     },
     en: {
       tabName: "Cybersecurity",
       title: "Cyber Security Services",
       desc: "Comprehensive protection for your digital infrastructure, penetration testing, and secure training for teams.",
       cards: [
-        { name: "Network Security", icon: ShieldCheck, color: "cyan" },
-        { name: "Penetration Testing", icon: Fingerprint, color: "blue" },
-        { name: "Security Auditing", icon: FileSearch, color: "purple" },
-        { name: "Team Security Training", icon: Users, color: "coral" }
-      ]
+        { name: "Network Security", icon: ShieldCheck },
+        { name: "Penetration Testing", icon: Fingerprint },
+        { name: "Security Auditing", icon: FileSearch },
+        { name: "Team Security Training", icon: Users },
+      ],
     },
     ku: {
       tabName: "ئاسایشی سایبەری",
       title: "خزمەتگوزاری ئاسایشی سایبەری",
       desc: "پاراستنی گشتگیر بۆ ژێرخانی دیجیتاڵیت، تاقیکردنەوەی دزەکردن، و ڕاهێنانی تیمەکان لەسەر ئاسایش.",
       cards: [
-        { name: "پاراستنی تۆڕەکان", icon: ShieldCheck, color: "cyan" },
-        { name: "تاقیکردنەوەی دزەکردن", icon: Fingerprint, color: "blue" },
-        { name: "پشکنینی ئەمنی", icon: FileSearch, color: "purple" },
-        { name: "ڕاهێنانی ئەمنی تیمەکان", icon: Users, color: "coral" }
-      ]
-    }
-  }
+        { name: "پاراستنی تۆڕەکان", icon: ShieldCheck },
+        { name: "تاقیکردنەوەی دزەکردن", icon: Fingerprint },
+        { name: "پشکنینی ئەمنی", icon: FileSearch },
+        { name: "ڕاهێنانی ئەمنی تیمەکان", icon: Users },
+      ],
+    },
+  },
 };
 
-const cardColors = {
-  cyan: { text: "text-cyan-400", bg: "bg-cyan-500/10", border: "border-cyan-500/20" },
-  blue: { text: "text-sky-300", bg: "bg-sky-400/10", border: "border-sky-400/20" },
-  purple: { text: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/20" },
-  coral: { text: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20" }
+// Deterministic ambient motes (avoids SSR hydration mismatch)
+const MOTES = [
+  { top: "12%", left: "8%", size: 6, dur: 14, delay: 0, mx: "40px", my: "-60px" },
+  { top: "28%", left: "82%", size: 4, dur: 18, delay: 2, mx: "-50px", my: "40px" },
+  { top: "62%", left: "16%", size: 5, dur: 16, delay: 1, mx: "60px", my: "-30px" },
+  { top: "78%", left: "70%", size: 7, dur: 20, delay: 3, mx: "-40px", my: "-50px" },
+  { top: "44%", left: "48%", size: 3, dur: 13, delay: 0.5, mx: "30px", my: "50px" },
+  { top: "18%", left: "60%", size: 5, dur: 17, delay: 2.5, mx: "-30px", my: "60px" },
+  { top: "70%", left: "40%", size: 4, dur: 15, delay: 1.5, mx: "50px", my: "-40px" },
+  { top: "36%", left: "26%", size: 6, dur: 19, delay: 3.5, mx: "-60px", my: "-30px" },
+  { top: "54%", left: "88%", size: 3, dur: 12, delay: 1, mx: "40px", my: "40px" },
+  { top: "86%", left: "22%", size: 5, dur: 21, delay: 2, mx: "-40px", my: "-60px" },
+  { top: "8%", left: "38%", size: 4, dur: 16, delay: 0.8, mx: "50px", my: "50px" },
+  { top: "48%", left: "6%", size: 6, dur: 18, delay: 2.8, mx: "60px", my: "-40px" },
+];
+
+function CountUp({ to, suffix = "", run }: { to: number; suffix?: string; run: boolean }) {
+  const [val, setVal] = useState(0);
+  useEffect(() => {
+    if (!run) return;
+    let raf = 0;
+    const t0 = performance.now();
+    const dur = 1300;
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - t0) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setVal(Math.round(eased * to));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [run, to]);
+  return (
+    <>
+      {val}
+      {suffix}
+    </>
+  );
+}
+
+const sceneVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.0 } },
+};
+
+type Custom = { z: number; delay: number; ry?: number };
+
+const panelVariants: Variants = {
+  hidden: (c: Custom) => ({ opacity: 0, z: c.z - 280, y: 46, rotateX: 16, rotateY: c.ry ?? 0 }),
+  show: (c: Custom) => ({
+    opacity: 1,
+    z: c.z,
+    y: 0,
+    rotateX: 0,
+    rotateY: c.ry ?? 0,
+    transition: { delay: c.delay, duration: 0.95, ease: [0.22, 1, 0.36, 1] },
+  }),
+};
+
+const contentStagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } },
+};
+
+const itemFade = {
+  hidden: { opacity: 0, y: 14 },
+  show: { opacity: 1, y: 0 },
 };
 
 export default function ServicesTabs() {
   const { lang } = useApp() as { lang: Lang };
+  const router = useRouter();
   const [active, setActive] = useState<TabKey>("dev");
-  const [selectedCard, setSelectedCard] = useState<any>(null);
   const isRtl = lang === "ar" || lang === "ku";
+  const reduce = useReducedMotion();
+
+  const sectionRef = useRef<HTMLElement>(null);
+  const inView = useInView(sectionRef, { once: false, amount: 0.25 });
+  const started = useInView(sectionRef, { once: true, amount: 0.3 });
+
+  const [lowPower, setLowPower] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 900px)");
+    const update = () => setLowPower(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  const disable3D = reduce || lowPower;
+
+  // Mouse-driven camera parallax
+  const mvX = useMotionValue(0);
+  const mvY = useMotionValue(0);
+  const springCfg = { stiffness: 60, damping: 18, mass: 0.6 };
+  const rotY = useSpring(useTransform(mvX, [-0.5, 0.5], [-15, 15]), springCfg);
+  const rotX = useSpring(useTransform(mvY, [-0.5, 0.5], [11, -11]), springCfg);
+
+  const handlePointer = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (disable3D) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    mvX.set((e.clientX - r.left) / r.width - 0.5);
+    mvY.set((e.clientY - r.top) / r.height - 0.5);
+  };
+  const resetPointer = () => {
+    mvX.set(0);
+    mvY.set(0);
+  };
+
+  const goToProjects = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    startSlideTransition(isRtl, () => router.push("/our-projects"));
+  };
 
   const tab = tabsData[active][lang];
 
-  // Translation helpers
-  const labelText = {
-    ar: "ما نقدمه",
-    en: "WHAT WE OFFER",
-    ku: "چی پێشکەش دەکەین"
-  }[lang];
-
-  const headerTitle = {
-    ar: "خدماتنا",
-    en: "Our Services",
-    ku: "خزمەتگوزارییەکانمان"
-  }[lang];
-
+  const labelText = { ar: "ما نقدمه", en: "WHAT WE OFFER", ku: "چی پێشکەش دەکەین" }[lang];
+  const headerTitle = { ar: "خدماتنا", en: "Our Services", ku: "خزمەتگوزارییەکانمان" }[lang];
   const headerDesc = {
     ar: "حلول متكاملة من الفكرة للتنفيذ والدعم.",
     en: "End-to-end solutions from concept to deployment and support.",
-    ku: "چارەسەری تەواو لە بیرۆکەوە بۆ جێبەجێکردن و پشتگیری."
+    ku: "چارەسەری تەواو لە بیرۆکەوە بۆ جێبەجێکردن و پشتگیری.",
   }[lang];
 
-  const stats = [
-    {
-      value: "+5",
-      label: {
-        ar: "سنوات خبرة",
-        en: "Years of Experience",
-        ku: "ساڵانی ئەزموون"
-      }[lang]
-    },
-    {
-      value: { ar: "كل العراق", en: "All Iraq", ku: "هەموو عێراق" }[lang],
-      label: {
-        ar: "تغطية شاملة",
-        en: "Full Coverage",
-        ku: "ڕووماڵی تەواو"
-      }[lang],
-      isBlue: true
-    }
-  ];
+  const yearsLabel = { ar: "سنوات خبرة", en: "Years of Experience", ku: "ساڵانی ئەزموون" }[lang];
+  const coverageValue = { ar: "كل العراق", en: "All Iraq", ku: "هەموو عێراق" }[lang];
+  const coverageLabel = { ar: "تغطية شاملة", en: "Full Coverage", ku: "ڕووماڵی تەواو" }[lang];
 
   const actionButtons = {
     quote: { ar: "اطلب عرض سعر", en: "Request a Quote", ku: "داواکردنی نرخ" }[lang],
-    projects: { ar: "تصفح المشاريع", en: "Browse Projects", ku: "بینینی پڕۆژەکان" }[lang]
+    projects: { ar: "استكشف مشاريعنا", en: "Explore Our Projects", ku: "پڕۆژەکانمان ببینە" }[lang],
   };
 
   const tabs = [
-    { key: "dev" as const, label: tab.tabName, icon: Code },
+    { key: "dev" as const, label: tabsData.dev[lang].tabName, icon: Code },
     { key: "cloud" as const, label: tabsData.cloud[lang].tabName, icon: Cloud },
-    { key: "sec" as const, label: tabsData.sec[lang].tabName, icon: ShieldCheck }
+    { key: "sec" as const, label: tabsData.sec[lang].tabName, icon: ShieldCheck },
   ];
 
+  const animateState = started ? "show" : "hidden";
+  const idle = inView && !disable3D;
+  const statTilt = isRtl ? -9 : 9;
+
   return (
-    <section 
+    <section
+      ref={sectionRef}
+      id="services"
       dir={isRtl ? "rtl" : "ltr"}
-      className="w-full py-16 relative overflow-hidden"
+      className="services-3d w-full py-16 md:py-24 lg:py-28 relative overflow-hidden"
     >
-      {/* Premium background grid overlay */}
-      <div 
-        className="absolute inset-0 opacity-[0.03] pointer-events-none" 
-        style={{ 
-          backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
-          backgroundSize: '24px 24px'
-        }} 
-      />
+      {/* Atmospheric depth fog */}
+      <div className="svc-fog" aria-hidden />
 
-      {/* Decorative colored glow orbs */}
-
-      <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
-        
-        {/* Two-column main layout */}
-        <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-          
-          {/* Main Content Column (Right on RTL, Left on LTR) */}
-          <div className="lg:col-span-8 flex flex-col justify-center">
-            
-            {/* Header section (aligned to right in RTL, left in LTR) */}
-            <div className="mb-10 text-start">
-              <span className="text-xs font-mono font-bold tracking-[0.2em] text-cyan-400 uppercase block mb-3">
-                {labelText}
-              </span>
-              <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
-                {headerTitle}
-              </h2>
-              <p className="text-white/40 text-base md:text-lg font-medium leading-relaxed max-w-xl">
-                {headerDesc}
-              </p>
-            </div>
-
-            {/* Horizontal pill tabs with icons */}
-            <div className="flex flex-wrap gap-3 mb-8 border-b border-white/5 pb-6">
-              {tabs.map((t) => {
-                const TabIcon = t.icon;
-                const isActive = active === t.key;
-                return (
-                  <button
-                    key={t.key}
-                    onClick={() => setActive(t.key)}
-                    className={`
-                      flex items-center gap-3 px-5 py-3 rounded-full text-sm font-bold transition-all duration-300 border
-                      ${isActive 
-                        ? "bg-sky-500 border-sky-500 text-white shadow-[0_10px_25px_-5px_rgba(125,211,252,0.25)]" 
-                        : "bg-brand-soft border-[var(--border)] text-brand-logo-muted hover:text-brand-logo hover:border-[var(--border-strong)]"
-                      }
-                    `}
-                  >
-                    <TabIcon size={16} strokeWidth={isActive ? 2.5 : 2} />
-                    <span>{tabsData[t.key][lang].tabName}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Tab Panel Display */}
-            <div className="min-h-[380px]">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={active}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -15 }}
-                  transition={{ duration: 0.35, ease: "easeInOut" }}
-                  className="bg-[var(--surface)] border border-[var(--border)] rounded-[2.5rem] p-8 md:p-10 shadow-[var(--card-shadow)] relative overflow-hidden backdrop-blur-md"
-                >
-                  {/* Subtle top-inset gloss reflection */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
-
-                  {/* Panel Title & Description */}
-                  <div className="mb-8 text-start">
-                    <h3 className="text-lg md:text-xl font-bold text-white mb-2">
-                      {tab.title}
-                    </h3>
-                    <p className="text-white/40 text-xs md:text-sm font-medium leading-relaxed max-w-2xl">
-                      {tab.desc}
-                    </p>
-                  </div>
-
-                  {/* 2x2 Services Grid */}
-                  <div className="grid sm:grid-cols-2 gap-4 mb-8">
-                    {tab.cards.map((card, i) => {
-                      const CardIcon = card.icon;
-                      const color = cardColors[card.color];
-                      return (
-                        <div 
-                          key={i}
-                          onClick={() => setSelectedCard(card)}
-                          className="flex items-center gap-4 p-5 rounded-2xl bg-brand-soft border border-[var(--border)] hover:border-[var(--border-strong)] transition-all duration-300 group cursor-pointer"
-                        >
-                          {/* 36x36 Icon Container */}
-                          <div className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center transition-all duration-300 ${color.bg} ${color.text} ${color.border} border`}>
-                            <CardIcon size={16} strokeWidth={2} className="transition-transform duration-500 group-hover:scale-110" />
-                          </div>
-                          <span className="text-white text-[13px] font-bold tracking-wide leading-none">
-                            {card.name}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-white/5">
-                    <a
-                      href="/contact"
-                      className="px-8 py-3.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-white font-bold text-xs md:text-sm transition-all duration-300 text-center shadow-lg shadow-sky-500/20 flex items-center justify-center gap-2 group/btn"
-                    >
-                      <span>{actionButtons.quote}</span>
-                      {isRtl ? (
-                        <ArrowLeft size={16} className="transition-transform duration-300 group-hover/btn:-translate-x-1" />
-                      ) : (
-                        <ArrowRight size={16} className="transition-transform duration-300 group-hover/btn:translate-x-1" />
-                      )}
-                    </a>
-                    <a
-                      href="/projects"
-                      className="px-8 py-3.5 rounded-xl border border-[var(--border)] hover:border-[var(--border-strong)] bg-brand-soft text-brand-logo hover:text-brand-cyan font-bold text-xs md:text-sm transition-all duration-300 text-center"
-                    >
-                      {actionButtons.projects}
-                    </a>
-                  </div>
-
-                </motion.div>
-              </AnimatePresence>
-            </div>
-
-          </div>
-
-          {/* Stats Sidebar Column (Left on RTL, Right on LTR) */}
-          <div className="lg:col-span-4 flex flex-col justify-center gap-4 h-full">
-            {stats.map((s, idx) => (
-              <div 
-                key={idx}
-                className="p-6 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-[var(--card-shadow)] backdrop-blur-md hover:border-[var(--border-strong)] transition-all duration-300 text-start group"
-              >
-                <div className={`text-4xl md:text-5xl font-black mb-2 transition-transform duration-500 group-hover:scale-105 inline-block ${
-                  s.isBlue ? "text-brand-cyan" : "text-white"
-                }`}>
-                  {s.value}
-                </div>
-                <div className="text-white/40 text-xs md:text-sm font-bold tracking-wide uppercase leading-none">
-                  {s.label}
-                </div>
-              </div>
-            ))}
-          </div>
-
+      {/* Ambient floating motes */}
+      {!disable3D && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden>
+          {MOTES.map((m, i) => (
+            <span
+              key={i}
+              className="svc-mote"
+              style={{
+                top: m.top,
+                left: m.left,
+                width: m.size,
+                height: m.size,
+                // @ts-expect-error custom props
+                "--mx": m.mx,
+                "--my": m.my,
+                animation: `svcMoteDrift ${m.dur}s ${m.delay}s ease-in-out infinite`,
+                animationPlayState: idle ? "running" : "paused",
+              }}
+            />
+          ))}
         </div>
+      )}
 
-      </div>
-
-      {/* Modal */}
-      <AnimatePresence>
-        {selectedCard && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setSelectedCard(null)}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 dark:bg-slate-950/80 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-md bg-[var(--surface)] border border-[var(--border)] rounded-[2.5rem] p-8 shadow-[var(--card-shadow)] overflow-hidden"
-            >
-              <button 
-                onClick={() => setSelectedCard(null)}
-                className={`absolute top-6 ${isRtl ? 'left-6' : 'right-6'} p-2 text-brand-logo-muted hover:text-brand-logo bg-brand-soft hover:bg-brand-cyan-soft rounded-full transition-colors`}
+      <div
+        className="svc-viewport max-w-7xl mx-auto px-5 sm:px-6 md:px-12 relative z-10"
+        onPointerMove={handlePointer}
+        onPointerLeave={resetPointer}
+      >
+        <motion.div
+          className="svc-scene"
+          variants={sceneVariants}
+          initial="hidden"
+          animate={animateState}
+          style={disable3D ? undefined : { rotateX: rotX, rotateY: rotY }}
+        >
+          <div className="grid lg:grid-cols-12 gap-8 lg:gap-10 xl:gap-14 items-start">
+            {/* Stat panels — floating to the side, deeper + tilted */}
+            <div className="lg:col-span-4 order-1 lg:order-2 flex flex-col gap-5">
+              {/* 5+ years */}
+              <motion.div
+                className="svc-layer"
+                variants={panelVariants}
+                custom={{ z: -70, delay: 0.12, ry: statTilt }}
+                whileHover={disable3D ? undefined : { z: -20, transition: { type: "spring", stiffness: 200, damping: 20 } }}
+                style={{ transformStyle: "preserve-3d" }}
               >
-                <X size={20} />
-              </button>
+                <motion.div animate={idle ? { y: [0, -10, 0] } : { y: 0 }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}>
+                  <div className="svc-panel svc-panel-hoverable p-6 md:p-7 text-start">
+                    <div className="text-4xl md:text-[2.75rem] font-black leading-none tracking-tight mb-2.5 text-white">
+                      <CountUp to={5} suffix="+" run={started} />
+                    </div>
+                    <div className="text-sm font-semibold text-[var(--svc-text-muted)]">{yearsLabel}</div>
+                  </div>
+                </motion.div>
+              </motion.div>
 
-              <div className="flex flex-col items-center text-center mt-2">
-                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-6 border
-                  ${cardColors[selectedCard.color as keyof typeof cardColors].bg} 
-                  ${cardColors[selectedCard.color as keyof typeof cardColors].text} 
-                  ${cardColors[selectedCard.color as keyof typeof cardColors].border}
-                `}>
-                  <selectedCard.icon size={36} strokeWidth={1.5} />
-                </div>
-                
-                <h3 className="text-2xl font-bold text-white mb-3">{selectedCard.name}</h3>
-                
-                <p className="text-white/60 text-sm leading-relaxed mb-8">
-                  {lang === "ar" 
-                    ? `نقدم في هذه الخدمة حلولاً متقدمة لـ ${selectedCard.name} بأعلى معايير الجودة والأمان لضمان نجاح أعمالك.`
-                    : lang === "ku"
-                    ? `لە کاتی پێشکەشکردنی ئەم خزمەتگوزارییەدا، باشترین چارەسەرەکان بۆ ${selectedCard.name} دابین دەکەین بە بەرزترین کوالێتی.`
-                    : `We provide advanced solutions for ${selectedCard.name} with the highest standards of quality and security to ensure your business success.`}
+              {/* coverage */}
+              <motion.div
+                className="svc-layer"
+                variants={panelVariants}
+                custom={{ z: -95, delay: 0.22, ry: statTilt }}
+                whileHover={disable3D ? undefined : { z: -30, transition: { type: "spring", stiffness: 200, damping: 20 } }}
+                style={{ transformStyle: "preserve-3d" }}
+              >
+                <motion.div animate={idle ? { y: [0, 10, 0] } : { y: 0 }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}>
+                  <div className="svc-panel svc-panel-hoverable p-6 md:p-7 text-start">
+                    <div className="text-3xl md:text-4xl font-black leading-none tracking-tight mb-2.5 text-[var(--svc-accent-bright)]">
+                      {coverageValue}
+                    </div>
+                    <div className="text-sm font-semibold text-[var(--svc-text-muted)]">{coverageLabel}</div>
+                  </div>
+                </motion.div>
+              </motion.div>
+            </div>
+
+            {/* Main column */}
+            <div className="lg:col-span-8 order-2 lg:order-1 flex flex-col" style={{ transformStyle: "preserve-3d" }}>
+              {/* Header */}
+              <motion.header
+                className="svc-layer mb-8 md:mb-9 text-start space-y-2.5 md:space-y-3"
+                variants={panelVariants}
+                custom={{ z: 25, delay: 0 }}
+                style={{ transformStyle: "preserve-3d" }}
+              >
+                <span className="text-[11px] font-bold tracking-[0.22em] text-[var(--svc-accent-bright)] uppercase block">
+                  {labelText}
+                </span>
+                <h2 className="text-3xl sm:text-4xl md:text-[2.75rem] font-black text-white leading-[1.1] tracking-tight">
+                  {headerTitle}
+                </h2>
+                <p className="text-[var(--svc-text-muted)] text-sm sm:text-base md:text-lg font-medium leading-relaxed max-w-xl">
+                  {headerDesc}
                 </p>
+              </motion.header>
 
-                <a
-                  href="/contact"
-                  className="w-full py-3.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-white font-bold text-sm transition-all duration-300 shadow-lg shadow-sky-500/20"
-                >
-                  {actionButtons.quote}
-                </a>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              {/* Switcher — floats slightly forward */}
+              <motion.div
+                className="svc-layer -mx-5 px-5 sm:mx-0 sm:px-0 mb-7 md:mb-8 overflow-x-auto scrollbar-none"
+                variants={panelVariants}
+                custom={{ z: 70, delay: 0.3 }}
+                style={{ transformStyle: "preserve-3d" }}
+              >
+                <div className="svc-switcher-track inline-flex min-w-max sm:min-w-0 sm:w-full sm:flex-wrap gap-1 p-1.5 rounded-2xl" role="tablist" aria-label={headerTitle}>
+                  {tabs.map((t) => {
+                    const TabIcon = t.icon;
+                    const isActive = active === t.key;
+                    return (
+                      <button
+                        key={t.key}
+                        role="tab"
+                        aria-selected={isActive}
+                        onClick={() => setActive(t.key)}
+                        className={`relative flex items-center gap-2.5 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-colors duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[var(--svc-accent-bright)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#001220] ${
+                          isActive ? "text-white" : "text-white/45 hover:text-white/70"
+                        }`}
+                      >
+                        {isActive && (
+                          <motion.span
+                            layoutId="servicesTabIndicator"
+                            className="absolute inset-0 rounded-xl bg-[var(--svc-accent)] shadow-[0_0_26px_rgba(43,127,255,0.6)]"
+                            transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                          />
+                        )}
+                        <TabIcon size={16} strokeWidth={isActive ? 2.5 : 2} className="relative z-10 shrink-0" />
+                        <span className="relative z-10">{t.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+
+              {/* Focal detail panel */}
+              <motion.div
+                className="svc-layer min-h-[360px] sm:min-h-[400px]"
+                variants={panelVariants}
+                custom={{ z: 10, delay: 0.42 }}
+                whileHover={disable3D ? undefined : { z: 45, transition: { type: "spring", stiffness: 180, damping: 22 } }}
+                style={{ transformStyle: "preserve-3d" }}
+              >
+                <div className="svc-panel p-6 sm:p-8 md:p-10 relative overflow-hidden" style={{ transformStyle: "preserve-3d" }}>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={active}
+                      initial={{ opacity: 0, rotateY: isRtl ? -22 : 22, z: -70 }}
+                      animate={{ opacity: 1, rotateY: 0, z: 0 }}
+                      exit={{ opacity: 0, rotateY: isRtl ? 18 : -18, z: -50 }}
+                      transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+                      style={{ transformStyle: "preserve-3d" }}
+                    >
+                      <motion.div variants={contentStagger} initial="hidden" animate="show">
+                        <motion.div variants={itemFade} className="mb-7 md:mb-8 text-start">
+                          <h3 className="text-xl sm:text-2xl font-black text-white mb-2 tracking-tight">{tab.title}</h3>
+                          <p className="text-[var(--svc-text-muted)] text-sm sm:text-[15px] font-medium leading-relaxed max-w-2xl">
+                            {tab.desc}
+                          </p>
+                        </motion.div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-8" style={{ transformStyle: "preserve-3d" }}>
+                          {tab.cards.map((card, i) => {
+                            const CardIcon = card.icon;
+                            return (
+                              <motion.div
+                                key={i}
+                                variants={itemFade}
+                                whileHover={disable3D ? undefined : { z: 30, transition: { type: "spring", stiffness: 220, damping: 20 } }}
+                                style={{ transformStyle: "preserve-3d" }}
+                                className="svc-feature-tile flex items-center gap-3.5 sm:gap-4 p-4 sm:p-5 rounded-2xl border border-[var(--svc-glass-border)] bg-white/[0.02] text-start"
+                              >
+                                <div className="svc-feature-icon w-10 h-10 shrink-0 rounded-xl flex items-center justify-center bg-[var(--svc-accent-soft)] text-[var(--svc-accent-bright)] border border-[var(--svc-accent-border)] transition-all duration-300">
+                                  <CardIcon size={18} strokeWidth={2} />
+                                </div>
+                                <span className="text-white text-sm sm:text-[15px] font-bold leading-snug">{card.name}</span>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+
+                        <motion.div variants={itemFade}>
+                          <div className="h-px bg-[var(--svc-glass-border)] mb-6" aria-hidden />
+                          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                            <a
+                              href="/contact"
+                              className="svc-btn-primary group/btn flex-1 sm:flex-none inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl text-white font-bold text-sm"
+                            >
+                              <span>{actionButtons.quote}</span>
+                              {isRtl ? (
+                                <ArrowLeft size={17} className="transition-transform duration-300 group-hover/btn:-translate-x-1" />
+                              ) : (
+                                <ArrowRight size={17} className="transition-transform duration-300 group-hover/btn:translate-x-1" />
+                              )}
+                            </a>
+                            <a
+                              href="/our-projects"
+                              onClick={goToProjects}
+                              className="svc-btn-ghost flex-1 sm:flex-none inline-flex items-center justify-center px-7 py-3.5 rounded-xl text-white/75 font-bold text-sm"
+                            >
+                              {actionButtons.projects}
+                            </a>
+                          </div>
+                        </motion.div>
+                      </motion.div>
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
     </section>
   );
 }

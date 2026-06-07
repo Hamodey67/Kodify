@@ -27,19 +27,10 @@ export default function BackgroundClient() {
     };
   }, []);
 
-  if (theme === "light") {
-    return (
-      <>
-        <BackgroundLight />
-        <BackgroundCodeFX />
-      </>
-    );
-  }
-
   if (isMobile) {
     return (
       <>
-        <BackgroundAurora colorStops={["#0373FF", "#00c6fb", "#0373FF"]} blend={0.5} amplitude={1.0} speed={0.5} />
+        <BackgroundAurora colorStops={["#2B7FFF", "#5BA4FF", "#85BDFF"]} blend={0.85} amplitude={1.2} speed={0.5} />
         <BackgroundMobile />
       </>
     );
@@ -47,10 +38,10 @@ export default function BackgroundClient() {
 
   return (
     <>
-      <BackgroundAurora colorStops={["#0373FF", "#00c6fb", "#0373FF"]} blend={0.5} amplitude={1.0} speed={0.5} />
+      <BackgroundAurora colorStops={["#2B7FFF", "#5BA4FF", "#85BDFF"]} blend={0.85} amplitude={1.2} speed={0.5} />
       <BackgroundMindLike />
-      <BackgroundCodeSymbols />
-      <BackgroundCodeFX />
+      {/* <BackgroundCodeSymbols /> */}
+      {/* <BackgroundCodeFX /> */}
     </>
   );
 }

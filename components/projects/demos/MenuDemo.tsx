@@ -197,7 +197,7 @@ export default function MenuDemo() {
         {/* List */}
         <div className="px-4 pt-3 pb-4 h-[540px] overflow-hidden">
           <ScreenTransition k={`${cat}-${detailsId ?? "x"}-${orderOpen ? "o" : "c"}`}>
-            <div className="h-full overflow-auto pr-1 space-y-3">
+            <div className="h-full overflow-auto pe-1 space-y-3">
               {current.map((it) => (
                 <div
                   key={it.id}

@@ -5,7 +5,6 @@ import Hero from "@/components/Hero";
 import Section from "@/components/Section";
 import FeatureGrid from "@/components/FeatureGrid";
 import ServicesTabs from "@/components/ServicesTabs";
-import ProjectsGrid from "@/components/ProjectsGrid";
 
 import SecurityLab from "@/components/SecurityLab";
 import Testimonials from "@/components/Testimonials";
@@ -17,6 +16,7 @@ import Reveal from "@/components/Reveal";
 export default function HomePage() {
   const { lang } = useApp();
   const tx = t[lang];
+  const isRtl = lang === "ar" || lang === "ku";
 
   return (
     <div className="min-h-screen">
@@ -27,7 +27,14 @@ export default function HomePage() {
       <div className="section-divider" />
 
       <Reveal delayMs={60}>
-        <Section id="why-us" layout="split" accentTitle title={tx.featuresTitle} desc={tx.featuresDesc}>
+        <Section
+          id="why-us"
+          accentTitle
+          headerAlign="start"
+          title={tx.featuresTitle}
+          desc={tx.featuresDesc}
+          dir={isRtl ? "rtl" : "ltr"}
+        >
           <FeatureGrid />
         </Section>
       </Reveal>
@@ -36,17 +43,6 @@ export default function HomePage() {
 
       <Reveal delayMs={80}>
         <ServicesTabs />
-      </Reveal>
-
-      <div className="section-divider" />
-
-      <Reveal delayMs={90}>
-        <Section 
-          title={lang === 'ar' ? "مشاريعنا" : lang === 'ku' ? "پڕۆژەکانمان" : "Our Projects"} 
-          desc={lang === 'ar' ? "نظرة على بعض الأعمال والحلول الرقمية التي قمنا بتنفيذها باحترافية عالية." : lang === 'ku' ? "تەماشای هەندێک لەو کارانە بکە کە ئەنجاممان داون." : "A glimpse into some of the digital works and solutions we've executed with high professionalism."}
-        >
-          <ProjectsGrid />
-        </Section>
       </Reveal>
 
       <div className="section-divider" />

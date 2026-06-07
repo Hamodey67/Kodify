@@ -1,10 +1,15 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export default function SplashScreen({ onComplete }: { onComplete?: () => void }) {
   const [isVisible, setIsVisible] = useState(true);
+
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
     // Hide scrollbar while splashing to avoid shifting
@@ -16,7 +21,7 @@ export default function SplashScreen({ onComplete }: { onComplete?: () => void }
 
     const unmountTimer = setTimeout(() => {
       document.body.style.overflow = "";
-      onComplete?.();
+      onCompleteRef.current?.();
     }, 3300); // give time for the exit animation
 
     return () => {
@@ -24,7 +29,7 @@ export default function SplashScreen({ onComplete }: { onComplete?: () => void }
       clearTimeout(hideTimer);
       clearTimeout(unmountTimer);
     };
-  }, [onComplete]);
+  }, []);
 
   return (
     <AnimatePresence>

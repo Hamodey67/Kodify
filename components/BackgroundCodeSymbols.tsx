@@ -108,7 +108,7 @@ export default function BackgroundCodeSymbols() {
       `}</style>
 
       <div
-        className="pointer-events-none fixed inset-0 -z-[9] overflow-hidden font-mono text-[11px] text-sky-300/45 select-none"
+        className="pointer-events-none fixed inset-0 -z-[9] overflow-hidden font-mono text-[11px] text-[rgba(43,127,255,0.20)] select-none"
         aria-hidden="true"
         dir="ltr"
       >

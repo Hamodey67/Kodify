@@ -33,22 +33,21 @@ function applyTheme(theme: Theme) {
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [lang, setLang] = useState<Lang>("ar");
-  const [theme, setThemeState] = useState<Theme>("light");
+  const [theme, setThemeState] = useState<Theme>("dark");
 
   useEffect(() => {
     const savedLang = localStorage.getItem("lang") as Lang | null;
     if (savedLang && LANGS.includes(savedLang)) setLang(savedLang);
 
-    const savedTheme = localStorage.getItem("theme") as Theme | null;
-    const initial: Theme = savedTheme === "dark" ? "dark" : "light";
-    setThemeState(initial);
-    applyTheme(initial);
+    setThemeState("dark");
+    applyTheme("dark");
+    localStorage.setItem("theme", "dark");
   }, []);
 
   useEffect(() => {
     const root = document.documentElement;
 
-    root.lang = lang;
+    root.lang = lang === "ku" ? "ckb" : lang;
     root.dir = lang === "ar" || lang === "ku" ? "rtl" : "ltr";
 
     root.classList.toggle("is-ar", lang === "ar");
@@ -58,8 +57,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   }, [lang]);
 
   useEffect(() => {
-    applyTheme(theme);
-    localStorage.setItem("theme", theme);
+    applyTheme("dark");
+    localStorage.setItem("theme", "dark");
   }, [theme]);
 
   const setTheme = (t: Theme) => setThemeState(t);

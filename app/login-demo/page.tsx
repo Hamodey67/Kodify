@@ -1,20 +1,24 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Info, RotateCcw, Search, Shield, ShieldAlert, X } from "lucide-react";
 import Footer from "@/components/Footer";
-import Section from "@/components/Section";
 import { useApp } from "@/app/providers";
+import { cn } from "@/lib/utils";
 import { getDemoScenarios, getLoginDemoCopy, DemoScenarioKind } from "./data/demo";
 import LoginPageMock from "./components/LoginPageMock";
 import WhatsAppScamMock from "./components/WhatsAppScamMock";
-import Verdict from "./components/Verdict";
+import ScorePanel from "./components/ScorePanel";
 import CluesPanel from "./components/CluesPanel";
+import { getActiveCluesForScenario } from "./utils";
 
 type VerdictChoice = "none" | "safe" | "phishing";
 
 export default function LoginDemoPage() {
   const { lang } = useApp();
-  const l = (lang as "ar" | "en" | "ku");
+  const l = lang as "ar" | "en" | "ku";
+  const isRtl = l === "ar" || l === "ku";
   const copy = useMemo(() => getLoginDemoCopy(l), [l]);
 
   const [tab, setTab] = useState<DemoScenarioKind>("login");
@@ -25,48 +29,45 @@ export default function LoginDemoPage() {
 
   const [choice, setChoice] = useState<VerdictChoice>("none");
   const [inspect, setInspect] = useState(false);
-  const [found, setFound] = useState<Set<string>>(new Set());
   const [streak, setStreak] = useState(0);
-
+  const [correctCount, setCorrectCount] = useState(0);
+  const [bannerOpen, setBannerOpen] = useState(true);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
 
-  const maxScore = copy.clues.length;
-  const score = found.size;
+  const activeClues = useMemo(
+    () => (scenario ? getActiveCluesForScenario(scenario) : new Set<string>()),
+    [scenario]
+  );
 
   const correct = useMemo(() => {
-    if (!scenario) return null;
-    if (choice === "none") return null;
+    if (!scenario || choice === "none") return null;
     const userSaysPhishing = choice === "phishing";
     return userSaysPhishing === scenario.isPhishing;
   }, [choice, scenario]);
 
-  const onHotspot = (id: string) => {
-    if (!inspect) return;
-    setFound((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
+  const verdictFeedback = useMemo(() => {
+    if (choice === "none" || correct == null || !scenario) return null;
+    return {
+      choice,
+      correct,
+      message: correct ? copy.result.correct : scenario.note ?? copy.result.wrong,
+    };
+  }, [choice, correct, scenario, copy.result]);
 
   const resetRound = () => {
     setChoice("none");
     setInspect(false);
-    setFound(new Set());
     setShareStatus(null);
   };
 
   const submitChoice = (v: VerdictChoice) => {
-    if (!scenario) return;
+    if (!scenario || v === "none") return;
     setChoice(v);
     setInspect(true);
-    setFound(new Set()); // start clue hunt fresh
     setShareStatus(null);
-    setStreak((s) => {
-      const isCorrect = (v === "phishing") === scenario.isPhishing;
-      return isCorrect ? s + 1 : 0;
-    });
+    const isCorrect = (v === "phishing") === scenario.isPhishing;
+    setStreak((s) => (isCorrect ? s + 1 : 0));
+    setCorrectCount((c) => (isCorrect ? c + 1 : c));
   };
 
   const nextScenario = () => {
@@ -79,18 +80,24 @@ export default function LoginDemoPage() {
     setTab(k);
     setIdx(0);
     setStreak(0);
+    setCorrectCount(0);
     resetRound();
   };
 
   const share = async () => {
     if (!scenario) return;
-    const text = copy.shareText({ score, max: maxScore, streak, brand: scenario.brand, kind: tab });
+    const text = copy.shareText({
+      score: correctCount,
+      max: scenarios.length,
+      streak,
+      brand: scenario.brand,
+      kind: tab,
+    });
     try {
       await navigator.clipboard.writeText(text);
       setShareStatus(copy.buttons.copied);
       window.setTimeout(() => setShareStatus(null), 1600);
     } catch {
-      // Fallback for older browsers
       try {
         const ta = document.createElement("textarea");
         ta.value = text;
@@ -107,149 +114,215 @@ export default function LoginDemoPage() {
   };
 
   return (
-    <div className="min-h-screen">
-      <Section title={copy.title} desc={copy.desc} className="pt-10">
-        <div className="mb-4 rounded-2xl border border-[var(--border)] bg-brand-soft p-4 text-sm text-[var(--muted)]">
-          <div className="font-semibold text-[var(--fg)]">{copy.hint}</div>
-          <div className="mt-1">{copy.instruction}</div>
-        </div>
+    <div className="min-h-screen" dir={isRtl ? "rtl" : "ltr"}>
+      <section className="mx-auto max-w-6xl px-4 pb-16 pt-10 sm:px-6 md:pt-14">
+        <div className="overflow-hidden rounded-[1.75rem] border border-white/[0.08] bg-[#071525]/95 shadow-[0_40px_100px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.05)]">
+          {/* Header */}
+          <div className="border-b border-white/[0.06] px-5 py-6 sm:px-8">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
+                    {copy.title}
+                  </h1>
+                  <span className="rounded-full border border-[var(--accent-bright)]/25 bg-[var(--accent-primary)]/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--accent-bright)]">
+                    {copy.demoBadge}
+                  </span>
+                </div>
+                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/55 sm:text-base">
+                  {copy.desc}
+                </p>
+              </div>
 
-        {/* Tabs */}
-        <div className="mb-6 flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => changeTab("login")}
-            className={
-              tab === "login"
-                ? "rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-2 text-sm font-semibold text-[var(--fg)] shadow-sm"
-                : "rounded-2xl border border-[var(--border)] bg-brand-soft px-4 py-2 text-sm font-semibold text-[var(--muted)] hover:bg-[var(--surface-muted)]"
-            }
-          >
-            {copy.tabs.login}
-          </button>
-          <button
-            type="button"
-            onClick={() => changeTab("whatsapp")}
-            className={
-              tab === "whatsapp"
-                ? "rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-2 text-sm font-semibold text-[var(--fg)] shadow-sm"
-                : "rounded-2xl border border-[var(--border)] bg-brand-soft px-4 py-2 text-sm font-semibold text-[var(--muted)] hover:bg-[var(--surface-muted)]"
-            }
-          >
-            {copy.tabs.whatsapp}
-          </button>
-
-          <div className="ml-auto text-sm text-white/60">
-            {scenario ? (
-              <span>
-                {scenario.brand} <span className="text-white/30">•</span> {idx + 1}/{scenarios.length}
-              </span>
-            ) : (
-              "—"
-            )}
-          </div>
-        </div>
-
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            {scenario?.kind === "login" && scenario.form ? (
-              <LoginPageMock
-                urlLabel={copy.urlLabel}
-                url={scenario.shownUrl}
-                badge={scenario.isPhishing ? copy.fakeTag : copy.legitTag}
-                badgeTone={scenario.isPhishing ? "danger" : "ok"}
-                onHotspot={onHotspot}
-                found={found}
-                strings={scenario.form}
-                hotspotLabels={copy.hotspots}
-              />
-            ) : scenario?.kind === "whatsapp" && scenario.wa ? (
-              <WhatsAppScamMock
-                urlLabel={copy.urlLabel}
-                url={scenario.shownUrl}
-                badge={scenario.isPhishing ? copy.fakeTag : copy.legitTag}
-                badgeTone={scenario.isPhishing ? "danger" : "ok"}
-                onHotspot={onHotspot}
-                found={found}
-                hotspotLabels={copy.hotspots}
-                wa={scenario.wa}
-              />
-            ) : (
-              <div className="rounded-3xl border border-[var(--border)] bg-brand-soft p-6 text-[var(--muted)]">No scenarios</div>
-            )}
-
-            <div className="mt-4 flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={() => submitChoice("safe")}
-                className="rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-3 text-sm font-semibold text-[var(--fg)] hover:bg-[var(--surface-muted)] shadow-sm"
-              >
-                {copy.buttons.safe}
-              </button>
-              <button
-                type="button"
-                onClick={() => submitChoice("phishing")}
-                className="rounded-2xl border border-rose-500/20 dark:border-rose-400/20 bg-rose-500/10 px-5 py-3 text-sm font-semibold text-rose-700 dark:text-rose-200 hover:bg-rose-500/15"
-              >
-                {copy.buttons.phishing}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setInspect(true)}
-                className="ml-auto rounded-2xl border border-[var(--border)] bg-brand-soft px-5 py-3 text-sm font-semibold text-[var(--fg)] hover:bg-[var(--surface-muted)]"
-              >
-                {copy.buttons.inspect}
-              </button>
-              <button
-                type="button"
-                onClick={resetRound}
-                className="rounded-2xl border border-[var(--border)] bg-brand-soft px-5 py-3 text-sm font-semibold text-[var(--muted)] hover:bg-[var(--surface-muted)]"
-              >
-                {copy.buttons.reset}
-              </button>
-              <button
-                type="button"
-                onClick={nextScenario}
-                className="rounded-2xl border border-[var(--border)] bg-brand-soft px-5 py-3 text-sm font-semibold text-[var(--muted)] hover:bg-[var(--surface-muted)]"
-              >
-                {copy.buttons.next}
-              </button>
+              {scenario && (
+                <div className="flex shrink-0 flex-wrap items-center gap-2 lg:justify-end">
+                  <span className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-xs font-semibold text-white/70">
+                    {scenario.brand}
+                  </span>
+                  <span className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-xs font-medium tabular-nums text-white/45">
+                    {idx + 1}/{scenarios.length}
+                  </span>
+                  <span className="rounded-lg border border-white/[0.06] bg-transparent px-3 py-1.5 text-[11px] font-medium text-white/35">
+                    {tab === "login" ? copy.tabs.login : copy.tabs.whatsapp}
+                  </span>
+                </div>
+              )}
             </div>
 
-            {scenario?.note ? (
-              <div className="mt-4 rounded-2xl border border-[var(--border)] bg-brand-soft p-4 text-sm text-[var(--muted)]">
-                {scenario.note}
-              </div>
-            ) : null}
+            <AnimatePresence>
+              {bannerOpen && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-4 flex items-start gap-3 rounded-xl border border-[var(--accent-bright)]/15 bg-[var(--accent-primary)]/[0.06] px-4 py-3">
+                    <Info size={16} className="mt-0.5 shrink-0 text-[var(--accent-bright)]" aria-hidden />
+                    <p className="flex-1 text-sm text-white/70">{copy.hint}</p>
+                    <button
+                      type="button"
+                      onClick={() => setBannerOpen(false)}
+                      className="shrink-0 rounded-md p-1 text-white/40 transition hover:bg-white/[0.06] hover:text-white/70"
+                      aria-label={copy.bannerDismiss}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              {(["login", "whatsapp"] as const).map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => changeTab(k)}
+                  className={cn(
+                    "rounded-xl px-4 py-2 text-sm font-semibold transition",
+                    tab === k
+                      ? "bg-[var(--accent-primary)]/15 text-[var(--accent-bright)] ring-1 ring-[var(--accent-bright)]/25"
+                      : "text-white/45 hover:bg-white/[0.04] hover:text-white/70"
+                  )}
+                >
+                  {k === "login" ? copy.tabs.login : copy.tabs.whatsapp}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="grid gap-6">
-            <Verdict
-              verdict={choice}
-              correct={correct}
-              labelCorrect={copy.result.correct}
-              labelWrong={copy.result.wrong}
-              scoreLabel={copy.result.scoreLabel}
-              score={score}
-              maxScore={maxScore}
-              streakLabel={copy.result.streakLabel}
-              streak={streak}
-              shareLabel={shareStatus ?? copy.buttons.share}
-              onShare={share}
-              shareDisabled={choice === "none"}
-            />
+          {/* Main grid */}
+          <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-[minmax(240px,280px)_1fr] lg:p-8">
+            {/* Challenge — first on mobile */}
+            <div className="order-1 lg:order-2 lg:col-start-2">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={scenario?.id ?? "empty"}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                >
+                  {scenario?.kind === "login" && scenario.form ? (
+                    <LoginPageMock
+                      url={scenario.shownUrl}
+                      strings={scenario.form}
+                      notSecureLabel={copy.notSecure}
+                      secureLabel={copy.secure}
+                      verdict={verdictFeedback}
+                    />
+                  ) : scenario?.kind === "whatsapp" && scenario.wa ? (
+                    <WhatsAppScamMock
+                      url={scenario.shownUrl}
+                      wa={scenario.wa}
+                      notSecureLabel={copy.notSecure}
+                      secureLabel={copy.secure}
+                      verdict={verdictFeedback}
+                    />
+                  ) : (
+                    <div className="rounded-2xl border border-white/[0.08] p-8 text-white/45">
+                      No scenarios
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
 
-            <CluesPanel
-              title={copy.cluesTitle}
-              clues={copy.clues}
-              found={found}
-              foundLabel={copy.statusFound}
-              hiddenLabel={copy.statusHidden}
-            />
+              {/* Verdict controls */}
+              <div className="mt-6">
+                <p className="mb-4 text-sm font-medium text-white/50">{copy.instruction}</p>
+
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                  <button
+                    type="button"
+                    onClick={() => submitChoice("safe")}
+                    disabled={choice !== "none"}
+                    className={cn(
+                      "group flex items-center justify-center gap-2.5 rounded-2xl border-2 px-4 py-4 text-base font-bold transition-all duration-300 sm:py-5",
+                      choice === "safe"
+                        ? "border-emerald-400/50 bg-emerald-500/15 text-emerald-200"
+                        : "border-emerald-400/30 bg-emerald-500/[0.07] text-emerald-100 hover:border-emerald-400/50 hover:bg-emerald-500/12",
+                      choice !== "none" && choice !== "safe" && "opacity-40"
+                    )}
+                  >
+                    <Shield size={20} aria-hidden />
+                    {copy.buttons.safe}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => submitChoice("phishing")}
+                    disabled={choice !== "none"}
+                    className={cn(
+                      "group flex items-center justify-center gap-2.5 rounded-2xl border-2 px-4 py-4 text-base font-bold transition-all duration-300 sm:py-5",
+                      choice === "phishing"
+                        ? "border-amber-400/50 bg-amber-500/15 text-amber-100"
+                        : "border-amber-400/30 bg-amber-500/[0.07] text-amber-100 hover:border-amber-400/50 hover:bg-amber-500/12",
+                      choice !== "none" && choice !== "phishing" && "opacity-40"
+                    )}
+                  >
+                    <ShieldAlert size={20} aria-hidden />
+                    {copy.buttons.phishing}
+                  </button>
+                </div>
+
+                <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-white/[0.06] pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setInspect(true)}
+                    disabled={inspect}
+                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-white/45 transition hover:bg-white/[0.04] hover:text-white/70 disabled:opacity-35"
+                  >
+                    <Search size={14} aria-hidden />
+                    {copy.buttons.inspect}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={resetRound}
+                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-white/45 transition hover:bg-white/[0.04] hover:text-white/70"
+                  >
+                    <RotateCcw size={14} aria-hidden />
+                    {copy.buttons.reset}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={nextScenario}
+                    className="ms-auto inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-white/45 transition hover:bg-white/[0.04] hover:text-white/70"
+                  >
+                    {copy.buttons.next}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Sidebar */}
+            <div className="order-2 flex flex-col gap-5 lg:order-1 lg:col-start-1 lg:row-start-1">
+              <ScorePanel
+                scoreLabel={copy.result.scoreLabel}
+                score={correctCount}
+                maxScore={scenarios.length}
+                streakLabel={copy.result.streakLabel}
+                streak={streak}
+                roundLabel={copy.roundLabel}
+                roundCurrent={idx + 1}
+                roundTotal={scenarios.length}
+                shareLabel={shareStatus ?? copy.buttons.share}
+                onShare={share}
+                shareDisabled={choice === "none"}
+              />
+
+              <CluesPanel
+                title={copy.cluesTitle}
+                clues={copy.clues}
+                activeClues={activeClues}
+                revealed={inspect}
+                lockedMessage={copy.cluesLocked}
+                presentLabel={copy.statusPresent}
+                absentLabel={copy.statusAbsent}
+              />
+            </div>
           </div>
         </div>
-      </Section>
+      </section>
 
       <Footer />
     </div>

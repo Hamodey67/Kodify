@@ -114,10 +114,10 @@ export default function BackgroundInteractive() {
         const x2 = px + Math.cos(ang) * L;
         const y2 = py + Math.sin(ang) * L;
 
-        // gradient stroke (cyan/emerald) very subtle
+        // gradient stroke (brand blue/ice blue) very subtle
         const g = ctx.createLinearGradient(px, py, x2, y2);
-        g.addColorStop(0, `rgba(34,211,238,${l.a})`); // cyan-400
-        g.addColorStop(1, `rgba(16,185,129,${l.a * 0.9})`); // emerald-500
+        g.addColorStop(0, `rgba(43,127,255,${l.a})`); // var(--accent-primary)
+        g.addColorStop(1, `rgba(133,189,255,${l.a * 0.9})`); // var(--accent-glow)
 
         ctx.strokeStyle = g;
         ctx.lineWidth = l.w;
@@ -130,7 +130,7 @@ export default function BackgroundInteractive() {
 
         // tiny glow dot near mouse (subtle)
         if (influence > 0.25) {
-          ctx.fillStyle = `rgba(34,211,238,${0.08 * influence})`;
+          ctx.fillStyle = `rgba(133,189,255,${0.08 * influence})`;
           ctx.beginPath();
           ctx.arc(px, py, 1.4, 0, Math.PI * 2);
           ctx.fill();
