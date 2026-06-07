@@ -1,4 +1,4 @@
-import { Cairo, Inter, Noto_Sans_Arabic } from "next/font/google";
+import { Cairo, Inter, Noto_Sans_Arabic, Vazirmatn } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 import LayoutClientWrapper from "@/components/LayoutClientWrapper";
@@ -35,6 +35,14 @@ const notoSansArabic = Noto_Sans_Arabic({
   display: "swap",
 });
 
+// Vazirmatn: أفضل خط لدعم الكردي السوراني (ڕ ڵ ێ ۆ ە)
+const vazirmatn = Vazirmatn({
+  subsets: ["arabic"],
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-vazirmatn",
+  display: "swap",
+});
+
 export default function RootLayout({
   children,
 }: {
@@ -63,6 +71,7 @@ export default function RootLayout({
           cairo.variable,
           inter.variable,
           notoSansArabic.variable,
+          vazirmatn.variable,
         ].join(" ")}
       >
         <Providers>

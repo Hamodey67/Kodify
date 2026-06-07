@@ -51,7 +51,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     root.dir = lang === "ar" || lang === "ku" ? "rtl" : "ltr";
 
     root.classList.toggle("is-ar", lang === "ar");
-    root.classList.toggle("is-latin", lang !== "ar");
+    root.classList.toggle("is-ku", lang === "ku");
+    root.classList.toggle("is-latin", lang !== "ar" && lang !== "ku");
 
     localStorage.setItem("lang", lang);
   }, [lang]);

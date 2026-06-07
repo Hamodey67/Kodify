@@ -207,16 +207,38 @@ html[lang="en"] body {
   font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
 }
 
-html[lang="ar"] body {
+html[lang="ar"] body,
+html.is-ar body {
   font-family: var(--font-cairo), system-ui, -apple-system, sans-serif;
 }
 
+/* الكردي السوراني: Vazirmatn هو الخط الأنسب لحروف ڕ ڵ ێ ۆ ە ڤ */
 html[lang="ckb"] body,
-html[lang="ku"] body,
+html.is-ku body,
 [lang="ckb"],
-[lang="ku"],
-[dir="rtl"] {
-  font-family: var(--font-noto-arabic), var(--font-cairo), system-ui, -apple-system, sans-serif;
+[lang="ku"] {
+  font-family: var(--font-vazirmatn), var(--font-noto-arabic), var(--font-cairo), system-ui, -apple-system, sans-serif;
+}
+
+/* العناصر الكردية داخل الصفحة */
+html.is-ku h1,
+html.is-ku h2,
+html.is-ku h3,
+html.is-ku h4,
+html.is-ku p,
+html.is-ku span,
+html.is-ku a,
+html.is-ku button,
+html.is-ku input,
+html.is-ku textarea {
+  font-family: var(--font-vazirmatn), var(--font-noto-arabic), var(--font-cairo), system-ui, -apple-system, sans-serif;
+}
+
+/* ─── الكردي: تجاوز utility class الكايرو بـ Vazirmatn تلقائياً ─── */
+/* عندما يكون html.is-ku، أي عنصر يستخدم var(--font-cairo) يتحول لـ Vazirmatn */
+html.is-ku [class*="font-cairo"],
+html.is-ku [style*="font-cairo"] {
+  font-family: var(--font-vazirmatn), var(--font-noto-arabic), system-ui, sans-serif !important;
 }
 
 body::after {
