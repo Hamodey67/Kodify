@@ -402,7 +402,8 @@ export default function ProjectsGrid() {
         <div className="relative min-w-0">
           <div
             data-lenis-prevent
-            className="pg-projects-track flex w-full min-w-0 gap-4 overflow-x-auto overscroll-x-contain pb-3 snap-x snap-proximity scrollbar-none sm:gap-5 lg:grid lg:grid-cols-5 lg:items-stretch lg:overflow-visible lg:gap-6 lg:snap-none lg:pb-0"
+            className="pg-projects-track flex w-full min-w-0 gap-4 overflow-x-auto pb-3 snap-x snap-proximity scrollbar-none sm:gap-5 lg:grid lg:grid-cols-5 lg:items-stretch lg:overflow-visible lg:gap-6 lg:snap-none lg:pb-0"
+            style={{ touchAction: "pan-x pan-y" }}
           >
             {projects.map((project) => (
               <div

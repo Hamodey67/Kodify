@@ -30,6 +30,13 @@ export default function LayoutClientWrapper({
 
     const isTouchDevice = window.matchMedia("(hover: none), (pointer: coarse)").matches;
 
+    // موبايل: التمرير الطبيعي (native) أسرع وأسلس من Lenis على iOS/Android
+    // نفعّله فقط على الحاسبة
+    if (isTouchDevice) {
+      ScrollTrigger.refresh();
+      return;
+    }
+
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -37,8 +44,8 @@ export default function LayoutClientWrapper({
       gestureOrientation: "vertical",
       smoothWheel: true,
       wheelMultiplier: 1,
-      touchMultiplier: isTouchDevice ? 1 : 2,
-      syncTouch: isTouchDevice,
+      touchMultiplier: 2,
+      syncTouch: false,
       syncTouchLerp: 0.075,
     });
 

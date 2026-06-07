@@ -5,11 +5,18 @@ import { useEffect, useState, useRef } from "react";
 
 export default function SplashScreen({ onComplete }: { onComplete?: () => void }) {
   const [isVisible, setIsVisible] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
 
   const onCompleteRef = useRef(onComplete);
   useEffect(() => {
     onCompleteRef.current = onComplete;
   }, [onComplete]);
+
+  useEffect(() => {
+    // كشف الموبايل
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    if (coarse || window.innerWidth <= 768) setIsMobile(true);
+  }, []);
 
   useEffect(() => {
     // Hide scrollbar while splashing to avoid shifting
@@ -39,8 +46,9 @@ export default function SplashScreen({ onComplete }: { onComplete?: () => void }
           exit={{
             opacity: 0,
             scale: 1.05,
-            filter: "blur(10px)",
-            transition: { duration: 0.8, ease: [0.4, 0, 0.2, 1] },
+            // موبايل: نتجنب filter:blur لأنه ثقيل على GPU الموبايل
+            ...(isMobile ? {} : { filter: "blur(10px)" }),
+            transition: { duration: isMobile ? 0.4 : 0.8, ease: [0.4, 0, 0.2, 1] },
           }}
           className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#080d17] overflow-hidden"
           style={{ willChange: "opacity, transform, filter", cursor: "none" }}
@@ -54,7 +62,8 @@ export default function SplashScreen({ onComplete }: { onComplete?: () => void }
             }
           `}</style>
 
-          {/* Smooth subtle ambient background glow */}
+          {/* Smooth subtle ambient background glow — حاسبة فقط */}
+          {!isMobile && (
           <div className="absolute inset-0 z-0 flex items-center justify-center">
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
@@ -63,6 +72,7 @@ export default function SplashScreen({ onComplete }: { onComplete?: () => void }
               className="h-[50vw] w-[50vw] max-h-[600px] max-w-[600px] rounded-full bg-sky-500/20 blur-[120px]"
             />
           </div>
+          )}
 
           <div className="relative z-10 flex flex-col items-center justify-center">
             {/* Logo Container */}

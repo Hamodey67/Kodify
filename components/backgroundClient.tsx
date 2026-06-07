@@ -28,12 +28,8 @@ export default function BackgroundClient() {
   }, []);
 
   if (isMobile) {
-    return (
-      <>
-        <BackgroundAurora colorStops={["#2B7FFF", "#5BA4FF", "#85BDFF"]} blend={0.85} amplitude={1.2} speed={0.5} />
-        <BackgroundMobile />
-      </>
-    );
+    // موبايل: نستخدم فقط الخلفية الخفيفة CSS بدون WebGL (Aurora) لتوفير GPU
+    return <BackgroundMobile />;
   }
 
   return (

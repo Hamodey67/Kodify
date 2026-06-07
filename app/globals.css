@@ -473,7 +473,7 @@ a:hover, button:hover, [role="button"]:hover {
 
 .pg-projects-track {
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-x;
+  touch-action: pan-y;   /* السماح بالتمرير العمودي — pan-x كانت تمنعه */
   scroll-behavior: smooth;
 }
 
@@ -1130,4 +1130,46 @@ html.lenis body {
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     0 0 0 1px rgba(43, 127, 255, 0.45),
     0 0 24px rgba(43, 127, 255, 0.18);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   تحسينات الأداء على الموبايل فقط — لا تؤثر على نسخة الحاسبة
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* إيقاف backdrop-filter على الموبايل — ثقيل جداً على GPU */
+  .hero-stat-card,
+  .hero-feature-card,
+  .btn-hero-secondary-mobile,
+  .footer-glass-card,
+  .footer-status-pill {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* إيقاف الأنيميشن المستمرة الغير ضرورية */
+  .footer-status-dot {
+    animation: none !important;
+  }
+
+  /* تبسيط الـ box-shadow الثقيلة على الموبايل */
+  .theme-surface {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25) !important;
+  }
+
+  /* تسريع الـ transitions على الموبايل */
+  .theme-surface,
+  .footer-glass-card,
+  .footer-quick-link {
+    transition-duration: 0.15s !important;
+  }
+
+  /* إيقاف willChange لتوفير VRAM */
+  * {
+    will-change: auto !important;
+  }
+
+  /* منع scroll-behavior smooth الثقيل على الموبايل */
+  html {
+    scroll-behavior: auto;
+  }
 }

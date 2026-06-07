@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const CHARS =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789{}[]<>;:./\\|&%$#@_+-=~";
@@ -74,7 +74,8 @@ function buildColumns(width: number, height: number): Column[] {
   return columns;
 }
 
-export default function CodeRain() {
+/** الكومبوننت الفعلي — يحتوي كل منطق الكانفاس بدون أي تغيير */
+function CodeRainInner() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const columnsRef = useRef<Column[]>([]);
   const rafRef = useRef<number>(0);
@@ -238,3 +239,22 @@ export default function CodeRain() {
     </div>
   );
 }
+
+/**
+ * Wrapper مسؤول فقط عن كشف الموبايل.
+ * على الموبايل → null (بدون كانفاس = بدون CPU/GPU overhead)
+ * على الحاسبة → CodeRainInner بدون أي تغيير
+ */
+export default function CodeRain() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    const small = window.innerWidth <= 768;
+    if (coarse || small) setIsMobile(true);
+  }, []);
+
+  if (isMobile) return null;
+  return <CodeRainInner />;
+}
+
