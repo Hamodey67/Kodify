@@ -52,7 +52,7 @@ const projects = [
     ar: { title: "نظام POS", category: "مبيعات وكاشير", desc: "نظام مبيعات عالي الأداء للموبايل والتابلت مع حساب ضرائب فوري وواجهة تاتش." },
     en: { title: "Sales POS", category: "Retail & POS", desc: "High-performance POS for mobile and tablet with instant tax calculation and touch UI." },
     ku: { title: "سیستەمی POS", category: "فرۆشتن و کاشێر", desc: "سیستەمی فرۆشتنی خێرا بۆ مۆبایل و تابلێت لەگەڵ حیسابکردنی خێرای باج." },
-    images: ["/demos/pos/i1.webp", "/demos/pos/i2.webp", "/demos/pos/i3.webp"],
+    images: ["/Video Project 4.gif"],
     link: "/simulator/",
   },
 ];
