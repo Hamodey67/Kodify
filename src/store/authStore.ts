@@ -15,6 +15,7 @@ interface AuthState {
   login: (username: string, passwordHash: string) => Promise<boolean>;
   logout: () => void;
   clearError: () => void;
+  resetStuckState: () => void;
 }
 
 // In Electron, we can use window.api because it is declared globally in electron/preload.ts
@@ -64,4 +65,5 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ user: null, error: null });
   },
   clearError: () => set({ error: null }),
+  resetStuckState: () => set({ isLoading: false }),
 }));

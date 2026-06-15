@@ -80,6 +80,12 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.invoke('db:get-settings'),
   saveSettings: (settingsList: Record<string, string>) =>
     ipcRenderer.invoke('db:save-settings', settingsList),
+  createBackup: () =>
+    ipcRenderer.invoke('db:create-backup'),
+  getBackupStatus: () =>
+    ipcRenderer.invoke('db:get-backup-status'),
+  openBackupFolder: () =>
+    ipcRenderer.invoke('db:open-backup-folder'),
   getManagerTunnelStatus: () =>
     ipcRenderer.invoke('manager:tunnel-status'),
   startManagerTunnel: () =>

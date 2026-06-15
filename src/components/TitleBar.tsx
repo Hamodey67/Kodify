@@ -4,6 +4,7 @@ import { useLanguageStore } from '../store/languageStore';
 import { translations } from '../utils/translations';
 import { Globe, Minus, Square, X, User as UserIcon } from 'lucide-react';
 import { Logo } from './Logo';
+import { InputRecoveryButton } from './InputRecoveryButton';
 
 export const TitleBar: React.FC = () => {
   const { user } = useAuthStore();
@@ -82,6 +83,8 @@ export const TitleBar: React.FC = () => {
             <option value="ku" className="bg-slate-900 text-slate-200">کوردی</option>
           </select>
         </div>
+
+        <InputRecoveryButton variant="titlebar" />
 
         {/* Windows Control Buttons */}
         <div className="flex items-center gap-1 pl-1">

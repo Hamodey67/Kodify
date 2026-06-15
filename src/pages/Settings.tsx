@@ -13,7 +13,10 @@ import {
   CheckCircle2,
   XCircle,
   Play,
-  Square
+  Square,
+  Database,
+  FolderOpen,
+  HardDriveDownload
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -39,8 +42,19 @@ export const Settings: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
 
+  const [backupStatus, setBackupStatus] = useState<any>(null);
+  const [isBackingUp, setIsBackingUp] = useState(false);
+  const [backupMessage, setBackupMessage] = useState<string | null>(null);
+
+  const loadBackupStatus = async () => {
+    if (!window.api?.getBackupStatus) return;
+    const status = await window.api.getBackupStatus();
+    setBackupStatus(status);
+  };
+
   useEffect(() => {
     fetchSettings();
+    loadBackupStatus();
     
     // Fetch initial tunnel status
     if (window.api && window.api.getManagerTunnelStatus) {
@@ -145,6 +159,42 @@ export const Settings: React.FC = () => {
       };
       await saveSettings(payload);
       window.api.startManagerTunnel();
+    }
+  };
+
+  const formatBackupDate = (value: string | null) => {
+    if (!value) return t.noBackupYet;
+    return new Date(value).toLocaleString(language === 'ar' ? 'ar-IQ' : language === 'ku' ? 'ku' : 'en-US');
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (!bytes) return '0 MB';
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const handleManualBackup = async () => {
+    if (!window.api?.createBackup) return;
+    setIsBackingUp(true);
+    setBackupMessage(null);
+    try {
+      const result = await window.api.createBackup();
+      if (result?.success) {
+        setBackupMessage(t.backupSuccess);
+        await loadBackupStatus();
+      } else {
+        setBackupMessage(t.backupFailed);
+      }
+    } catch {
+      setBackupMessage(t.backupFailed);
+    } finally {
+      setIsBackingUp(false);
+      window.setTimeout(() => setBackupMessage(null), 4000);
+    }
+  };
+
+  const handleOpenBackupFolder = async () => {
+    if (window.api?.openBackupFolder) {
+      await window.api.openBackupFolder();
     }
   };
 
@@ -365,8 +415,104 @@ export const Settings: React.FC = () => {
                 )}
               </button>
             </div>
+        </div>
+      </div>
+
+      {/* DATA BACKUP */}
+      <div className="glass-card p-6 rounded-xl border border-slate-800 animate-fade-in">
+        <h3 className="text-sm font-bold text-slate-200 flex items-center gap-1.5 border-b border-slate-700/60 pb-3 mb-5">
+          <Database size={15} className="text-cyan-300" />
+          <span>{t.dataBackup}</span>
+        </h3>
+
+        <p className="text-xs text-slate-400 mb-5">{t.dataBackupDesc}</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+          <div className="rounded-xl border border-white/8 bg-white/[0.03] p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{t.autoBackupEnabled}</p>
+            <p className="mt-2 text-sm font-bold text-emerald-300">{t.autoBackupInterval}</p>
+          </div>
+          <div className="rounded-xl border border-white/8 bg-white/[0.03] p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{t.lastAutoBackup}</p>
+            <p className="mt-2 text-sm font-semibold text-slate-200">{formatBackupDate(backupStatus?.lastAutoBackupAt ?? null)}</p>
+          </div>
+          <div className="rounded-xl border border-white/8 bg-white/[0.03] p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{t.lastManualBackup}</p>
+            <p className="mt-2 text-sm font-semibold text-slate-200">{formatBackupDate(backupStatus?.lastManualBackupAt ?? null)}</p>
+          </div>
+          <div className="rounded-xl border border-white/8 bg-white/[0.03] p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{t.totalBackups}</p>
+            <p className="mt-2 text-sm font-semibold text-slate-200">{backupStatus?.totalBackups ?? 0}</p>
           </div>
         </div>
+
+        {backupStatus?.backupDir && (
+          <div className="mb-5 rounded-xl border border-slate-700 bg-slate-900/50 p-3">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-1">{t.backupFolder}</p>
+            <p className="text-[11px] font-mono text-cyan-200 break-all">{backupStatus.backupDir}</p>
+          </div>
+        )}
+
+        {backupMessage && (
+          <div className={`mb-4 rounded-xl border px-3 py-2 text-xs font-semibold ${
+            backupMessage === t.backupSuccess
+              ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-200'
+              : 'border-rose-400/25 bg-rose-500/10 text-rose-200'
+          }`}>
+            {backupMessage}
+          </div>
+        )}
+
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={handleManualBackup}
+            disabled={isBackingUp}
+            className="bg-primary text-primary-foreground hover:bg-teal-400 py-2.5 px-5 rounded-xl font-bold transition-all hover-scale glow-teal active:scale-95 flex items-center gap-2 text-xs disabled:opacity-50"
+          >
+            {isBackingUp ? (
+              <>
+                <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white/30 border-t-white" />
+                <span>{t.backingUp}</span>
+              </>
+            ) : (
+              <>
+                <HardDriveDownload size={14} />
+                <span>{t.backupNow}</span>
+              </>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleOpenBackupFolder}
+            className="py-2.5 px-5 rounded-xl font-bold transition-all border border-white/10 bg-white/[0.04] text-slate-200 hover:border-cyan-400/30 hover:bg-cyan-500/10 flex items-center gap-2 text-xs"
+          >
+            <FolderOpen size={14} />
+            <span>{t.openBackupFolder}</span>
+          </button>
+        </div>
+
+        {backupStatus?.recentBackups?.length > 0 && (
+          <div className="mt-6 border-t border-slate-800 pt-4">
+            <h4 className="text-xs font-bold text-slate-300 mb-3">{t.recentBackups}</h4>
+            <div className="space-y-2">
+              {backupStatus.recentBackups.slice(0, 5).map((file: any) => (
+                <div
+                  key={file.fullPath}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-white/8 bg-white/[0.03] px-3 py-2 text-[11px]"
+                >
+                  <span className="font-mono text-slate-300 truncate">{file.fileName}</span>
+                  <div className="flex items-center gap-3 shrink-0 text-slate-500">
+                    <span>{formatFileSize(file.sizeBytes)}</span>
+                    <span>{formatBackupDate(file.createdAt)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="flex justify-start pt-2">
         <button

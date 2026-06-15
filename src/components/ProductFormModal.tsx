@@ -3,6 +3,7 @@ import { useLanguageStore } from '../store/languageStore';
 import { useAuthStore } from '../store/authStore';
 import { translations } from '../utils/translations';
 import { AlertCircle, Sparkles } from 'lucide-react';
+import { InputRecoveryButton } from './InputRecoveryButton';
 
 interface ProductFormModalProps {
   isOpen: boolean;
@@ -148,20 +149,27 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
   return (
     <div className="fixed inset-0 glass z-[100] flex items-center justify-center p-4" dir={dir}>
-      <div className="glass-card rounded-2xl border border-white/10 shadow-glass w-full max-w-lg flex flex-col overflow-hidden animate-fade-in">
+      <div id="product-form-modal" className="glass-card rounded-2xl border border-white/10 shadow-glass w-full max-w-lg flex flex-col overflow-hidden animate-fade-in">
         {/* Header */}
         <div className="p-4 border-b border-white/8 flex justify-between items-center bg-white/3">
           <h3 className="font-black text-slate-100 text-sm flex items-center gap-1.5">
             <Sparkles size={16} className="text-cyan-200" />
             <span>{isEditMode ? t.editProduct : t.addProduct}</span>
           </h3>
-          <button 
-            type="button"
-            onClick={onClose}
-            className="text-slate-300/70 hover:text-white"
-          >
-            ✕
-          </button>
+          <div className="flex items-center gap-2">
+            <InputRecoveryButton
+              variant="modal"
+              focusSelector="#product-form-modal input:not([disabled]), #product-form-modal textarea:not([disabled]), #product-form-modal select:not([disabled])"
+              onRecover={() => setIsSubmitting(false)}
+            />
+            <button 
+              type="button"
+              onClick={onClose}
+              className="text-slate-300/70 hover:text-white"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         {/* Error alerts */}

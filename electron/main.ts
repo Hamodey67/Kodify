@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
 import { eq, and, desc, asc, sql, like, or } from 'drizzle-orm';
 import { db, initDatabase } from './db';
+import { createDatabaseBackup, getBackupDirectoryPath, getBackupStatus, runScheduledAutoBackup } from './backup';
 import * as schema from './schema';
 import bcrypt from 'bcryptjs';
 import { printReceipt, triggerCashDrawer, printShiftReport, printDailyReport, generateReceiptHtml, printProductReport } from './printers';
@@ -375,6 +376,7 @@ app.whenReady().then(async () => {
     updateSplashStatus('Initializing database...', 25);
 
     await initDatabase();
+    await runScheduledAutoBackup();
     await startMobileManagerServer();
     await startCloudflareTunnel();
 
@@ -1430,6 +1432,41 @@ ipcMain.handle('db:save-settings', async (_, settingsList) => {
     });
   } catch (error) {
     console.error('IPC db:save-settings error:', error);
+    return false;
+  }
+});
+
+ipcMain.handle('db:create-backup', async () => {
+  try {
+    const backup = await createDatabaseBackup('manual');
+    if (!backup) {
+      return { success: false, error: 'database_not_found' };
+    }
+    return { success: true, backup };
+  } catch (error: any) {
+    console.error('IPC db:create-backup error:', error);
+    return { success: false, error: error?.message || 'backup_failed' };
+  }
+});
+
+ipcMain.handle('db:get-backup-status', async () => {
+  try {
+    return await getBackupStatus();
+  } catch (error) {
+    console.error('IPC db:get-backup-status error:', error);
+    return null;
+  }
+});
+
+ipcMain.handle('db:open-backup-folder', async () => {
+  try {
+    const { shell } = await import('electron');
+    const backupDir = getBackupDirectoryPath();
+    fs.mkdirSync(backupDir, { recursive: true });
+    await shell.openPath(backupDir);
+    return true;
+  } catch (error) {
+    console.error('IPC db:open-backup-folder error:', error);
     return false;
   }
 });

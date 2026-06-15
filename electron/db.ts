@@ -21,27 +21,18 @@ sqlite.pragma('journal_mode = WAL');
 
 export const db = drizzle(sqlite, { schema });
 
-function getDatabaseBackupPath() {
-  const backupDir = path.join(path.dirname(dbPath), 'backups');
-  const safeVersion = app.getVersion().replace(/[^a-zA-Z0-9._-]/g, '_');
-  return path.join(backupDir, `kodify-system-before-v${safeVersion}.db`);
+export function getDatabasePath(): string {
+  return dbPath;
+}
+
+export async function backupDatabaseTo(targetPath: string): Promise<void> {
+  fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+  await sqlite.backup(targetPath);
 }
 
 async function backupDatabaseBeforeMigrations() {
-  if (!fs.existsSync(dbPath) || fs.statSync(dbPath).size === 0) {
-    console.log('No existing database found. Skipping pre-migration backup.');
-    return;
-  }
-
-  const backupPath = getDatabaseBackupPath();
-  if (fs.existsSync(backupPath)) {
-    console.log(`Pre-migration backup already exists: ${backupPath}`);
-    return;
-  }
-
-  fs.mkdirSync(path.dirname(backupPath), { recursive: true });
-  await sqlite.backup(backupPath);
-  console.log(`Created pre-migration database backup: ${backupPath}`);
+  const { createDatabaseBackup } = await import('./backup');
+  await createDatabaseBackup('migration');
 }
 
 // Run migrations on startup
