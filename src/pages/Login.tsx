@@ -126,7 +126,7 @@ export const Login: React.FC = () => {
               {error && (
                 <div className="bg-rose-500/10 border border-rose-500/20 text-rose-200 text-xs py-3 px-4 rounded-2xl flex items-center gap-2">
                   <ShieldCheck size={14} className="shrink-0" />
-                  <span className="font-semibold">{t.loginError}</span>
+                  <span className="font-semibold">{error === 'timeout' ? t.loginTimeout : t.loginError}</span>
                 </div>
               )}
 

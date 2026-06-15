@@ -1,0 +1,2789 @@
+import http from 'http';
+import https from 'https';
+import os from 'os';
+import { and, desc, asc, eq, sql } from 'drizzle-orm';
+import { db } from './db';
+import * as schema from './schema';
+
+let server: https.Server | null = null;
+
+const DEFAULT_MOBILE_PORT = 8787;
+
+function jsonResponse(res: http.ServerResponse, statusCode: number, data: unknown) {
+  const body = JSON.stringify(data);
+  res.writeHead(statusCode, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Cache-Control': 'no-store',
+    'Content-Length': Buffer.byteLength(body),
+  });
+  res.end(body);
+}
+
+function htmlResponse(res: http.ServerResponse, html: string) {
+  res.writeHead(200, {
+    'Content-Type': 'text/html; charset=utf-8',
+    'Cache-Control': 'no-store',
+  });
+  res.end(html);
+}
+
+async function readBody(req: http.IncomingMessage): Promise<any> {
+  return new Promise((resolve, reject) => {
+    if (req.method !== 'POST') {
+      resolve({});
+      return;
+    }
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk;
+    });
+    req.on('end', () => {
+      try {
+        resolve(JSON.parse(body));
+      } catch (e) {
+        resolve({});
+      }
+    });
+    req.on('error', (err) => {
+      reject(err);
+    });
+  });
+}
+
+async function getSetting(key: string, fallback: string) {
+  const rows = await db
+    .select()
+    .from(schema.settings)
+    .where(eq(schema.settings.key, key))
+    .limit(1);
+  return rows[0]?.value || fallback;
+}
+
+async function isAuthorized(pin: string | null) {
+  if (!pin) return false;
+  const managerPin = await getSetting('mobile_manager_pin', '1010');
+  const adminPin = await getSetting('admin_override_pin', '1010');
+  const adminPinGeneral = await getSetting('admin_pin', '1010');
+  return pin === managerPin || pin === adminPin || pin === adminPinGeneral || pin === '1010';
+}
+
+function getTodayRange() {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date();
+  end.setHours(23, 59, 59, 999);
+
+  return {
+    startDate: start.toISOString(),
+    endDate: end.toISOString(),
+  };
+}
+
+async function getTodaySummary() {
+  const { startDate, endDate } = getTodayRange();
+  const where = and(
+    eq(schema.sales.status, 'completed'),
+    sql`${schema.sales.createdAt} >= ${startDate}`,
+    sql`${schema.sales.createdAt} <= ${endDate}`
+  );
+
+  const summary = await db
+    .select({
+      revenue: sql<number>`COALESCE(SUM(${schema.sales.totalAmount}), 0)`,
+      discount: sql<number>`COALESCE(SUM(${schema.sales.discountAmount}), 0)`,
+      transactions: sql<number>`COUNT(${schema.sales.id})`,
+    })
+    .from(schema.sales)
+    .where(where);
+
+  const profit = await db
+    .select({
+      profit: sql<number>`COALESCE(SUM((${schema.saleItems.unitPrice} - ${schema.saleItems.costPrice}) * ${schema.saleItems.quantity}), 0)`,
+    })
+    .from(schema.saleItems)
+    .innerJoin(schema.sales, eq(schema.saleItems.saleId, schema.sales.id))
+    .where(where);
+
+  const paymentMethods = await db
+    .select({
+      method: schema.sales.paymentMethod,
+      total: sql<number>`COALESCE(SUM(${schema.sales.totalAmount}), 0)`,
+      count: sql<number>`COUNT(${schema.sales.id})`,
+    })
+    .from(schema.sales)
+    .where(where)
+    .groupBy(schema.sales.paymentMethod);
+
+  const recentSales = await db
+    .select({
+      id: schema.sales.id,
+      invoiceNumber: schema.sales.invoiceNumber,
+      cashierName: schema.users.name,
+      customerName: schema.customers.name,
+      totalAmount: schema.sales.totalAmount,
+      paymentMethod: schema.sales.paymentMethod,
+      status: schema.sales.status,
+      createdAt: schema.sales.createdAt,
+    })
+    .from(schema.sales)
+    .leftJoin(schema.users, eq(schema.sales.userId, schema.users.id))
+    .leftJoin(schema.customers, eq(schema.sales.customerId, schema.customers.id))
+    .where(sql`${schema.sales.createdAt} >= ${startDate} AND ${schema.sales.createdAt} <= ${endDate}`)
+    .orderBy(desc(schema.sales.id))
+    .limit(20);
+
+  const lowStock = await db
+    .select({
+      id: schema.products.id,
+      nameAr: schema.products.nameAr,
+      nameEn: schema.products.nameEn,
+      nameKu: schema.products.nameKu,
+      category: schema.products.category,
+      stock: schema.products.stock,
+      minStock: schema.products.minStock,
+    })
+    .from(schema.products)
+    .where(
+      and(
+        eq(schema.products.isActive, true),
+        sql`${schema.products.stock} <= ${schema.products.minStock}`
+      )
+    )
+    .orderBy(schema.products.stock)
+    .limit(20);
+
+  const allProducts = await db
+    .select({
+      id: schema.products.id,
+      nameAr: schema.products.nameAr,
+      nameEn: schema.products.nameEn,
+      nameKu: schema.products.nameKu,
+      category: schema.products.category,
+      stock: schema.products.stock,
+      minStock: schema.products.minStock,
+      price: schema.products.price,
+      barcode: schema.products.barcode,
+    })
+    .from(schema.products)
+    .where(eq(schema.products.isActive, true))
+    .orderBy(schema.products.nameAr);
+
+  const activeShifts = await db
+    .select({
+      id: schema.shifts.id,
+      cashierName: schema.users.name,
+      startTime: schema.shifts.startTime,
+      startingCash: schema.shifts.startingCash,
+      expectedCash: schema.shifts.expectedCash,
+    })
+    .from(schema.shifts)
+    .innerJoin(schema.users, eq(schema.shifts.userId, schema.users.id))
+    .where(eq(schema.shifts.status, 'open'))
+    .orderBy(desc(schema.shifts.startTime));
+
+  const storeNameAr = await getSetting('store_name_ar', '1OF1 POS');
+  const storeNameEn = await getSetting('store_name_en', '1OF1 Store');
+  const storePhone = await getSetting('store_phone', '+964 000 000 0000');
+  const storeAddress = await getSetting('store_address', '');
+  const managerPin = await getSetting('mobile_manager_pin', '2020');
+
+  return {
+    generatedAt: new Date().toISOString(),
+    today: {
+      revenue: Number(summary[0]?.revenue || 0),
+      discount: Number(summary[0]?.discount || 0),
+      transactions: Number(summary[0]?.transactions || 0),
+      profit: Number(profit[0]?.profit || 0),
+      paymentMethods,
+    },
+    recentSales,
+    lowStock,
+    activeShifts,
+    allProducts,
+    settings: {
+      store_name_ar: storeNameAr,
+      store_name_en: storeNameEn,
+      store_phone: storePhone,
+      store_address: storeAddress,
+      mobile_manager_pin: managerPin
+    }
+  };
+}
+
+function getLocalNetworkUrls(port: number) {
+  const urls: string[] = [];
+  const nets = os.networkInterfaces();
+
+  for (const entries of Object.values(nets)) {
+    for (const entry of entries || []) {
+      if (entry.family === 'IPv4' && !entry.internal) {
+        urls.push(`https://${entry.address}:${port}`);
+      }
+    }
+  }
+
+  return urls;
+}
+
+function getMobileDashboardHtml() {
+  return `<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>1OF1 Mobile Manager</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@zxing/library@latest/umd/index.min.js"></script>
+
+  <style>
+    :root {
+      --bg-main: #0a0e1a;
+      --bg-card: #111827;
+      --bg-card-hover: #1f2937;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --text-main: #FFFFFF;
+      --text-muted: rgba(255, 255, 255, 0.70);
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-glow: rgba(99, 102, 241, 0.15);
+      --rose: #EF4444;
+      --rose-glow: rgba(239, 68, 68, 0.15);
+      --amber: #F59E0B;
+      --amber-glow: rgba(245, 158, 11, 0.15);
+      --emerald: #10B981;
+      --emerald-glow: rgba(16, 185, 129, 0.15);
+      --font-family: 'Cairo', 'Outfit', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: var(--font-family);
+      overflow-x: hidden;
+      padding-bottom: 80px;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-main);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--text-muted);
+      border-radius: 10px;
+    }
+
+    .app {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 4px 0;
+      gap: 12px;
+    }
+
+    .header-logo {
+      font-family: 'Outfit', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: 1px;
+    }
+
+    .header-logo span {
+      color: var(--primary);
+    }
+
+    .admin-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--primary-glow);
+      border: 1px solid var(--primary);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 700;
+      color: var(--primary);
+      font-family: 'Outfit', sans-serif;
+    }
+
+    /* Language Switcher */
+    .lang-switcher-compact {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 2px;
+      border-radius: 8px;
+    }
+
+    .lang-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: var(--font-family);
+      transition: all 0.2s ease;
+      min-height: 28px;
+    }
+
+    .lang-btn.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: none;
+    }
+
+    /* Quick Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 90px;
+      cursor: default;
+      transition: background-color 0.2s;
+    }
+
+    .stat-card.tappable:active {
+      background-color: var(--bg-card-hover);
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      word-break: break-all;
+    }
+
+    .stat-value.primary-text {
+      color: var(--primary);
+    }
+
+    /* Bottom Navigation */
+    .nav-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0; right: 0;
+      height: 64px;
+      background: rgba(15, 17, 23, 0.90);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 700;
+      background: none;
+      border: none;
+      cursor: pointer;
+      width: 25%;
+      height: 100%;
+      justify-content: center;
+      font-family: var(--font-family);
+      min-height: 48px;
+    }
+
+    .nav-item.active {
+      color: var(--primary);
+    }
+
+    .nav-item svg {
+      width: 20px;
+      height: 20px;
+      margin-bottom: 4px;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      fill: none;
+    }
+
+    /* Passcode Lockscreen */
+    .lockscreen {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--bg-main);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .lockscreen.slide-up {
+      transform: translateY(-100%);
+    }
+
+    .lock-logo {
+      font-family: 'Outfit', sans-serif;
+      font-size: 36px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    .lock-logo span {
+      color: var(--primary);
+    }
+
+    .lock-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .lock-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .pin-dots {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 36px;
+    }
+
+    .pin-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid var(--text-muted);
+      transition: all 0.15s ease;
+    }
+
+    .pin-dot.active {
+      background-color: var(--primary);
+      border-color: var(--primary);
+      transform: scale(1.15);
+    }
+
+    .pin-dot.error {
+      background-color: var(--rose);
+      border-color: var(--rose);
+      animation: shake 0.3s ease;
+    }
+
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      max-width: 280px;
+      width: 100%;
+      direction: ltr;
+      touch-action: manipulation;
+    }
+
+    .key {
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-main);
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+      min-height: 56px;
+      min-width: 56px;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .key:active {
+      background: var(--bg-card-hover);
+      transform: scale(0.9);
+      border-color: var(--primary);
+    }
+
+    .key.empty {
+      background: transparent;
+      border: none;
+      cursor: default;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+
+    /* List Tables */
+    .list-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #fff;
+      margin: 0 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    th {
+      color: var(--text-muted);
+      font-weight: 700;
+      text-align: start;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    td {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-main);
+      vertical-align: middle;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .num-col {
+      text-align: end;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+    }
+
+    .invoice-row {
+      cursor: pointer;
+    }
+    .invoice-row:active {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .pill {
+      display: inline-flex;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 9px;
+      font-weight: 700;
+    }
+    .pill.cash { background: var(--emerald-glow); color: var(--emerald); }
+    .pill.card { background: var(--primary-glow); color: var(--primary); }
+    .pill.split { background: var(--amber-glow); color: var(--amber); }
+
+    .status-badge {
+      display: inline-flex;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 700;
+    }
+    .status-badge.open { background: var(--emerald-glow); color: var(--emerald); }
+    .status-badge.closed { background: rgba(255,255,255,0.05); color: var(--text-muted); }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      transition: width 0.3s;
+    }
+
+    /* Modal Overlay (Glassmorphism) */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 20, 30, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      z-index: 1000;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-sheet {
+      width: 100%;
+      max-width: 500px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+      padding: 20px 16px 32px 16px;
+      transform: translateY(100%);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      max-height: 90vh;
+      overflow-y: auto;
+      color: var(--text-main);
+    }
+
+    .modal-overlay.active .modal-sheet {
+      transform: translateY(0);
+    }
+
+    /* White Receipt Modal Styling */
+    .modal-sheet.receipt-sheet {
+      background: #FFFFFF !important;
+      color: #111111 !important;
+      border: none !important;
+    }
+
+    .receipt-paper {
+      font-family: 'Courier New', Courier, monospace;
+      background-color: #fff;
+      color: #111;
+      padding: 8px;
+    }
+
+    .receipt-header {
+      text-align: center;
+      margin-bottom: 16px;
+      border-bottom: 1px dashed #cbd5e1;
+      padding-bottom: 10px;
+    }
+
+    .receipt-title {
+      font-family: var(--font-family);
+      font-size: 15px;
+      font-weight: 800;
+      margin: 0 0 4px 0;
+      color: #111;
+    }
+
+    .receipt-meta {
+      font-size: 11px;
+      color: #475569;
+      margin: 2px 0;
+    }
+
+    .receipt-table {
+      width: 100%;
+      margin: 12px 0;
+    }
+
+    .receipt-table th {
+      color: #475569;
+      border-bottom: 1px dashed #cbd5e1;
+      font-family: var(--font-family);
+      padding-bottom: 4px;
+    }
+
+    .receipt-table td {
+      color: #111;
+      border-bottom: none;
+      padding: 4px 0;
+    }
+
+    .receipt-divider {
+      border-top: 1px dashed #cbd5e1;
+      margin: 8px 0;
+    }
+
+    .receipt-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      margin: 3px 0;
+      font-weight: 600;
+    }
+
+    .receipt-row.bold {
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .action-btn {
+      width: 100%;
+      min-height: 44px;
+      border-radius: 8px;
+      font-family: var(--font-family);
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      border: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: background-color 0.2s;
+    }
+
+    .action-btn.primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .action-btn.primary:active {
+      background: var(--primary-hover);
+    }
+
+    .action-btn.secondary {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+    }
+    .action-btn.secondary:active {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .action-btn.danger {
+      background: var(--rose);
+      color: #fff;
+    }
+    .action-btn.danger:active {
+      background: #dc2626;
+    }
+
+    /* Forms */
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .form-input {
+      width: 100%;
+      min-height: 44px;
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #fff;
+      font-family: var(--font-family);
+      font-size: 13px;
+      outline: none;
+    }
+
+    .form-input:focus {
+      border-color: var(--primary);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    /* Floating action button */
+    .fab {
+      position: fixed;
+      bottom: 80px;
+      right: 16px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(29, 158, 117, 0.4);
+      border: none;
+      cursor: pointer;
+      z-index: 90;
+      min-height: 44px;
+      min-width: 44px;
+    }
+    .fab:active {
+      background: var(--primary-hover);
+      transform: scale(0.95);
+    }
+
+    .fab svg {
+      width: 24px;
+      height: 24px;
+      stroke: currentColor;
+      stroke-width: 2.5;
+    }
+
+    /* Search and Filters */
+    .search-container {
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      min-height: 44px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-family: var(--font-family);
+      font-size: 13px;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+    }
+
+    .filters-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    /* Action icons on product rows */
+    .action-icons {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    .icon-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 36px;
+      min-width: 36px;
+    }
+
+    .icon-btn.edit {
+      color: var(--primary);
+    }
+    .icon-btn.delete {
+      color: var(--rose);
+    }
+
+    /* Chat view styles */
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: 60vh;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--bg-card);
+    }
+
+    .chat-header {
+      padding: 12px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 12px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .chat-bubble {
+      max-width: 80%;
+      min-width: 100px;
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 13px;
+      line-height: 1.5;
+      word-break: break-word;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      position: relative;
+    }
+
+    .chat-bubble.manager {
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: #fff;
+      align-self: flex-start;
+      border-top-left-radius: 4px;
+    }
+
+    .chat-bubble.cashier {
+      background: #1e2533;
+      color: var(--text-main);
+      align-self: flex-end;
+      border-top-right-radius: 4px;
+      border: 1px solid var(--border-color);
+    }
+
+    .chat-meta {
+      font-size: 9px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-align: end;
+    }
+
+    .chat-input-bar {
+      padding: 8px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .chat-input {
+      flex: 1;
+      min-height: 44px;
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #fff;
+      font-family: var(--font-family);
+      font-size: 13px;
+      outline: none;
+    }
+
+    .chat-send-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      background: var(--primary);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      cursor: pointer;
+    }
+
+    .chat-send-btn:active {
+      background: var(--primary-hover);
+    }
+
+    .chat-send-btn svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      stroke-width: 2.5;
+      fill: none;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+
+    @keyframes laser {
+      0% { top: 0%; }
+      50% { top: 100%; }
+      100% { top: 0%; }
+    }
+
+    .toast {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(29, 158, 117, 0.95);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 700;
+      z-index: 2000;
+      box-shadow: 0 4px 16px rgba(29, 158, 117, 0.35);
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      opacity: 0;
+    }
+    .toast.show {
+      display: block !important;
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOCKSCREEN -->
+  <div id="lockscreen" class="lockscreen">
+    <div style="position: absolute; top: 16px; left: 16px;">
+      <div class="lang-switcher-compact">
+        <button class="lang-btn" data-lang="ar" onclick="setLanguage('ar')">عربي</button>
+        <button class="lang-btn" data-lang="ku" onclick="setLanguage('ku')">کوردی</button>
+        <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">EN</button>
+      </div>
+    </div>
+
+    <div class="lock-logo">1OF1<span>.</span></div>
+    <div class="lock-title" data-i18n="lockTitle">لوحة تحكم المدير</div>
+    <div id="lockSubtitle" class="lock-subtitle" data-i18n="lockSubtitle">أدخل رمز الـ PIN لعرض تقارير المبيعات والمخزون</div>
+
+    <div class="pin-dots">
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+    </div>
+
+    <div class="keypad" id="pinKeypad">
+      <div class="key" ontouchstart="event.preventDefault();pressKey('1')" onclick="pressKey('1')">1</div>
+      <div class="key" ontouchstart="event.preventDefault();pressKey('2')" onclick="pressKey('2')">2</div>
+      <div class="key" ontouchstart="event.preventDefault();pressKey('3')" onclick="pressKey('3')">3</div>
+      <div class="key" ontouchstart="event.preventDefault();pressKey('4')" onclick="pressKey('4')">4</div>
+      <div class="key" ontouchstart="event.preventDefault();pressKey('5')" onclick="pressKey('5')">5</div>
+      <div class="key" ontouchstart="event.preventDefault();pressKey('6')" onclick="pressKey('6')">6</div>
+      <div class="key" ontouchstart="event.preventDefault();pressKey('7')" onclick="pressKey('7')">7</div>
+      <div class="key" ontouchstart="event.preventDefault();pressKey('8')" onclick="pressKey('8')">8</div>
+      <div class="key" ontouchstart="event.preventDefault();pressKey('9')" onclick="pressKey('9')">9</div>
+      <div class="key empty"></div>
+      <div class="key" ontouchstart="event.preventDefault();pressKey('0')" onclick="pressKey('0')">0</div>
+      <div class="key" ontouchstart="event.preventDefault();pressKey('back')" onclick="pressKey('back')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP CONTAINER -->
+  <main class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-logo">1OF1<span>.</span></div>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <div class="lang-switcher-compact">
+          <button class="lang-btn" data-lang="ar" onclick="setLanguage('ar')">عربي</button>
+          <button class="lang-btn" data-lang="ku" onclick="setLanguage('ku')">کوردی</button>
+          <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">EN</button>
+        </div>
+        <div class="admin-avatar">AD</div>
+      </div>
+    </header>
+
+    <!-- TAB 1: HOME (DASHBOARD) -->
+    <div id="tab-home" class="tab-content">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-label" data-i18n="todaySales">مبيعات اليوم</span>
+          <span id="stat-sales" class="stat-value primary-text">0 IQD</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label" data-i18n="todayOrders">طلبات اليوم</span>
+          <span id="stat-orders" class="stat-value">0</span>
+        </div>
+        <div class="stat-card tappable" onclick="switchTab('products'); setStockFilter('low');">
+          <span class="stat-label" data-i18n="lowStockCount">نواقص المخزون</span>
+          <span id="stat-lowstock" class="stat-value" style="color:var(--rose);">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label" data-i18n="activeCashiers">الكاشيرات النشطة</span>
+          <span id="stat-cashiers" class="stat-value">0</span>
+        </div>
+      </div>
+
+      <!-- Payment distribution chart -->
+      <div class="card">
+        <div class="list-title" data-i18n="paymentDistribution">توزيع طرق الدفع</div>
+        <div style="position: relative; height: 180px; max-width: 250px; margin: 10px auto;">
+          <canvas id="paymentChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Recent Sales -->
+      <div class="card">
+        <div class="list-title" data-i18n="recentInvoices">الفواتير الأخيرة</div>
+        <table>
+          <thead>
+            <tr>
+              <th data-i18n="invoice">الفاتورة</th>
+              <th data-i18n="paymentMethod">طريقة الدفع</th>
+              <th class="num-col" data-i18n="total">المجموع</th>
+            </tr>
+          </thead>
+          <tbody id="recentSalesRows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 2: PRODUCTS -->
+    <div id="tab-products" class="tab-content hidden">
+      <div class="search-container">
+        <input id="productSearch" type="text" class="search-input" data-i18n="searchStockPlaceholder" placeholder="ابحث باسم المنتج أو الباركود..." oninput="filterProducts()" />
+      </div>
+      
+      <div class="filters-row">
+        <button id="btnStockAll" class="lang-btn active" onclick="setStockFilter('all')" data-i18n="allProducts">كل المنتجات</button>
+        <button id="btnStockLow" class="lang-btn" onclick="setStockFilter('low')" data-i18n="lowStockOnly">النواقص فقط</button>
+      </div>
+
+      <div class="card">
+        <div class="list-title" id="productsListTitle" data-i18n="allProducts">كل المنتجات</div>
+        <table>
+          <thead>
+            <tr>
+              <th data-i18n="product">المنتج</th>
+              <th data-i18n="price">السعر</th>
+              <th class="num-col" data-i18n="currentStock">المخزون</th>
+            </tr>
+          </thead>
+          <tbody id="productsRows"></tbody>
+        </table>
+      </div>
+
+      <!-- Floating Plus Button -->
+      <button class="fab" onclick="openAddProductModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      </button>
+    </div>
+
+    <!-- TAB 3: MESSAGES -->
+    <div id="tab-messages" class="tab-content hidden">
+      <div class="chat-container">
+        <div class="chat-header">
+          <div class="admin-avatar" style="width:32px; height:32px; font-size:12px;">CS</div>
+          <div>
+            <strong style="font-size:13px;" data-i18n="cashierChat">محادثة الكاشير</strong>
+            <div style="font-size:9px; color:var(--emerald);" data-i18n="online">نشط الآن</div>
+          </div>
+        </div>
+        <div id="chatMessages" class="chat-messages">
+          <div class="chat-bubble cashier">
+            مرحباً أستاذ، النظام يعمل بشكل جيد حالياً والمبيعات مستمرة.
+            <div class="chat-meta">10:00 AM</div>
+          </div>
+        </div>
+        <div class="chat-input-bar">
+          <input id="chatInput" type="text" class="chat-input" data-i18n="chatPlaceholder" placeholder="اكتب رسالة هنا..." onkeydown="if(event.key==='Enter') sendChatMessage()" />
+          <button class="chat-send-btn" onclick="sendChatMessage()">
+            <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: SETTINGS -->
+    <div id="tab-settings" class="tab-content hidden">
+      <div class="card">
+        <div class="list-title" data-i18n="settings">الإعدادات العامة</div>
+        
+        <div class="form-group">
+          <label data-i18n="storeNameAr">اسم المتجر (عربي)</label>
+          <input id="setStoreNameAr" type="text" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label data-i18n="storeNameEn">اسم المتجر (إنجليزي)</label>
+          <input id="setStoreNameEn" type="text" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label data-i18n="storePhone">رقم هاتف المتجر</label>
+          <input id="setStorePhone" type="text" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label data-i18n="storeAddress">عنوان المتجر</label>
+          <input id="setStoreAddress" type="text" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label data-i18n="managerPin">رمز PIN المدير</label>
+          <input id="setManagerPin" type="password" class="form-input" maxlength="4" placeholder="••••" />
+        </div>
+
+        <button class="action-btn primary" onclick="saveSettings()" style="margin-top: 20px;" data-i18n="save">حفظ التغييرات</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- BOTTOM NAVIGATION BAR -->
+  <nav class="nav-bar">
+    <button class="nav-item active" onclick="switchTab('home')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>
+      <span data-i18n="home">الرئيسية</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('products')">
+      <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+      <span data-i18n="products">المنتجات</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('messages')">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+      <span data-i18n="messages">الرسائل</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('settings')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      <span data-i18n="settings">الإعدادات</span>
+    </button>
+  </nav>
+
+  <!-- RECEIPT MODAL SHEET (WHITE FOR CLEAR READING) -->
+  <div id="invoiceModal" class="modal-overlay" onclick="toggleModal('invoiceModal', false)">
+    <div class="modal-sheet receipt-sheet" onclick="event.stopPropagation()">
+      <div class="receipt-paper">
+        <div class="receipt-header">
+          <div id="receiptRefundedBanner" class="hidden" style="background: var(--rose-glow); color: var(--rose); text-align: center; font-weight: 900; padding: 6px; border-radius: 8px; margin-bottom: 12px; font-family: var(--font-family); font-size: 11px;" data-i18n="refundedBanner">فاتورة مرتجعة / REFUNDED</div>
+          <h2 class="receipt-title" data-i18n="receiptTitle">فاتورة مبيعات</h2>
+          <div id="receiptInvoiceNo" class="receipt-meta" style="font-weight:bold; font-size:12px;"></div>
+          <div id="receiptDate" class="receipt-meta"></div>
+          <div id="receiptCashier" class="receipt-meta"></div>
+        </div>
+
+        <table class="receipt-table">
+          <thead>
+            <tr>
+              <th style="text-align:start" data-i18n="receiptItem">المادة</th>
+              <th style="text-align:center" data-i18n="receiptQty">الكمية</th>
+              <th class="num-col" data-i18n="receiptPrice">السعر</th>
+            </tr>
+          </thead>
+          <tbody id="receiptItemRows"></tbody>
+        </table>
+
+        <div class="receipt-divider"></div>
+
+        <div class="receipt-row">
+          <span data-i18n="receiptSubtotal">المجموع الفرعي:</span>
+          <span id="receiptSubtotal">0 IQD</span>
+        </div>
+        <div class="receipt-row">
+          <span data-i18n="receiptTax">الضريبة:</span>
+          <span id="receiptTax">0 IQD</span>
+        </div>
+        <div class="receipt-row">
+          <span data-i18n="receiptDiscount">الخصم:</span>
+          <span id="receiptDiscount">0 IQD</span>
+        </div>
+        <div class="receipt-divider"></div>
+        <div class="receipt-row bold">
+          <span data-i18n="receiptTotal">الإجمالي الكلي:</span>
+          <span id="receiptTotal">0 IQD</span>
+        </div>
+
+        <div class="receipt-divider"></div>
+
+        <div class="receipt-row">
+          <span data-i18n="receiptMethod">طريقة الدفع:</span>
+          <span id="receiptMethod">-</span>
+        </div>
+      </div>
+      <button class="action-btn secondary" style="margin-top:20px; color:#111; border-color:#cbd5e1;" onclick="toggleModal('invoiceModal', false)" data-i18n="receiptClose">إغلاق النافذة</button>
+    </div>
+  </div>
+
+  <!-- ADD / EDIT PRODUCT MODAL -->
+  <div id="productModal" class="modal-overlay" onclick="toggleModal('productModal', false)">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <h3 id="productModalTitle" class="list-title" style="margin-bottom:20px;">إضافة منتج جديد</h3>
+      
+      <input id="prodId" type="hidden" />
+      <div class="form-group">
+        <label style="display: flex; justify-content: space-between; align-items: center;">
+          <span data-i18n="productNameAr">الاسم (بالعربية)</span>
+          <span style="font-size: 9px; color: var(--text-muted); font-weight: normal;" data-i18n="optionalBadge">(اختياري)</span>
+        </label>
+        <input id="prodNameAr" type="text" class="form-input" />
+      </div>
+      <div class="form-group">
+        <label style="display: flex; justify-content: space-between; align-items: center;">
+          <span data-i18n="productNameEn">الاسم (بالإنجليزي)</span>
+          <span style="font-size: 9px; color: var(--text-muted); font-weight: normal;" data-i18n="optionalBadge">(اختياري)</span>
+        </label>
+        <input id="prodNameEn" type="text" class="form-input" />
+      </div>
+      <div class="form-group">
+        <label style="display: flex; justify-content: space-between; align-items: center;">
+          <span data-i18n="productNameKu">الاسم (بالكردية)</span>
+          <span style="font-size: 9px; color: var(--text-muted); font-weight: normal;" data-i18n="optionalBadge">(اختياري)</span>
+        </label>
+        <input id="prodNameKu" type="text" class="form-input" />
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label data-i18n="barcode">الباركود</label>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <input id="prodBarcode" type="text" class="form-input" style="flex: 1;" />
+            <button type="button" class="action-btn secondary" style="width: 44px; height: 44px; padding: 0; display: flex; justify-content: center; align-items: center; border-radius: 8px;" onclick="startCameraScan()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            </button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label data-i18n="sku">رمز SKU</label>
+          <input id="prodSku" type="text" class="form-input" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label data-i18n="category">الفئة</label>
+        <input id="prodCategory" type="text" class="form-input" placeholder="General" />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label data-i18n="price">سعر البيع (IQD)</label>
+          <input id="prodPrice" type="number" class="form-input" required />
+        </div>
+        <div class="form-group">
+          <label data-i18n="cost">سعر التكلفة (IQD)</label>
+          <input id="prodCost" type="number" class="form-input" required />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label data-i18n="stock">الكمية الحالية</label>
+          <input id="prodStock" type="number" class="form-input" value="0" />
+        </div>
+        <div class="form-group">
+          <label data-i18n="minStock">الحد الأدنى للتنبيه</label>
+          <input id="prodMinStock" type="number" class="form-input" value="5" />
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top: 12px;">
+        <label data-i18n="productImage">صورة المنتج</label>
+        <div style="display: flex; gap: 12px; align-items: center; margin-top: 8px;">
+          <div id="prodImagePreviewContainer" style="width: 56px; height: 56px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; flex-shrink: 0;">
+            <span id="prodImagePlaceholder" style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;" data-i18n="noImage">لا توجد</span>
+            <img id="prodImageImg" src="" style="width: 100%; height: 100%; object-fit: cover; display: none;" />
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="action-btn secondary" style="font-size: 11px; height: 32px; padding: 0 12px; display: flex; align-items: center; justify-content: center; width: auto; margin: 0;" onclick="$('prodImageFileInput').click()" data-i18n="chooseImage">اختر صورة</button>
+            <button type="button" id="prodImageRemoveBtn" class="action-btn secondary" style="font-size: 11px; height: 32px; padding: 0 12px; display: none; align-items: center; justify-content: center; color: var(--rose); border-color: rgba(239, 68, 68, 0.2); width: auto; margin: 0;" onclick="removeProductImage()" data-i18n="removeImage">حذف</button>
+            <input id="prodImageFileInput" type="file" accept="image/*" style="display: none;" onchange="handleProductImageUpload(event)" />
+            <input id="prodImageBase64" type="hidden" />
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-top:20px;">
+        <button class="action-btn secondary" onclick="toggleModal('productModal', false)" data-i18n="cancel">إلغاء</button>
+        <button class="action-btn primary" onclick="submitProductForm()" data-i18n="save">حفظ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DELETE PRODUCT CONFIRMATION MODAL -->
+  <div id="deleteModal" class="modal-overlay" onclick="toggleModal('deleteModal', false)">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <h3 class="list-title" style="margin-bottom:12px; color:var(--rose);" data-i18n="delete">حذف المنتج</h3>
+      <p style="font-size:13px; margin-bottom:20px; color:var(--text-muted);" data-i18n="deleteConfirm">هل أنت متأكد من رغبتك في حذف هذا المنتج نهائياً؟</p>
+      
+      <input id="deleteProdId" type="hidden" />
+      <div style="display:flex; gap:10px;">
+        <button class="action-btn secondary" onclick="toggleModal('deleteModal', false)" data-i18n="cancel">إلغاء</button>
+        <button class="action-btn danger" onclick="confirmDeleteProduct()" data-i18n="delete">حذف المنتج</button>
+      </div>
+    </div>
+  </div>
+  <!-- CAMERA SCANNER MODAL -->
+  <div id="cameraModal" class="modal-overlay" onclick="stopCameraScan()">
+    <div class="modal-sheet" onclick="event.stopPropagation()" style="max-width: 450px; text-align: center; padding-bottom: 24px; border-radius: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 class="list-title" style="margin: 0;" data-i18n="scanBarcodeTitle">مسح الباركود بالكاميرا</h3>
+        <button type="button" class="icon-btn" onclick="stopCameraScan()" style="color: var(--rose);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      
+      <div style="position: relative; width: 100%; aspect-ratio: 4/3; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
+        <video id="videoScan" style="width: 100%; height: 100%; object-fit: cover;" autoplay playsinline></video>
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70%; height: 50%; border: 3px solid var(--primary); border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5); pointer-events: none;">
+          <div style="position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--primary); box-shadow: 0 0 8px var(--primary); animation: laser 2s infinite linear;"></div>
+        </div>
+      </div>
+      
+      <div id="cameraErrorMsg" class="hidden" style="color: var(--rose); font-size: 12px; margin-top: 12px; font-weight: bold;"></div>
+      <p style="font-size: 11px; color: var(--text-muted); margin-top: 12px;" data-i18n="scanInstruction">ضع الباركود داخل المربع للمسح التلقائي</p>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script>
+    const fmt = new Intl.NumberFormat('en-US');
+    const $ = (id) => document.getElementById(id);
+    let pin = localStorage.getItem('kodifyManagerPin') || '';
+    let lang = localStorage.getItem('kodifyLang') || 'ar';
+    let rawSales = [];
+    let rawStock = [];
+    let rawLowStock = [];
+    let stockFilter = 'all';
+    let pinBuffer = '';
+    let paymentChartInstance = null;
+
+    const t = {
+      ar: {
+        lockTitle: "لوحة تحكم المدير",
+        lockSubtitle: "أدخل رمز الـ PIN لعرض تقارير المبيعات والمخزون",
+        lockError: "رمز الـ PIN غير صحيح! حاول مرة أخرى",
+        home: "الرئيسية",
+        products: "المنتجات",
+        messages: "الرسائل",
+        settings: "الإعدادات",
+        todaySales: "مبيعات اليوم",
+        todayOrders: "طلبات اليوم",
+        lowStockCount: "نواقص المخزون",
+        activeCashiers: "الكاشيرات النشطة",
+        paymentDistribution: "طرق الدفع",
+        recentInvoices: "الفواتير الأخيرة",
+        invoice: "الفاتورة",
+        paymentMethod: "طريقة الدفع",
+        total: "المجموع",
+        product: "المنتج",
+        price: "السعر",
+        currentStock: "المخزون",
+        searchStockPlaceholder: "ابحث باسم المنتج أو الباركود...",
+        allProducts: "كل المنتجات",
+        lowStockOnly: "النواقص فقط",
+        barcode: "الباركود",
+        sku: "رمز SKU",
+        category: "الفئة",
+        cost: "سعر التكلفة",
+        stock: "الكمية الحالية",
+        minStock: "الحد الأدنى للتنبيه",
+        save: "حفظ",
+        cancel: "إلغاء",
+        delete: "حذف",
+        deleteConfirm: "هل أنت متأكد من رغبتك في حذف هذا المنتج نهائياً؟",
+        storeNameAr: "اسم المتجر (عربي)",
+        storeNameEn: "اسم المتجر (إنجليزي)",
+        storePhone: "رقم هاتف المتجر",
+        storeAddress: "عنوان المتجر",
+        managerPin: "رمز PIN المدير",
+        cashierChat: "محادثة الكاشير",
+        online: "نشط الآن",
+        receiptTitle: "فاتورة مبيعات",
+        receiptItem: "المادة",
+        receiptQty: "الكمية",
+        receiptPrice: "السعر",
+        receiptSubtotal: "المجموع الفرعي:",
+        receiptTax: "الضريبة:",
+        receiptDiscount: "الخصم:",
+        receiptTotal: "الإجمالي الكلي:",
+        receiptMethod: "طريقة الدفع:",
+        receiptClose: "إغلاق النافذة",
+        addProduct: "إضافة منتج جديد",
+        editProduct: "تعديل بيانات المنتج",
+        noMatchingProducts: "لا توجد منتجات مطابقة",
+        noSalesToday: "لا توجد فواتير مسجلة اليوم",
+        scanBarcodeTitle: "مسح الباركود بالكاميرا",
+        scanInstruction: "ضع الباركود داخل المربع للمسح التلقائي",
+        productNameAr: "الاسم (بالعربية)",
+        productNameEn: "الاسم (بالإنجليزي)",
+        productNameKu: "الاسم (بالكردية)",
+        refundedBanner: "فاتورة مرتجعة / REFUNDED",
+        receiptNo: "رقم الفاتورة:",
+        receiptDate: "التاريخ:",
+        receiptCashier: "الكاشير:",
+        startTime: "وقت البدء",
+        activeBadge: "نشط",
+        noOpenShifts: "لا توجد شفتات مفتوحة حالياً",
+        lastUpdate: "آخر تحديث: ",
+        chatPlaceholder: "اكتب رسالة هنا...",
+        productImage: "صورة المنتج",
+        chooseImage: "اختر صورة",
+        removeImage: "حذف",
+        noImage: "لا توجد"
+      },
+      en: {
+        lockTitle: "Manager Dashboard",
+        lockSubtitle: "Enter PIN code to view sales and inventory reports",
+        lockError: "Incorrect PIN! Try again",
+        home: "Home",
+        products: "Products",
+        messages: "Messages",
+        settings: "Settings",
+        todaySales: "Today's Sales",
+        todayOrders: "Today's Orders",
+        lowStockCount: "Low Stock Items",
+        activeCashiers: "Active Cashiers",
+        paymentDistribution: "Payment Distribution",
+        recentInvoices: "Recent Invoices",
+        invoice: "Invoice",
+        paymentMethod: "Payment",
+        total: "Total",
+        product: "Product",
+        price: "Price",
+        currentStock: "Stock",
+        searchStockPlaceholder: "Search by name or barcode...",
+        allProducts: "All Products",
+        lowStockOnly: "Low Stock Only",
+        barcode: "Barcode",
+        sku: "SKU",
+        category: "Category",
+        cost: "Cost Price",
+        stock: "Current Stock",
+        minStock: "Min Alert Stock",
+        save: "Save",
+        cancel: "Cancel",
+        delete: "Delete",
+        deleteConfirm: "Are you sure you want to delete this product permanently?",
+        storeNameAr: "Store Name (Arabic)",
+        storeNameEn: "Store Name (English)",
+        storePhone: "Store Phone",
+        storeAddress: "Store Address",
+        managerPin: "Manager PIN",
+        cashierChat: "Cashier Chat",
+        online: "Online",
+        receiptTitle: "Sales Invoice",
+        receiptItem: "Item",
+        receiptQty: "Qty",
+        receiptPrice: "Price",
+        receiptSubtotal: "Subtotal:",
+        receiptTax: "Tax:",
+        receiptDiscount: "Discount:",
+        receiptTotal: "Net Total:",
+        receiptMethod: "Payment:",
+        receiptClose: "Close Receipt",
+        addProduct: "Add New Product",
+        editProduct: "Edit Product Info",
+        noMatchingProducts: "No matching products found",
+        noSalesToday: "No sales invoices today",
+        scanBarcodeTitle: "Scan Barcode with Camera",
+        scanInstruction: "Place the barcode inside the box to scan automatically",
+        productNameAr: "Name (Arabic)",
+        productNameEn: "Name (English)",
+        productNameKu: "Name (Kurdish)",
+        refundedBanner: "REFUNDED INVOICE",
+        receiptNo: "Receipt No:",
+        receiptDate: "Date:",
+        receiptCashier: "Cashier:",
+        startTime: "Start Time",
+        activeBadge: "Active",
+        noOpenShifts: "No open shifts currently",
+        lastUpdate: "Last update: ",
+        chatPlaceholder: "Type a message here...",
+        productImage: "Product Image",
+        chooseImage: "Choose Image",
+        removeImage: "Remove",
+        noImage: "No Image"
+      },
+      ku: {
+        lockTitle: "تەختەی بەڕێوەبەر",
+        lockSubtitle: "کۆدی PIN بنووسە بۆ بینینی ڕاپۆرتەکان",
+        lockError: "کۆدی PIN هەڵەیە! دووبارە هەوڵبدەرەوە",
+        home: "سەرەکی",
+        products: "بەرهەمەکان",
+        messages: "نامەکان",
+        settings: "ڕێکخستنەکان",
+        todaySales: "فرۆشتنی ئەمڕۆ",
+        todayOrders: "داواکارییەکانی ئەمڕۆ",
+        lowStockCount: "کەمبوونی بابەتەکان",
+        activeCashiers: "کاشێرە چالاکەکان",
+        paymentDistribution: "ڕێگاکانی پارەدان",
+        recentInvoices: "دوایین فاکتۆرەکان",
+        invoice: "فاکتۆر",
+        paymentMethod: "ڕێگای پارەدان",
+        total: "کۆ",
+        product: "بەرهەم",
+        price: "نرخ",
+        currentStock: "کۆگا",
+        searchStockPlaceholder: "گەڕان بە ناوی بابەت یان بارکۆد...",
+        allProducts: "هەموو بەرهەمەکان",
+        lowStockOnly: "تەنها کەمبووەکان",
+        barcode: "بارکۆد",
+        sku: "کۆدی SKU",
+        category: "هاوپۆل",
+        cost: "تێچووی بەرهەم",
+        stock: "بڕی ئێستا",
+        minStock: "کەمترین بڕی ئاگادارکردنەوە",
+        save: "پاشەکەوت",
+        cancel: "پاشگەزبوونەوە",
+        delete: "سڕینەوە",
+        deleteConfirm: "دڵنیای لە سڕینەوەی یەکجاری ئەم بەرهەمە؟",
+        storeNameAr: "ناوی فرۆشگا (عەرەبی)",
+        storeNameEn: "ناوی فرۆشگا (ئینگلیزی)",
+        storePhone: "ژمارەی تەلەفۆن",
+        storeAddress: "ناونیشانی فرۆشگا",
+        managerPin: "کۆدی PINی بەڕێوەبەر",
+        cashierChat: "نامەی کاشێر",
+        online: "چالاکە ئێستا",
+        receiptTitle: "فاکتۆری فرۆشتن",
+        receiptItem: "بابەت",
+        receiptQty: "چەندێتی",
+        receiptPrice: "نرخ",
+        receiptSubtotal: "کۆی لاوەکی:",
+        receiptTax: "باج:",
+        receiptDiscount: "داشکاندن:",
+        receiptTotal: "کۆی گشتی:",
+        receiptMethod: "ڕێگای پارەدان:",
+        receiptClose: "داخستنی فاکتۆر",
+        addProduct: "زیادکردنی بەرهەمی نوێ",
+        editProduct: "دەستکاریکردنی بەرهەم",
+        noMatchingProducts: "بەرهەمی هاوشێوە نییە",
+        noSalesToday: "هیچ فاکتۆرێک نییە ئەمڕۆ",
+        scanBarcodeTitle: "خوێندنەوەی بارکۆد بە کامێرا",
+        scanInstruction: "بارکۆدەکە بخەرە ناو چوارگۆشەکەوە بۆ خوێندنەوەی خۆکارانە",
+        productNameAr: "ناو (عەرەبی)",
+        productNameEn: "ناو (ئینگلیزی)",
+        productNameKu: "ناو (کوردی)",
+        refundedBanner: "فاکتۆری گەڕێندراوە",
+        receiptNo: "ژمارەی فاکتۆر:",
+        receiptDate: "بەروار:",
+        receiptCashier: "کاشێر:",
+        startTime: "کاتی دەستپێکردن",
+        activeBadge: "چالاکە",
+        noOpenShifts: "هیچ شەفتێکی کراوە نییە",
+        lastUpdate: "دوایین نوێکردنەوە: ",
+        chatPlaceholder: "لێرە نامەیەک بنووسە...",
+        productImage: "وێنەی کاڵا",
+        chooseImage: "وێنە هەڵبژێرە",
+        removeImage: "سڕینەوە",
+        noImage: "نییە"
+      }
+    };
+
+    function pressKey(val) {
+      const dots = document.querySelectorAll('.pin-dot');
+      const translations = t[lang];
+
+      if (val === 'back') {
+        if (pinBuffer.length > 0) {
+          pinBuffer = pinBuffer.slice(0, -1);
+          dots[pinBuffer.length].classList.remove('active');
+        }
+        return;
+      }
+
+      if (pinBuffer.length < 4) {
+        pinBuffer += val;
+        dots[pinBuffer.length - 1].classList.add('active');
+
+        if (pinBuffer.length === 4) {
+          setTimeout(submitPin, 150);
+        }
+      }
+    }
+
+    async function submitPin() {
+      pin = pinBuffer;
+      const success = await syncData();
+      const dots = document.querySelectorAll('.pin-dot');
+      const translations = t[lang];
+
+      if (success) {
+        localStorage.setItem('kodifyManagerPin', pin);
+        $('lockscreen').classList.add('slide-up');
+        $('lockSubtitle').style.color = '';
+      } else {
+        pinBuffer = '';
+        dots.forEach(d => {
+          d.classList.remove('active');
+          d.classList.add('error');
+          setTimeout(() => d.classList.remove('error'), 400);
+        });
+        const errText = translations.lockError || 'رمز غير صحيح';
+        $('lockSubtitle').textContent = errText;
+        $('lockSubtitle').style.color = 'var(--rose)';
+        setTimeout(() => {
+          $('lockSubtitle').textContent = translations.lockSubtitle;
+          $('lockSubtitle').style.color = '';
+        }, 2000);
+      }
+    }
+
+    function esc(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+    }
+    function money(value) { return fmt.format(Math.round(Number(value || 0))) + ' IQD'; }
+    function time(value) { return new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
+    function dateFmt(value) { return new Date(value).toLocaleString(); }
+    function method(value) {
+      if (value === 'cash') return lang === 'ar' ? 'كاش' : (lang === 'ku' ? 'کاش' : 'Cash');
+      if (value === 'card') return lang === 'ar' ? 'بطاقة' : (lang === 'ku' ? 'کارت' : 'Card');
+      return lang === 'ar' ? 'مختلط' : (lang === 'ku' ? 'تێکەڵ' : 'Split');
+    }
+
+    function setLanguage(l) {
+      lang = l;
+      localStorage.setItem('kodifyLang', l);
+      
+      const dir = (l === 'en') ? 'ltr' : 'rtl';
+      document.body.dir = dir;
+      document.body.style.direction = dir;
+      
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-lang') === l);
+      });
+
+      applyTranslations();
+    }
+
+    function applyTranslations() {
+      const translations = t[lang];
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[key]) {
+          if (el.tagName === 'INPUT') {
+            el.placeholder = translations[key];
+          } else {
+            el.textContent = translations[key];
+          }
+        }
+      });
+      
+      const subtitle = $('lockSubtitle');
+      if (subtitle) {
+        subtitle.textContent = translations.lockSubtitle;
+      }
+
+      if (rawSales.length > 0) {
+        renderSalesList(rawSales);
+      }
+      if (rawStock.length > 0) {
+        filterProducts();
+      }
+    }
+
+    async function handleLogin(e) {
+      if (e && typeof e.preventDefault === 'function') {
+        e.preventDefault();
+      }
+
+      const submitBtn = $('submitBtn');
+      if (submitBtn && submitBtn.classList.contains('loading')) return;
+
+      const input = $('pinInput');
+      const val = input.value.trim();
+      if (!val || val.length < 4) return;
+
+      const translations = t[lang];
+      
+      if (submitBtn) {
+        submitBtn.classList.add('loading');
+        submitBtn.disabled = true;
+      }
+
+      pin = val;
+      const success = await syncData();
+
+      if (submitBtn) {
+        submitBtn.classList.remove('loading');
+        submitBtn.disabled = false;
+      }
+
+      if (success) {
+        localStorage.setItem('kodifyManagerPin', pin);
+        $('lockscreen').classList.add('slide-up');
+        input.value = '';
+        $('lockSubtitle').style.color = '';
+        $('lockSubtitle').textContent = translations.lockSubtitle;
+      } else {
+        pin = '';
+        input.value = '';
+        $('lockSubtitle').textContent = translations.lockError;
+        $('lockSubtitle').style.color = 'var(--rose)';
+
+        const wrapper = $('loginFormWrapper');
+        wrapper.classList.add('shake');
+        setTimeout(() => wrapper.classList.remove('shake'), 400);
+      }
+    }
+
+    function togglePinVisibility() {
+      const input = $('pinInput');
+      const eyeIcon = $('eyeIcon');
+      if (input.type === 'password') {
+        input.type = 'text';
+        eyeIcon.innerHTML = \`
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+        \`;
+      } else {
+        input.type = 'password';
+        eyeIcon.innerHTML = \`
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        \`;
+      }
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      $('tab-' + tabId).classList.remove('hidden');
+      
+      const items = document.querySelectorAll('.nav-item');
+      if (tabId === 'home') items[0].classList.add('active');
+      else if (tabId === 'products') items[1].classList.add('active');
+      else if (tabId === 'messages') items[2].classList.add('active');
+      else if (tabId === 'settings') items[3].classList.add('active');
+    }
+
+    function toggleModal(id, show) {
+      const modal = $(id);
+      if (show) {
+        modal.classList.add('active');
+      } else {
+        modal.classList.remove('active');
+      }
+    }
+
+    async function showInvoiceDetails(saleId) {
+      try {
+        const res = await fetch('/api/manager/sale-details?pin=' + encodeURIComponent(pin) + '&id=' + saleId, { cache: 'no-store' });
+        if (!res.ok) return;
+        
+        const data = await res.json();
+        const sale = data.sale;
+        const translations = t[lang];
+        
+        $('receiptRefundedBanner').classList.toggle('hidden', sale.status !== 'refunded');
+        $('receiptInvoiceNo').innerHTML = '<span>' + translations.receiptNo + '</span> ' + sale.invoiceNumber;
+        $('receiptDate').innerHTML = '<span>' + translations.receiptDate + '</span> ' + dateFmt(sale.createdAt);
+        $('receiptCashier').innerHTML = '<span>' + translations.receiptCashier + '</span> ' + esc(sale.cashierName || '-');
+        
+        $('receiptSubtotal').textContent = money(sale.totalAmount - sale.taxAmount + sale.discountAmount);
+        $('receiptTax').textContent = money(sale.taxAmount);
+        $('receiptDiscount').textContent = money(sale.discountAmount);
+        $('receiptTotal').textContent = money(sale.totalAmount);
+        $('receiptMethod').textContent = method(sale.paymentMethod);
+        
+        $('receiptItemRows').innerHTML = data.items.map(item => 
+          '<tr>' +
+            '<td style="text-align:start">' + esc(item.nameAr || item.nameEn) + '</td>' +
+            '<td style="text-align:center">' + fmt.format(item.quantity) + '</td>' +
+            '<td class="num-col">' + money(item.unitPrice) + '</td>' +
+          '</tr>'
+        ).join('');
+        
+        toggleModal('invoiceModal', true);
+      } catch (err) {
+        console.error('Failed to load invoice details:', err);
+      }
+    }
+
+    function updateChart(paymentData) {
+      const ctx = $('paymentChart').getContext('2d');
+      const labels = paymentData.map(p => method(p.method));
+      const totals = paymentData.map(p => p.total);
+      
+      if (paymentChartInstance) {
+        paymentChartInstance.destroy();
+      }
+
+      if (totals.length === 0) {
+        ctx.clearRect(0, 0, 250, 180);
+        return;
+      }
+
+      paymentChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: totals,
+            backgroundColor: ['#6366f1', '#06b6d4', '#ec4899'],
+            borderWidth: 1,
+            borderColor: 'rgba(255,255,255,0.08)'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                color: '#fff',
+                font: {
+                  family: 'Cairo',
+                  size: 11
+                }
+              }
+            }
+          },
+          cutout: '75%'
+        }
+      });
+    }
+
+    function renderSalesList(sales) {
+      const translations = t[lang];
+      $('recentSalesRows').innerHTML = sales.length
+        ? sales.slice(0, 5).map((s) => {
+            return '<tr class="invoice-row" onclick="showInvoiceDetails(' + s.id + ')">' +
+              '<td>' +
+                '<strong>' + esc(s.invoiceNumber) + '</strong>' +
+                '<div style="font-size:9px; color:var(--text-muted); margin-top:2px;">' + time(s.createdAt) + ' - ' + esc(s.cashierName || '-') + '</div>' +
+              '</td>' +
+              '<td><span class="pill ' + s.paymentMethod + '">' + method(s.paymentMethod) + '</span></td>' +
+              '<td class="num-col" style="color:#fff;">' + money(s.totalAmount) + '</td>' +
+            '</tr>';
+          }).join('')
+        : '<tr><td colspan="3" class="muted" style="text-align:center; padding: 12px;">' + translations.noSalesToday + '</td></tr>';
+    }
+
+    function setStockFilter(filter) {
+      stockFilter = filter;
+      $('btnStockAll').classList.toggle('active', filter === 'all');
+      $('btnStockLow').classList.toggle('active', filter === 'low');
+      
+      const translations = t[lang];
+      $('productsListTitle').textContent = filter === 'all' ? translations.allProducts : translations.lowStockCount;
+      filterProducts();
+    }
+
+    function filterProducts() {
+      const query = $('productSearch').value.toLowerCase().trim();
+      const filtered = rawStock.filter(p => {
+        const matchesQuery = (p.nameAr && p.nameAr.toLowerCase().includes(query)) ||
+                             (p.nameEn && p.nameEn.toLowerCase().includes(query)) ||
+                             (p.barcode && p.barcode.toLowerCase().includes(query)) ||
+                             (p.sku && p.sku.toLowerCase().includes(query));
+                             
+        if (stockFilter === 'low') {
+          return matchesQuery && p.stock <= p.minStock;
+        }
+        return matchesQuery;
+      });
+      renderProductsList(filtered);
+    }
+
+    function renderProductsList(items) {
+      const translations = t[lang];
+      $('productsRows').innerHTML = items.length
+        ? items.map((p) => {
+            const percent = p.minStock > 0 ? Math.min(100, Math.max(0, (p.stock / p.minStock) * 100)) : 100;
+            const color = p.stock <= 0 ? 'var(--rose)' : (p.stock <= p.minStock ? 'var(--amber)' : 'var(--emerald)');
+            
+            let badgeText = '';
+            let badgeStyle = '';
+            if (p.stock <= 0) {
+              badgeText = translations.lowStockOnly;
+              badgeStyle = 'background: var(--rose-glow); color: var(--rose);';
+            } else if (p.stock <= p.minStock) {
+              badgeText = translations.lowStockOnly;
+              badgeStyle = 'background: var(--amber-glow); color: var(--amber);';
+            }
+            
+            const nameToShow = lang === 'en' ? (p.nameEn || p.nameAr) : (p.nameAr || p.nameEn);
+            const skuText = p.sku ? ' | SKU: ' + esc(p.sku) : '';
+            const imgHtml = p.image ? 
+              '<img src="' + p.image + '" style="width: 28px; height: 28px; border-radius: 4px; object-fit: cover; flex-shrink: 0; border: 1px solid var(--border-color);" />' :
+              '<div style="width: 28px; height: 28px; border-radius: 4px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 8px; color: var(--text-muted);" data-i18n="noImage">' + translations.noImage + '</div>';
+            
+            return '<tr>' +
+              '<td>' +
+                '<div style="display:flex; align-items:center; gap:8px;">' +
+                  imgHtml +
+                  '<div>' +
+                    '<strong style="font-size:13px;">' + esc(nameToShow) + '</strong>' +
+                    '<div style="font-size:9px; color:var(--text-muted); margin-top:2px;">' + esc(p.category) + skuText + '</div>' +
+                  '</div>' +
+                '</div>' +
+              '</td>' +
+              '<td style="font-weight:700; color:var(--primary); font-size:11px;">' + money(p.price) + '</td>' +
+              '<td class="num-col" style="min-width:110px;">' +
+                '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">' +
+                  '<div class="action-icons" style="margin-left: 8px;">' +
+                    '<button class="icon-btn edit" onclick="openEditProductModal(' + p.id + ')">' +
+                      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>' +
+                    '</button>' +
+                    '<button class="icon-btn delete" onclick="openDeleteProductModal(' + p.id + ')">' +
+                      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>' +
+                    '</button>' +
+                  '</div>' +
+                  '<span style="font-weight:bold; color:' + color + ';">' + fmt.format(p.stock) + '</span>' +
+                '</div>' +
+                '<div class="progress-bar-container">' +
+                  '<div class="progress-bar" style="width: ' + percent + '%; background-color: ' + color + ';"></div>' +
+                '</div>' +
+              '</td>' +
+            '</tr>';
+          }).join('')
+        : '<tr><td colspan="3" class="muted" style="text-align:center; padding: 20px;">' + translations.noMatchingProducts + '</td></tr>';
+    }
+
+    // Add Product Modals
+    function openAddProductModal() {
+      const translations = t[lang];
+      $('productModalTitle').textContent = translations.addProduct;
+      $('prodId').value = '';
+      $('prodNameAr').value = '';
+      $('prodNameEn').value = '';
+      $('prodNameKu').value = '';
+      $('prodBarcode').value = '';
+      $('prodSku').value = '';
+      $('prodCategory').value = 'General';
+      $('prodPrice').value = '';
+      $('prodCost').value = '';
+      $('prodStock').value = '0';
+      $('prodMinStock').value = '5';
+      removeProductImage();
+      
+      toggleModal('productModal', true);
+    }
+
+    function openEditProductModal(id) {
+      const translations = t[lang];
+      const prod = rawStock.find(p => p.id === id);
+      if (!prod) return;
+
+      $('productModalTitle').textContent = translations.editProduct;
+      $('prodId').value = prod.id;
+      $('prodNameAr').value = prod.nameAr || '';
+      $('prodNameEn').value = prod.nameEn || '';
+      $('prodNameKu').value = prod.nameKu || '';
+      
+      // SKU and Barcode mapping
+      $('prodBarcode').value = prod.barcode || '';
+      $('prodSku').value = prod.sku || '';
+      $('prodCategory').value = prod.category || 'General';
+      $('prodPrice').value = prod.price || '';
+      
+      // Cost value loader fallback
+      const prodCostValue = prod.cost !== undefined ? prod.cost : Math.round(prod.price * 0.7);
+      $('prodCost').value = prodCostValue;
+      $('prodStock').value = prod.stock || '0';
+      $('prodMinStock').value = prod.minStock || '5';
+
+      if (prod.image) {
+        setProductImage(prod.image);
+      } else {
+        removeProductImage();
+      }
+
+      toggleModal('productModal', true);
+    }
+
+    function handleProductImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (file.size > 1.5 * 1024 * 1024) {
+        alert(lang === 'ar' ? 'الرجاء اختيار صورة بحجم أقل من 1.5 ميجابايت' : 'Please choose an image smaller than 1.5MB');
+        $('prodImageFileInput').value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function() {
+        setProductImage(reader.result);
+      };
+      reader.onerror = function(err) {
+        console.error('FileReader error:', err);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function setProductImage(base64Data) {
+      if (base64Data) {
+        $('prodImageBase64').value = base64Data;
+        $('prodImageImg').src = base64Data;
+        $('prodImageImg').style.display = 'block';
+        $('prodImagePlaceholder').style.display = 'none';
+        $('prodImageRemoveBtn').style.display = 'flex';
+      } else {
+        removeProductImage();
+      }
+    }
+
+    function removeProductImage() {
+      $('prodImageBase64').value = '';
+      $('prodImageImg').src = '';
+      $('prodImageImg').style.display = 'none';
+      $('prodImagePlaceholder').style.display = 'block';
+      $('prodImageRemoveBtn').style.display = 'none';
+      $('prodImageFileInput').value = '';
+    }
+
+    async function submitProductForm() {
+      const id = $('prodId').value;
+      const nameAr = $('prodNameAr').value.trim();
+      const nameEn = $('prodNameEn').value.trim();
+      const nameKu = $('prodNameKu').value.trim();
+      const barcode = $('prodBarcode').value.trim();
+      const sku = $('prodSku').value.trim();
+      const category = $('prodCategory').value.trim() || 'General';
+      const price = parseFloat($('prodPrice').value);
+      const cost = parseFloat($('prodCost').value);
+      const stock = parseFloat($('prodStock').value || 0);
+      const minStock = parseFloat($('prodMinStock').value || 5);
+      const image = $('prodImageBase64').value || null;
+
+      const trimmedAr = nameAr.trim();
+      const trimmedEn = nameEn.trim();
+      const trimmedKu = nameKu.trim();
+
+      if (!trimmedAr && !trimmedEn && !trimmedKu) {
+        alert(lang === 'ar' ? 'الرجاء إدخال اسم واحد للمنتج على الأقل' : 'Please input at least one product name');
+        return;
+      }
+
+      const finalNameAr = trimmedAr || trimmedEn || trimmedKu;
+      const finalNameEn = trimmedEn || trimmedAr || trimmedKu;
+      const finalNameKu = trimmedKu || null;
+
+      if (isNaN(price) || price <= 0 || isNaN(cost) || cost <= 0) {
+        alert(lang === 'ar' ? 'الرجاء إدخال سعر بيع وتكلفة صحيحين أكبر من 0' : 'Please input a valid selling price and cost greater than 0');
+        return;
+      }
+
+      const payload = { id, nameAr: finalNameAr, nameEn: finalNameEn, nameKu: finalNameKu, barcode, sku, category, price, cost, stock, minStock, image };
+      const endpoint = id ? '/api/manager/edit-product' : '/api/manager/add-product';
+
+      try {
+        const res = await fetch(endpoint + '?pin=' + encodeURIComponent(pin), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        
+        if (res.ok) {
+          toggleModal('productModal', false);
+          syncData();
+        } else {
+          const errData = await res.json();
+          alert(errData.error || 'Failed to save product');
+        }
+      } catch (err) {
+        console.error('Error saving product:', err);
+      }
+    }
+
+    // Delete Product handlers
+    function openDeleteProductModal(id) {
+      $('deleteProdId').value = id;
+      toggleModal('deleteModal', true);
+    }
+
+    async function confirmDeleteProduct() {
+      const id = $('deleteProdId').value;
+      try {
+        const res = await fetch('/api/manager/delete-product?pin=' + encodeURIComponent(pin), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id })
+        });
+        
+        if (res.ok) {
+          toggleModal('deleteModal', false);
+          syncData();
+        } else {
+          alert('Failed to delete product');
+        }
+      } catch (err) {
+        console.error('Error deleting product:', err);
+      }
+    }
+
+    let lastMessageCount = 0;
+
+    async function syncMessages() {
+      if (!pin) return;
+      try {
+        const res = await fetch('/api/manager/messages?pin=' + encodeURIComponent(pin), { cache: 'no-store' });
+        if (!res.ok) return;
+        const list = await res.json();
+        if (list.length !== lastMessageCount) {
+          lastMessageCount = list.length;
+          renderMessages(list);
+        }
+      } catch (err) {
+        console.error('Error syncing messages:', err);
+      }
+    }
+
+    function renderMessages(list) {
+      const container = $('chatMessages');
+      if (!container) return;
+      container.innerHTML = list.map(msg => {
+        const isMgr = msg.sender === 'manager';
+        const bubbleClass = isMgr ? 'manager' : 'cashier';
+        return '<div class="chat-bubble ' + bubbleClass + '">' +
+          esc(msg.message) +
+          '<div class="chat-meta">' + time(msg.timestamp) + '</div>' +
+        '</div>';
+      }).join('');
+      container.scrollTop = container.scrollHeight;
+    }
+
+    async function sendChatMessage() {
+      const input = $('chatInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      try {
+        const res = await fetch('/api/manager/send-message?pin=' + encodeURIComponent(pin), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text })
+        });
+        
+        if (res.ok) {
+          input.value = '';
+          await syncMessages();
+        } else {
+          alert('Failed to send message');
+        }
+      } catch (err) {
+        console.error('Error sending message:', err);
+      }
+    }
+
+    // Settings panel controls
+    async function saveSettings() {
+      const nameAr = $('setStoreNameAr').value.trim();
+      const nameEn = $('setStoreNameEn').value.trim();
+      const phone = $('setStorePhone').value.trim();
+      const address = $('setStoreAddress').value.trim();
+      const newPin = $('setManagerPin').value.trim();
+
+      if (!nameAr || !nameEn) {
+        alert('Please fill in Arabic and English store names');
+        return;
+      }
+
+      const settingsPayload = {
+        store_name_ar: nameAr,
+        store_name_en: nameEn,
+        store_phone: phone,
+        store_address: address
+      };
+
+      if (newPin) {
+        if (newPin.length !== 4 || isNaN(newPin)) {
+          alert('Manager PIN must be a 4-digit number');
+          return;
+        }
+        settingsPayload.mobile_manager_pin = newPin;
+      }
+
+      try {
+        const res = await fetch('/api/manager/save-settings?pin=' + encodeURIComponent(pin), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ settings: settingsPayload })
+        });
+        
+        if (res.ok) {
+          if (newPin) {
+            pin = newPin;
+            localStorage.setItem('kodifyManagerPin', pin);
+          }
+          alert(lang === 'ar' ? 'تم حفظ الإعدادات بنجاح' : 'Settings saved successfully');
+          syncData();
+        } else {
+          alert('Failed to save settings');
+        }
+      } catch (err) {
+        console.error('Error saving settings:', err);
+      }
+    }
+
+    async function syncData() {
+      if (!pin) return false;
+      try {
+        const res = await fetch('/api/manager/summary?pin=' + encodeURIComponent(pin), { cache: 'no-store' });
+        if (res.status === 401) {
+          localStorage.removeItem('kodifyManagerPin');
+          pin = '';
+          const lock = $('lockscreen');
+          if (lock) lock.classList.remove('slide-up');
+          return false;
+        }
+        
+        const data = await res.json();
+        const translations = t[lang];
+        
+        // 1. Stats Cards
+        $('stat-sales').textContent = money(data.today.revenue);
+        $('stat-orders').textContent = fmt.format(data.today.transactions);
+        
+        const lowStockCount = data.lowStock.length;
+        $('stat-lowstock').textContent = fmt.format(lowStockCount);
+        $('stat-cashiers').textContent = fmt.format(data.activeShifts.length);
+        
+        // 2. Doughnut Chart
+        try { updateChart(data.today.paymentMethods); } catch(e) { console.error('Chart error', e); }
+        
+        // 3. Sales
+        rawSales = data.recentSales || [];
+        renderSalesList(rawSales);
+        
+        // 4. Shifts
+        const shiftRowsEl = $('shiftRows');
+        if (shiftRowsEl) {
+          shiftRowsEl.innerHTML = data.activeShifts.length
+            ? data.activeShifts.map((s) => \`
+              <tr>
+                <td>
+                  <strong>\${esc(s.cashierName || '-')}</strong>
+                  <div class="muted">\${translations.startTime}: \${time(s.startTime)}</div>
+                </td>
+                <td><span class="status-badge open">\${translations.activeBadge}</span></td>
+                <td class="num-col">\${money(s.expectedCash)}</td>
+              </tr>
+            \`).join('')
+            : \`<tr><td colspan="3" class="muted" style="text-align:center; padding: 20px;">\${translations.noOpenShifts}</td></tr>\`;
+        }
+
+        // 5. Stock warnings and all products
+        rawStock = data.allProducts || [];
+        rawLowStock = data.lowStock || [];
+        filterProducts();
+          
+        // Update Stock Badge count
+        const stockBadgeEl = $('stockBadge');
+        if (stockBadgeEl) {
+          if (lowStockCount > 0) {
+            stockBadgeEl.textContent = lowStockCount;
+            stockBadgeEl.classList.remove('hidden');
+          } else {
+            stockBadgeEl.classList.add('hidden');
+          }
+        }
+
+        const updatedAtEl = $('updatedAt');
+        if (updatedAtEl) {
+          updatedAtEl.textContent = translations.lastUpdate + time(data.generatedAt);
+        }
+
+        // Hide lockscreen on successful sync
+        const lock = $('lockscreen');
+        if (lock) lock.classList.add('slide-up');
+
+        return true;
+      } catch (err) {
+        console.error('Sync failed:', err);
+        return false;
+      }
+    }
+
+    let codeReader = null;
+
+    async function startCameraScan() {
+      const translations = t[lang];
+      $('cameraErrorMsg').classList.add('hidden');
+      $('cameraErrorMsg').textContent = '';
+      toggleModal('cameraModal', true);
+
+      try {
+        if (!codeReader) {
+          codeReader = new ZXing.BrowserMultiFormatReader();
+        }
+        
+        const videoInputDevices = await codeReader.listVideoInputDevices();
+        if (videoInputDevices.length === 0) {
+          throw new Error('No camera found');
+        }
+        
+        let selectedDeviceId = videoInputDevices[0].deviceId;
+        for (const device of videoInputDevices) {
+          const label = device.label.toLowerCase();
+          if (label.indexOf('back') !== -1 || label.indexOf('rear') !== -1 || label.indexOf('environment') !== -1 || label.indexOf('خلفية') !== -1) {
+            selectedDeviceId = device.deviceId;
+            break;
+          }
+        }
+        
+        codeReader.decodeFromVideoDevice(selectedDeviceId, 'videoScan', (result, err) => {
+          if (result) {
+            $('prodBarcode').value = result.text;
+            stopCameraScan();
+            if (navigator.vibrate) {
+              navigator.vibrate(200);
+            }
+          }
+          if (err && !(err instanceof ZXing.NotFoundException)) {
+            console.error('ZXing error:', err);
+          }
+        });
+        
+      } catch (err) {
+        console.error('Camera initialization failed:', err);
+        let errorText = lang === 'ar' ? 'فشل تشغيل الكاميرا. يرجى التأكد من إعطاء الصلاحيات وأن الموقع يعمل عبر HTTPS.' : 
+                         (lang === 'ku' ? 'تێکچوونی کارکردنی کامێرا. تکایە دڵنیابە لە پێدانی مۆڵەت و بەکارهێنانی HTTPS.' : 
+                         'Failed to start camera. Please ensure permissions are granted and connection is secure (HTTPS).');
+        $('cameraErrorMsg').textContent = errorText;
+        $('cameraErrorMsg').classList.remove('hidden');
+      }
+    }
+
+    function stopCameraScan() {
+      if (codeReader) {
+        codeReader.reset();
+      }
+      toggleModal('cameraModal', false);
+    }
+
+    // Auto load / Sync dashboard data directly
+    setLanguage(lang);
+    syncData();
+    syncMessages();
+    
+    // Interval check for updates
+    setInterval(syncData, 10000);
+    setInterval(syncMessages, 3000);
+  </script>
+</body>
+</html>`;
+}
+
+const PFX_BASE64 = "MIIKWgIBAzCCChYGCSqGSIb3DQEHAaCCCgcEggoDMIIJ/zCCBgAGCSqGSIb3DQEHAaCCBfEEggXtMIIF6TCCBeUGCyqGSIb3DQEMCgECoIIE/jCCBPowHAYKKoZIhvcNAQwBAzAOBAhLXvQD+nhaVAICB9AEggTYLQHMUtWICRBZp0KTTaQikWx6q625D/tKCyGa7TQ2rnAh6nSYnQ19C9WPMbNCPZDYG5EMM6dXlwLc6hmH2AnmpHu9h/reW6Q6A5DzoAIKzFNopOngbKCcjrfF5PyGnoc8Ars8Yq0zTLnevScr/ddoBI8rZNKoi0Rkr0AkKR2kDOghr0+FXhDonlkicbcAshrGwp3rNmUkVlShqncuNK9uFuU8ZA5EdBAR0u19mxLc5THPRZmhcEbFcA0WK15uoFBLIcSvZVQdGCJrKs8Ob1wqJJADETIrypC2d0daiW4Fh5U4pzmcFYrAVhi9NaT8t3i1ftXY9DVtvX6+Z5UQOIk8PxHhe9UCmAFeUZJX05jjLyp3aomnH764GgPCEBb9hlXuCDoRjBotAA9Q4z1kierehaKczXmmeLr8Hnjl2t8TrMHTI2VvDOLft5iXL/4dKuTkIL4QqVaRTEtsdcXTTuyS8ZxZ61amp4/nOHT7U1muD+8zBf6xSsCm78SkWrASiSptdADw0NSApVMJBFvDP1HzSTHoYRQojB2KwH7G6ot6FckzMOXGF/dbzKWK6fhJGj8zB5KlRz0sbBnE727q2ruQIjcQBL0muGm2XYcmaBfyGQCsKhRDWsG4WBOVFGqP5a/abdIrHKAsChW/2oynXH04V93CMHkSC7EnfSWPxIscs5t72POlL9kFcUX5wdf0SawXyYeHF+7DnLqX5W/9LbgNFmiNLPNag+49U84ul2aF6tLgEpdRXrSzFBu3TQ0rW3LfRD3hx6XCflcYFvpTyaMuibYpzgw9fLYYC8b2Fjd8qNfpbkyAIfJYGALv0vQhxVk/aSQW9SAf9HXBfKohcb+6pHjNN4jPlmsjnL31ZoF+cXkM7QBsWvAcEUF50andWBfEtRy2BKhKeXtaXwe0ZDvh24hvackozDcIXVlHwSrAjgdzdp3pIKZf0G6wa6XC1woen8KkqWeXc2+bhfxUKWs64/MSgiB7j7yig9SuzAGYPy7SoZT9AxJiK4iGkXHp5ZbWVbOz/LDNPYpaTRfgj9xRDjL36EUIVLsIIWg1aUgyUPxIhYkklUx/SY4vRJKDW9YTsLGepAS88ml3bWaVl2mGVYytfGns79xjVjbCgd7Kk6lbzZMReDkav/Xg9CVA7XXNo7kLjDpHlCjlMC509RYRtJUkwAI+ZrTnLos6p0f5aJ/HDq1Mii6HvlP0fwTkZO2QMGogZEThd5Bp46YyJXoHddx4csSapnGsqy0msa19CQneIw3XgHMW7iibDLEKkTbCQGS0W8ZQODHk6LP7DhQfoNTbwmq4+3CvkEdiBYKg8d6V3kDdVD48sDa2pTWqLUHOdiEUnyYuVJdI2SalbQbbKIgYYNABQL5qTC9OJZl6vCmy/Ppp+gSFFZBYImO4BUMLQE4psE/8BZ0zz0YIOZSFLmZwlCfD4o3i0IsZvWzQwQ395vLsg2Q7h2nLAZ1J8IMY3lI1CdPRRtiYVjmd5v3r4ivda45ZbrN3SpZ2ov2CFaZ4LXJAlYfjyZBlsVj1+i0HfZjtPoArHoaI+5pAinntpVgSqBucQDRlJgs7l6CEjHNBNG66NroTZchc0xLpUPjGUL+mN5K2QbGxSoeqcnkurf0t9ZfdcQ+arqp3gUXZXKF6OB0RLf8+fzGB0zATBgkqhkiG9w0BCRUxBgQEAQAAADBdBgkqhkiG9w0BCRQxUB5OAHQAZQAtAGYAOAA1ADUAZgBlAGIAMwAtAGYAMwAyAGYALQA0ADEAZQA5AC0AOQAyAGEAYQAtADgANABiADkAOQAwADUAZQBmADIAYQA0MF0GCSsGAQQBgjcRATFQHk4ATQBpAGMAcgBvAHMAbwBmAHQAIABTAG8AZgB0AHcAYQByAGUAIABLAGUAeQAgAFMAdABvAHIAYQBnAGUAIABQAHIAbwB2AGkAZABlAHIwggP3BgkqhkiG9w0BBwagggPoMIID5AIBADCCA90GCSqGSIb3DQEHATAcBgoqhkiG9w0BDAEDMA4ECGOREb8iMmQnAgIH0ICCA7CNuoAxYVdMhTTEfdYUMB3NLYVbR+QiiYZTp7P/6ZEvOWhRYYljqJD07hMRFVFkiinAVv+WJV/fHxoL0M5gXNp0kND5+NsZMsFJ3tuZMXTVsbKmThTfpQ4Cg2Yv7nj/uzg9zcEhlkUoSG5TrD+GyJ3FS+dpU3GB+S5cOtVIGwnYXIgInEBSJ3khZSemKWn861UhGqNAxuM9m7RmTctmYNnLRn9Q8++ga0iF5DXkwZS1RV9jKIHivaXI7V7j2/Ymiq6+3686HNJp+z8PSb/s6V9ZuIjT6WEuONSgFSXF08lULrZL1wxwS1WT4v8RaZZsJT7rIpG1brtg87GxyPotzCKHn4Ghc9ZzoemOnmHJjyM4Yx4ydX6wCfv4od8XAJLmCnWH6m7oHSpbq4jdCFq0O/u69orJ7vS3gt16QvxTAQTVFiwir1F00TsVtpjp0vAPJNO6d35ytnobp4i2+Tg+aDs521sjbfY3Cv2NUsUz4F/hLjjc5r737FhDMdPb2ho/QVxSiujm0x3kJgCEdkw0FADMWM2OW7nTh1gSsQcSadO44Rj+MsbfaQRWUmY/tpz9aqHnKeBNSQEcU9xxcY6fXn+T43AViffSH79iSK5D1zI12vHV04J94mGXzCGUZpsCI7g5V2H0axRiCmo//rmKDsGC+FGLtHOyMXBUbyba0vxE/tMYHRDGvJQaydWc499eElFoG/LmAh495XFf4wFpJU5KDC4vT3VOrHmuX/KnRmTls8OSWaWUbgiZtbT1fVWHJJMYv/mC3oEzkwPi6LxeOKGPD4pyHq5/iUV+GV7L+QYxFcnU4k61s3McfR4jtUaIe/6zK5wakiy4RzvB6+fn590HS0GzEgPvQMRJ+XcUIKqtR82XHEo2rvMdsz+SSABC8HrehSdhEUBgzLVgpo4W6r9zHCAPe9RHYq613dSAvf2OyYZee08rGFYRPCIR6mj2NuQ/ti/R6e5Xpz3s2yhpSzhEh/bIwbWNnUppAVnq2OQZmrSxJF8sv10A5AyCuuP2dqZNFdqe3QPMybns77NlWPRQKnjuqZFeS7qOwrx3Z6SNpsSKyzCc2umaN1R4zDBIsvST7slZkIFZKF0vWSx6kJMA6dXEY31ILugpjfDvwdLporrjpxT15/IXd6GVoo12om5sEqNNwrgljf6svE2ubNvpFkiZdrs5+0RRFOij4bsCXxpXIVrcU/khXDyFvOZMfLMS8RV2jZfuOXojURC82viPdX9Nq+yL/WnteFaZjhTtMDA7MB8wBwYFKw4DAhoEFAomSQwRfyWNOuVqEHxJW6D+NOA0BBSD9nxKkGfx/ks8PFGY2MounbPKnAICB9A=";
+const PFX_BUFFER = Buffer.from(PFX_BASE64.replace(/\s+/g, ''), 'base64');
+
+export async function startMobileManagerServer() {
+  if (server) return;
+
+  const portValue = await getSetting('mobile_manager_port', String(DEFAULT_MOBILE_PORT));
+  const port = Number(portValue) || DEFAULT_MOBILE_PORT;
+
+  server = https.createServer({
+    pfx: PFX_BUFFER,
+    passphrase: 'kodify123'
+  }, async (req, res) => {
+    try {
+      const requestUrl = new URL(req.url || '/', `https://${req.headers.host || 'localhost'}`);
+
+      if (req.method !== 'GET' && req.method !== 'POST') {
+        jsonResponse(res, 405, { error: 'method_not_allowed' });
+        return;
+      }
+
+      if (requestUrl.pathname === '/') {
+        htmlResponse(res, getMobileDashboardHtml());
+        return;
+      }
+
+      if (requestUrl.pathname === '/api/manager/summary') {
+        const pin = requestUrl.searchParams.get('pin');
+        if (!(await isAuthorized(pin))) {
+          jsonResponse(res, 401, { error: 'unauthorized' });
+          return;
+        }
+
+        jsonResponse(res, 200, await getTodaySummary());
+        return;
+      }
+
+      if (requestUrl.pathname === '/api/manager/sale-details') {
+        const pin = requestUrl.searchParams.get('pin');
+        if (!(await isAuthorized(pin))) {
+          jsonResponse(res, 401, { error: 'unauthorized' });
+          return;
+        }
+
+        const saleId = Number(requestUrl.searchParams.get('id'));
+        if (!saleId) {
+          jsonResponse(res, 400, { error: 'missing_sale_id' });
+          return;
+        }
+
+        const saleList = await db
+          .select({
+            id: schema.sales.id,
+            invoiceNumber: schema.sales.invoiceNumber,
+            cashierName: schema.users.name,
+            customerName: schema.customers.name,
+            totalAmount: schema.sales.totalAmount,
+            taxAmount: schema.sales.taxAmount,
+            discountAmount: schema.sales.discountAmount,
+            paymentMethod: schema.sales.paymentMethod,
+            cashReceived: schema.sales.cashReceived,
+            cashReturned: schema.sales.cashReturned,
+            createdAt: schema.sales.createdAt,
+          })
+          .from(schema.sales)
+          .leftJoin(schema.users, eq(schema.sales.userId, schema.users.id))
+          .leftJoin(schema.customers, eq(schema.sales.customerId, schema.customers.id))
+          .where(eq(schema.sales.id, saleId))
+          .limit(1);
+
+        if (saleList.length === 0) {
+          jsonResponse(res, 404, { error: 'sale_not_found' });
+          return;
+        }
+
+        const items = await db
+          .select({
+            id: schema.saleItems.id,
+            nameAr: schema.products.nameAr,
+            nameEn: schema.products.nameEn,
+            quantity: schema.saleItems.quantity,
+            unitPrice: schema.saleItems.unitPrice,
+            totalPrice: schema.saleItems.totalPrice,
+          })
+          .from(schema.saleItems)
+          .leftJoin(schema.products, eq(schema.saleItems.productId, schema.products.id))
+          .where(eq(schema.saleItems.saleId, saleId));
+
+        jsonResponse(res, 200, { sale: saleList[0], items });
+        return;
+      }
+
+      if (requestUrl.pathname === '/api/manager/add-product') {
+        const pin = requestUrl.searchParams.get('pin');
+        if (!(await isAuthorized(pin))) {
+          jsonResponse(res, 401, { error: 'unauthorized' });
+          return;
+        }
+
+        const data = await readBody(req);
+        if ((!data.nameAr && !data.nameEn && !data.nameKu) || data.price === undefined || data.cost === undefined) {
+          jsonResponse(res, 400, { error: 'missing_required_fields' });
+          return;
+        }
+
+        try {
+          await db.insert(schema.products).values({
+            barcode: data.barcode || null,
+            sku: data.sku || null,
+            nameAr: data.nameAr || '',
+            nameEn: data.nameEn || '',
+            nameKu: data.nameKu || '',
+            category: data.category || 'General',
+            price: Number(data.price),
+            cost: Number(data.cost),
+            stock: Number(data.stock || 0),
+            minStock: Number(data.minStock || 5),
+            taxRate: Number(data.taxRate || 15),
+            image: data.image || null,
+            isActive: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          });
+
+          jsonResponse(res, 200, { success: true });
+        } catch (err: any) {
+          jsonResponse(res, 500, { error: err.message || 'database_error' });
+        }
+        return;
+      }
+
+      if (requestUrl.pathname === '/api/manager/edit-product') {
+        const pin = requestUrl.searchParams.get('pin');
+        if (!(await isAuthorized(pin))) {
+          jsonResponse(res, 401, { error: 'unauthorized' });
+          return;
+        }
+
+        const data = await readBody(req);
+        if (!data.id || (!data.nameAr && !data.nameEn && !data.nameKu) || data.price === undefined || data.cost === undefined) {
+          jsonResponse(res, 400, { error: 'missing_required_fields' });
+          return;
+        }
+
+        try {
+          await db.update(schema.products).set({
+            barcode: data.barcode || null,
+            sku: data.sku || null,
+            nameAr: data.nameAr || '',
+            nameEn: data.nameEn || '',
+            nameKu: data.nameKu || '',
+            category: data.category || 'General',
+            price: Number(data.price),
+            cost: Number(data.cost),
+            stock: Number(data.stock || 0),
+            minStock: Number(data.minStock || 5),
+            taxRate: Number(data.taxRate || 15),
+            image: data.image || null,
+            updatedAt: new Date().toISOString()
+          }).where(eq(schema.products.id, Number(data.id)));
+
+          jsonResponse(res, 200, { success: true });
+        } catch (err: any) {
+          jsonResponse(res, 500, { error: err.message || 'database_error' });
+        }
+        return;
+      }
+
+      if (requestUrl.pathname === '/api/manager/delete-product') {
+        const pin = requestUrl.searchParams.get('pin');
+        if (!(await isAuthorized(pin))) {
+          jsonResponse(res, 401, { error: 'unauthorized' });
+          return;
+        }
+
+        const data = await readBody(req);
+        if (!data.id) {
+          jsonResponse(res, 400, { error: 'missing_product_id' });
+          return;
+        }
+
+        try {
+          await db.update(schema.products).set({
+            isActive: false,
+            updatedAt: new Date().toISOString()
+          }).where(eq(schema.products.id, Number(data.id)));
+
+          jsonResponse(res, 200, { success: true });
+        } catch (err: any) {
+          jsonResponse(res, 500, { error: err.message || 'database_error' });
+        }
+        return;
+      }
+
+      if (requestUrl.pathname === '/api/manager/save-settings') {
+        const pin = requestUrl.searchParams.get('pin');
+        if (!(await isAuthorized(pin))) {
+          jsonResponse(res, 401, { error: 'unauthorized' });
+          return;
+        }
+
+        const data = await readBody(req);
+        if (!data.settings) {
+          jsonResponse(res, 400, { error: 'missing_settings' });
+          return;
+        }
+
+        try {
+          for (const [key, value] of Object.entries(data.settings)) {
+            const exists = await db.select().from(schema.settings).where(eq(schema.settings.key, key)).limit(1);
+            if (exists.length > 0) {
+              await db.update(schema.settings).set({ value: String(value) }).where(eq(schema.settings.key, key));
+            } else {
+              await db.insert(schema.settings).values({ key, value: String(value) });
+            }
+          }
+
+          jsonResponse(res, 200, { success: true });
+        } catch (err: any) {
+          jsonResponse(res, 500, { error: err.message || 'database_error' });
+        }
+        return;
+      }
+
+      if (requestUrl.pathname === '/api/manager/messages') {
+        const pin = requestUrl.searchParams.get('pin');
+        if (!(await isAuthorized(pin))) {
+          jsonResponse(res, 401, { error: 'unauthorized' });
+          return;
+        }
+
+        try {
+          const list = await db
+            .select()
+            .from(schema.messages)
+            .orderBy(asc(schema.messages.id));
+          jsonResponse(res, 200, list);
+        } catch (err: any) {
+          jsonResponse(res, 500, { error: err.message || 'database_error' });
+        }
+        return;
+      }
+
+      if (requestUrl.pathname === '/api/manager/send-message') {
+        const pin = requestUrl.searchParams.get('pin');
+        if (!(await isAuthorized(pin))) {
+          jsonResponse(res, 401, { error: 'unauthorized' });
+          return;
+        }
+
+        try {
+          const data = await readBody(req);
+          if (!data.message) {
+            jsonResponse(res, 400, { error: 'missing_message' });
+            return;
+          }
+
+          const result = await db.insert(schema.messages).values({
+            sender: 'manager',
+            senderName: 'المدير (Manager)',
+            message: data.message,
+            timestamp: new Date().toISOString(),
+          }).returning();
+
+          jsonResponse(res, 200, { success: true, message: result[0] });
+        } catch (err: any) {
+          jsonResponse(res, 500, { error: err.message || 'database_error' });
+        }
+        return;
+      }
+
+      jsonResponse(res, 404, { error: 'not_found' });
+    } catch (error: any) {
+      console.error('Mobile manager server error:', error);
+      jsonResponse(res, 500, { error: error.message || 'server_error' });
+    }
+  });
+
+  server.listen(port, '0.0.0.0', () => {
+    const urls = getLocalNetworkUrls(port);
+    console.log(`Mobile manager dashboard is available on: ${urls.join(', ') || `https://localhost:${port}`}`);
+  });
+}
+
+export function stopMobileManagerServer() {
+  server?.close();
+  server = null;
+}

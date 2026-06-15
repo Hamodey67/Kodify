@@ -1,0 +1,29 @@
+------------------------------------------
+      PRODUCT DETAILS REPORT
+         تقرير تفاصيل المنتج
+------------------------------------------
+Name (AR):                 11
+Name (EN):                 1
+Name (KU):                 1
+Barcode:                   1111
+SKU:                       PRD-521283
+Category:                  General1
+------------------------------------------
+      PRICING & STOCK / الأسعار والمخزون
+------------------------------------------
+Cost Price:                2 IQD
+Sale Price:                1 IQD
+Current Stock:             0
+Min Stock Level:           -1
+------------------------------------------
+      SALES PERFORMANCE / أداء المبيعات
+------------------------------------------
+Total Units Sold:          22
+Total Revenue:             22 IQD
+Total Cost:                44 IQD
+Net Profit:                -22 IQD
+Profit Margin:             -100.0%
+------------------------------------------
+Generated At:              6/4/2026, 4:00:53 PM
+            KODIFY SYSTEM
+------------------------------------------

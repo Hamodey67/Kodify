@@ -1,4 +1,5 @@
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { sql } from 'drizzle-orm';
 
 // Users / Cashiers
 export const users = sqliteTable('users', {
@@ -14,8 +15,8 @@ export const users = sqliteTable('users', {
 // Products & Inventory
 export const products = sqliteTable('products', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  barcode: text('barcode').unique(), // NULL means no barcode, or alphanumeric
-  sku: text('sku').unique(),
+  barcode: text('barcode'), // NULL means no barcode, or alphanumeric
+  sku: text('sku'),
   nameAr: text('name_ar').notNull(),
   nameEn: text('name_en').notNull(),
   nameKu: text('name_ku'),
@@ -25,10 +26,15 @@ export const products = sqliteTable('products', {
   stock: real('stock').notNull().default(0),
   minStock: real('min_stock').notNull().default(5),
   taxRate: real('tax_rate').notNull().default(15), // VAT standard in many places is 15%
+  color: text('color'),
+  image: text('image'),
   isActive: integer('is_active', { mode: 'boolean' }).default(true).notNull(),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
-});
+}, (table) => ({
+  barcodeUnique: uniqueIndex('products_barcode_unique').on(table.barcode).where(sql`is_active = 1`),
+  skuUnique: uniqueIndex('products_sku_unique').on(table.sku).where(sql`is_active = 1`),
+}));
 
 // Customer Loyalty & Accounts
 export const customers = sqliteTable('customers', {
@@ -113,3 +119,13 @@ export const priceOverrides = sqliteTable('price_overrides', {
   authorizedBy: text('authorized_by').notNull(),
   timestamp: text('timestamp').notNull(),
 });
+
+// Messages Chat
+export const messages = sqliteTable('messages', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  sender: text('sender').notNull(), // 'cashier' | 'manager'
+  senderName: text('sender_name').notNull(),
+  message: text('message').notNull(),
+  timestamp: text('timestamp').notNull(),
+});
+

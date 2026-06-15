@@ -6,6 +6,7 @@ import path from 'path';
 import { app } from 'electron';
 import bcrypt from 'bcryptjs';
 import { eq, and } from 'drizzle-orm';
+import fs from 'fs';
 
 // Setup DB path in App Data folder for prod, local root for dev
 const isProd = app.isPackaged;
@@ -20,6 +21,29 @@ sqlite.pragma('journal_mode = WAL');
 
 export const db = drizzle(sqlite, { schema });
 
+function getDatabaseBackupPath() {
+  const backupDir = path.join(path.dirname(dbPath), 'backups');
+  const safeVersion = app.getVersion().replace(/[^a-zA-Z0-9._-]/g, '_');
+  return path.join(backupDir, `kodify-system-before-v${safeVersion}.db`);
+}
+
+async function backupDatabaseBeforeMigrations() {
+  if (!fs.existsSync(dbPath) || fs.statSync(dbPath).size === 0) {
+    console.log('No existing database found. Skipping pre-migration backup.');
+    return;
+  }
+
+  const backupPath = getDatabaseBackupPath();
+  if (fs.existsSync(backupPath)) {
+    console.log(`Pre-migration backup already exists: ${backupPath}`);
+    return;
+  }
+
+  fs.mkdirSync(path.dirname(backupPath), { recursive: true });
+  await sqlite.backup(backupPath);
+  console.log(`Created pre-migration database backup: ${backupPath}`);
+}
+
 // Run migrations on startup
 export async function initDatabase() {
   try {
@@ -29,8 +53,41 @@ export async function initDatabase() {
       : path.join(process.cwd(), 'drizzle');
       
     console.log(`Looking for migrations in: ${migrationsFolder}`);
+    await backupDatabaseBeforeMigrations();
     migrate(db, { migrationsFolder });
     console.log('Database migrations applied successfully.');
+    
+    // Ensure the color column exists in the products table (migration fallback)
+    try {
+      sqlite.exec("ALTER TABLE products ADD COLUMN color TEXT;");
+      console.log("Added column 'color' to 'products' table.");
+    } catch (e) {
+      // Column might already exist, which is fine
+    }
+    
+    // Ensure the image column exists in the products table (migration fallback)
+    try {
+      sqlite.exec("ALTER TABLE products ADD COLUMN image TEXT;");
+      console.log("Added column 'image' to 'products' table.");
+    } catch (e) {
+      // Column might already exist, which is fine
+    }
+
+    // Ensure the messages table exists (migration fallback)
+    try {
+      sqlite.exec(`
+        CREATE TABLE IF NOT EXISTS messages (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          sender TEXT NOT NULL,
+          sender_name TEXT NOT NULL,
+          message TEXT NOT NULL,
+          timestamp TEXT NOT NULL
+        );
+      `);
+      console.log("Created table 'messages' or verified it exists.");
+    } catch (e) {
+      // Table might already exist, which is fine
+    }
     
     // Seed database if empty
     await seedDatabase();
@@ -96,7 +153,14 @@ async function seedDatabase() {
     { key: 'hardware_printer_ip', value: '' },
     { key: 'hardware_printer_type', value: 'network' }, // network / usb / serial
     { key: 'hardware_mock_mode', value: 'true' }, // Development mock layer
-    { key: 'admin_override_pin', value: '1234' },
+    { key: 'admin_override_pin', value: '1010' },
+    { key: 'mobile_manager_pin', value: '1010' },
+    { key: 'mobile_manager_port', value: '8787' },
+    { key: 'mobile_tunnel_enabled', value: 'false' },
+    { key: 'mobile_tunnel_mode', value: 'quick' },
+    { key: 'mobile_tunnel_cloudflared_path', value: 'cloudflared' },
+    { key: 'mobile_tunnel_token', value: '' },
+    { key: 'mobile_tunnel_last_url', value: '' },
   ]);
 
   console.log('Seeded settings.');
@@ -256,11 +320,54 @@ async function patchExistingBranding() {
     // Ensure admin override PIN exists for legacy databases
     await db
       .insert(schema.settings)
-      .values({ key: 'admin_override_pin', value: '1234' })
+      .values({ key: 'admin_override_pin', value: '1010' })
       .onConflictDoNothing({ target: schema.settings.key });
 
-    // Reset all product stocks to 0 for a clean start
-    await db.update(schema.products).set({ stock: 0 });
+    // Update existing default PIN to 1010 if it is still 1234
+    await db.update(schema.settings)
+      .set({ value: '1010' })
+      .where(
+        and(
+          eq(schema.settings.key, 'admin_override_pin'),
+          eq(schema.settings.value, '1234')
+        )
+      );
+
+    // Ensure manager mobile dashboard settings exist for updated offline installs.
+    await db
+      .insert(schema.settings)
+      .values({ key: 'mobile_manager_pin', value: '1010' })
+      .onConflictDoNothing({ target: schema.settings.key });
+
+    await db
+      .insert(schema.settings)
+      .values({ key: 'mobile_manager_port', value: '8787' })
+      .onConflictDoNothing({ target: schema.settings.key });
+
+    await db
+      .insert(schema.settings)
+      .values({ key: 'mobile_tunnel_enabled', value: 'false' })
+      .onConflictDoNothing({ target: schema.settings.key });
+
+    await db
+      .insert(schema.settings)
+      .values({ key: 'mobile_tunnel_mode', value: 'quick' })
+      .onConflictDoNothing({ target: schema.settings.key });
+
+    await db
+      .insert(schema.settings)
+      .values({ key: 'mobile_tunnel_cloudflared_path', value: 'cloudflared' })
+      .onConflictDoNothing({ target: schema.settings.key });
+
+    await db
+      .insert(schema.settings)
+      .values({ key: 'mobile_tunnel_token', value: '' })
+      .onConflictDoNothing({ target: schema.settings.key });
+
+    await db
+      .insert(schema.settings)
+      .values({ key: 'mobile_tunnel_last_url', value: '' })
+      .onConflictDoNothing({ target: schema.settings.key });
 
     // Clear legacy default settings so the fields start empty for the user
     await db.update(schema.settings)

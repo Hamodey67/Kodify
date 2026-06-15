@@ -1,14 +1,16 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
-import { eq, and, desc, sql, like, or } from 'drizzle-orm';
+import { eq, and, desc, asc, sql, like, or } from 'drizzle-orm';
 import { db, initDatabase } from './db';
 import * as schema from './schema';
 import bcrypt from 'bcryptjs';
-import { printReceipt, triggerCashDrawer, printShiftReport } from './printers';
+import { printReceipt, triggerCashDrawer, printShiftReport, printDailyReport, generateReceiptHtml, printProductReport } from './printers';
 import { execSync } from 'child_process';
 import crypto from 'crypto';
 import fs from 'fs';
 import { autoUpdater } from 'electron-updater';
+import { startMobileManagerServer, stopMobileManagerServer } from './mobileServer';
+import { getCloudflareTunnelStatus, startCloudflareTunnel, stopCloudflareTunnel } from './tunnelManager';
 
 autoUpdater.autoDownload = true;
 autoUpdater.autoInstallOnAppQuit = true;
@@ -19,24 +21,35 @@ let splashWindow: BrowserWindow | null = null;
 function setupAutoUpdater() {
   autoUpdater.on('checking-for-update', () => {
     console.log('Checking for updates...');
+    mainWindow?.webContents.send('auto-updater:status', 'checking');
   });
   autoUpdater.on('update-available', (info) => {
     console.log('Update available.', info);
+    mainWindow?.webContents.send('auto-updater:status', 'available', info);
   });
   autoUpdater.on('update-not-available', (info) => {
     console.log('Update not available.', info);
+    mainWindow?.webContents.send('auto-updater:status', 'not-available', info);
   });
   autoUpdater.on('error', (err) => {
     console.error('Error in auto-updater. ' + err);
+    mainWindow?.webContents.send('auto-updater:status', 'error', err?.message || String(err));
   });
   autoUpdater.on('download-progress', (progressObj) => {
     let log_message = "Download speed: " + progressObj.bytesPerSecond;
     log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
     log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
     console.log(log_message);
+    mainWindow?.webContents.send('auto-updater:status', 'downloading', {
+      percent: progressObj.percent,
+      bytesPerSecond: progressObj.bytesPerSecond,
+      transferred: progressObj.transferred,
+      total: progressObj.total
+    });
   });
   autoUpdater.on('update-downloaded', (info) => {
     console.log('Update downloaded. It will be installed on restart.');
+    mainWindow?.webContents.send('auto-updater:status', 'downloaded', info);
   });
 }
 
@@ -362,6 +375,8 @@ app.whenReady().then(async () => {
     updateSplashStatus('Initializing database...', 25);
 
     await initDatabase();
+    await startMobileManagerServer();
+    await startCloudflareTunnel();
 
     updateSplashStatus('Verifying license...', 60);
     await new Promise(resolve => setTimeout(resolve, 300));
@@ -398,6 +413,8 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => {
+  stopCloudflareTunnel();
+  stopMobileManagerServer();
   if (process.platform !== 'darwin') app.quit();
 });
 
@@ -418,6 +435,16 @@ ipcMain.on('window:maximize', () => {
 
 ipcMain.on('window:close', () => {
   mainWindow?.close();
+});
+
+// Auto-Updater IPC listeners
+ipcMain.on('auto-updater:restart', () => {
+  autoUpdater.quitAndInstall();
+});
+ipcMain.on('auto-updater:check', () => {
+  if (app.isPackaged) {
+    autoUpdater.checkForUpdatesAndNotify();
+  }
 });
 
 let currentSessionUser: { id: number; username: string; name: string; role: string } | null = null;
@@ -544,6 +571,42 @@ ipcMain.handle('db:get-products', async () => {
 
 ipcMain.handle('db:add-product', async (_, product) => {
   try {
+    // Validate duplicate barcode in active products
+    if (product.barcode) {
+      const existingBarcode = await db
+        .select()
+        .from(schema.products)
+        .where(
+          and(
+            eq(schema.products.barcode, product.barcode),
+            eq(schema.products.isActive, true)
+          )
+        )
+        .limit(1);
+      if (existingBarcode.length > 0) {
+        console.warn('Attempt to add product with duplicate active barcode:', product.barcode);
+        return null;
+      }
+    }
+
+    // Validate duplicate SKU in active products
+    if (product.sku) {
+      const existingSku = await db
+        .select()
+        .from(schema.products)
+        .where(
+          and(
+            eq(schema.products.sku, product.sku),
+            eq(schema.products.isActive, true)
+          )
+        )
+        .limit(1);
+      if (existingSku.length > 0) {
+        console.warn('Attempt to add product with duplicate active SKU:', product.sku);
+        return null;
+      }
+    }
+
     const now = new Date().toISOString();
     const result = await db.insert(schema.products).values({
       ...product,
@@ -560,6 +623,44 @@ ipcMain.handle('db:add-product', async (_, product) => {
 
 ipcMain.handle('db:update-product', async (_, id, product) => {
   try {
+    // Validate duplicate barcode in active products
+    if (product.barcode) {
+      const existingBarcode = await db
+        .select()
+        .from(schema.products)
+        .where(
+          and(
+            eq(schema.products.barcode, product.barcode),
+            eq(schema.products.isActive, true),
+            sql`${schema.products.id} != ${id}`
+          )
+        )
+        .limit(1);
+      if (existingBarcode.length > 0) {
+        console.warn('Attempt to update product to duplicate active barcode:', product.barcode);
+        return null;
+      }
+    }
+
+    // Validate duplicate SKU in active products
+    if (product.sku) {
+      const existingSku = await db
+        .select()
+        .from(schema.products)
+        .where(
+          and(
+            eq(schema.products.sku, product.sku),
+            eq(schema.products.isActive, true),
+            sql`${schema.products.id} != ${id}`
+          )
+        )
+        .limit(1);
+      if (existingSku.length > 0) {
+        console.warn('Attempt to update product to duplicate active SKU:', product.sku);
+        return null;
+      }
+    }
+
     const result = await db
       .update(schema.products)
       .set({
@@ -578,13 +679,54 @@ ipcMain.handle('db:update-product', async (_, id, product) => {
 ipcMain.handle('db:delete-product', async (_, id) => {
   try {
     const result = await db
-      .delete(schema.products)
+      .update(schema.products)
+      .set({
+        isActive: false,
+        updatedAt: new Date().toISOString(),
+      })
       .where(eq(schema.products.id, id))
       .returning();
     return result.length > 0;
   } catch (error) {
     console.error('IPC db:delete-product error:', error);
     return false;
+  }
+});
+
+ipcMain.handle('get-product-stats', async (_, productId) => {
+  try {
+    const stats = await db
+      .select({
+        totalQuantity: sql<number>`sum(${schema.saleItems.quantity})`,
+        totalRevenue: sql<number>`sum(${schema.saleItems.quantity} * ${schema.saleItems.unitPrice})`,
+        totalCost: sql<number>`sum(${schema.saleItems.quantity} * ${schema.saleItems.costPrice})`,
+      })
+      .from(schema.saleItems)
+      .innerJoin(schema.sales, eq(schema.saleItems.saleId, schema.sales.id))
+      .where(
+        and(
+          eq(schema.saleItems.productId, productId),
+          eq(schema.sales.status, 'completed')
+        )
+      );
+
+    const result = stats[0] || {};
+    const totalUnitsSold = Number(result.totalQuantity || 0);
+    const totalRevenue = Number(result.totalRevenue || 0);
+    const totalCost = Number(result.totalCost || 0);
+    const netProfit = totalRevenue - totalCost;
+    const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
+
+    return {
+      totalUnitsSold,
+      totalRevenue,
+      totalCost,
+      netProfit,
+      profitMargin,
+    };
+  } catch (error) {
+    console.error('IPC get-product-stats error:', error);
+    return null;
   }
 });
 
@@ -1292,9 +1434,30 @@ ipcMain.handle('db:save-settings', async (_, settingsList) => {
   }
 });
 
+ipcMain.handle('manager:tunnel-status', async () => {
+  return getCloudflareTunnelStatus();
+});
+
+ipcMain.handle('manager:start-tunnel', async () => {
+  return await startCloudflareTunnel();
+});
+
+ipcMain.handle('manager:stop-tunnel', async () => {
+  return stopCloudflareTunnel();
+});
+
 // ==========================================
 // HARDWARE IPC HANDLERS
 // ==========================================
+ipcMain.handle('hardware:preview-receipt', async (_, receiptData) => {
+  try {
+    return generateReceiptHtml(receiptData);
+  } catch (error: any) {
+    console.error('IPC hardware:preview-receipt error:', error);
+    return `<div style="color:red; padding:20px;">Error generating preview: ${error.message}</div>`;
+  }
+});
+
 ipcMain.handle('hardware:print-receipt', async (_, receiptData, config) => {
   try {
     return await printReceipt(receiptData, config);
@@ -1318,6 +1481,24 @@ ipcMain.handle('hardware:print-shift-report', async (_, reportData, config) => {
     return await printShiftReport(reportData, config);
   } catch (error: any) {
     console.error('Hardware shift report print error:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('hardware:print-daily-report', async (_, reportData, config) => {
+  try {
+    return await printDailyReport(reportData, config);
+  } catch (error: any) {
+    console.error('Hardware daily report print error:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('hardware:print-product-report', async (_, reportData, config) => {
+  try {
+    return await printProductReport(reportData, config);
+  } catch (error: any) {
+    console.error('Hardware product report print error:', error);
     return { success: false, error: error.message };
   }
 });
@@ -1404,6 +1585,44 @@ ipcMain.handle('license:activate', async (_, key: string) => {
   } catch (error: any) {
     console.error('Error activating license:', error);
     return { success: false, error: error.message };
+  }
+});
+
+// Chat messages API
+ipcMain.handle('db:get-messages', async () => {
+  try {
+    return await db
+      .select()
+      .from(schema.messages)
+      .orderBy(asc(schema.messages.id));
+  } catch (error) {
+    console.error('IPC db:get-messages error:', error);
+    return [];
+  }
+});
+
+ipcMain.handle('db:send-message', async (_, payload: { sender: string; senderName: string; message: string }) => {
+  try {
+    const result = await db.insert(schema.messages).values({
+      sender: payload.sender,
+      senderName: payload.senderName,
+      message: payload.message,
+      timestamp: new Date().toISOString(),
+    }).returning();
+    return result[0];
+  } catch (error) {
+    console.error('IPC db:send-message error:', error);
+    return null;
+  }
+});
+
+ipcMain.handle('db:clear-messages', async () => {
+  try {
+    await db.delete(schema.messages);
+    return true;
+  } catch (error) {
+    console.error('IPC db:clear-messages error:', error);
+    return false;
   }
 });
 

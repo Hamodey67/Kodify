@@ -27,6 +27,8 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.invoke('db:search-products', query),
   getLowStockAlerts: () =>
     ipcRenderer.invoke('db:low-stock-alerts'),
+  getProductStats: (productId: number) =>
+    ipcRenderer.invoke('get-product-stats', productId),
 
   // Customers
   getCustomers: () =>
@@ -78,21 +80,52 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.invoke('db:get-settings'),
   saveSettings: (settingsList: Record<string, string>) =>
     ipcRenderer.invoke('db:save-settings', settingsList),
+  getManagerTunnelStatus: () =>
+    ipcRenderer.invoke('manager:tunnel-status'),
+  startManagerTunnel: () =>
+    ipcRenderer.invoke('manager:start-tunnel'),
+  stopManagerTunnel: () =>
+    ipcRenderer.invoke('manager:stop-tunnel'),
+  onManagerTunnelStatusChanged: (callback: (status: any) => void) => {
+    const listener = (_event: any, status: any) => callback(status);
+    ipcRenderer.on('manager:tunnel-status-changed', listener);
+    return () => ipcRenderer.removeListener('manager:tunnel-status-changed', listener);
+  },
 
   // Hardware
+  previewReceipt: (receiptData: any) =>
+    ipcRenderer.invoke('hardware:preview-receipt', receiptData),
   printReceipt: (receiptData: PrintReceiptData, config: { mockMode: boolean; printerType: string; connectionPath: string }) =>
     ipcRenderer.invoke('hardware:print-receipt', receiptData, config),
   triggerCashDrawer: (config: { mockMode: boolean; port: string }) =>
     ipcRenderer.invoke('hardware:trigger-drawer', config),
-  printShiftReport: (reportData: ShiftReportData, config: { mockMode: boolean }) =>
+  printShiftReport: (reportData: ShiftReportData, config: { mockMode: boolean; printerType?: string; connectionPath?: string }) =>
     ipcRenderer.invoke('hardware:print-shift-report', reportData, config),
+  printDailyReport: (reportData: any, config: { mockMode: boolean; printerType?: string; connectionPath?: string }) =>
+    ipcRenderer.invoke('hardware:print-daily-report', reportData, config),
+  printProductReport: (reportData: any, config: { mockMode: boolean; printerType: string; connectionPath: string }) =>
+    ipcRenderer.invoke('hardware:print-product-report', reportData, config),
 
-  // Licensing
   checkLicense: () => ipcRenderer.invoke('license:status'),
   activateLicense: (key: string) => ipcRenderer.invoke('license:activate', key),
+
+  // Chat
+  getMessages: () => ipcRenderer.invoke('db:get-messages'),
+  sendMessage: (payload: { sender: string; senderName: string; message: string }) =>
+    ipcRenderer.invoke('db:send-message', payload),
+  clearMessages: () => ipcRenderer.invoke('db:clear-messages'),
 
   // Window operations
   minimizeWindow: () => ipcRenderer.send('window:minimize'),
   maximizeWindow: () => ipcRenderer.send('window:maximize'),
   closeWindow: () => ipcRenderer.send('window:close'),
+
+  // Auto-Updater
+  onUpdateStatus: (callback: (status: string, info: any) => void) => {
+    const listener = (_event: any, status: string, info: any) => callback(status, info);
+    ipcRenderer.on('auto-updater:status', listener);
+    return () => ipcRenderer.removeListener('auto-updater:status', listener);
+  },
+  restartAppForUpdate: () => ipcRenderer.send('auto-updater:restart'),
+  checkForUpdates: () => ipcRenderer.send('auto-updater:check'),
 });

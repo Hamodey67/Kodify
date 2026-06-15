@@ -73,7 +73,7 @@ export const AdminPinModal: React.FC<AdminPinModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 glass z-50 flex items-center justify-center p-4" dir={dir}>
+    <div className="fixed inset-0 glass z-[100] flex items-center justify-center p-4" dir={dir}>
       <div className={`bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl w-full max-w-sm overflow-hidden animate-fade-in ${shouldShake ? 'animate-shake' : ''}`}>
         <div className="p-4 border-b border-slate-700 flex items-center justify-between">
           <h3 className="text-sm font-extrabold text-slate-200">{t.enterSupervisorPin}</h3>

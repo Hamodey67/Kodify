@@ -31,9 +31,18 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: async (username, password) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await window.api.login(username, password);
+      // Safety net: never let inputs stay frozen (disabled) if the login
+      // IPC call hangs. If no response within the timeout, fail gracefully
+      // and re-enable the form so the cashier can retry.
+      const LOGIN_TIMEOUT_MS = 5000;
+      const loginPromise = window.api.login(username, password);
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('timeout')), LOGIN_TIMEOUT_MS)
+      );
+
+      const response = await Promise.race([loginPromise, timeoutPromise]);
       if (response) {
-        set({ user: response, isLoading: false, error: null });
+        set({ user: response as User, isLoading: false, error: null });
         return true;
       } else {
         set({ error: 'invalid_credentials', isLoading: false });
@@ -41,7 +50,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
     } catch (err: any) {
       console.error('Store login error:', err);
-      set({ error: err.message || 'unknown_error', isLoading: false });
+      const code = err?.message === 'timeout' ? 'timeout' : (err?.message || 'unknown_error');
+      set({ error: code, isLoading: false });
       return false;
     }
   },

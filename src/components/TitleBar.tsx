@@ -30,7 +30,7 @@ export const TitleBar: React.FC = () => {
 
   return (
     <div 
-      className="h-8 bg-pos-bg border-b border-white/5 flex items-center justify-between select-none px-3 relative"
+      className="h-10 bg-pos-bg border-b border-white/5 flex items-center justify-between select-none px-4 relative z-50 shadow-sm"
       style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
     >
       {/* Accent edge */}
@@ -59,26 +59,10 @@ export const TitleBar: React.FC = () => {
         className="flex items-center gap-4"
         style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
       >
-        {/* User Info */}
-        {user && (
-          <div className="hidden lg:flex items-center gap-2 px-2 h-7 rounded-full border border-white/5 bg-white/3 glass">
-            <div className="w-6 h-6 rounded-full bg-[linear-gradient(135deg,rgba(99,102,241,0.35),rgba(6,182,212,0.25))] border border-white/10 flex items-center justify-center text-[10px] font-extrabold text-slate-100">
-              {(user.name || user.username || 'U').slice(0, 1).toUpperCase()}
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5">
-                <UserIcon size={12} className="text-slate-300" />
-                <span className="text-[11px] font-bold text-slate-100">{user.name}</span>
-              </div>
-              <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${roleTone}`}>
-                {roleLabel}
-              </span>
-            </div>
-          </div>
-        )}
+
 
         {/* Language Selector Dropdown */}
-        <div className="relative flex items-center gap-1.5 px-2 mx-3 h-7 rounded-full border border-white/6 bg-white/3 glass text-slate-300 hover:text-white transition-colors">
+        <div className="relative flex items-center gap-1.5 px-3 mx-5 h-7 rounded-full border border-white/6 bg-white/3 glass text-slate-300 hover:text-white transition-colors">
           <Globe size={13} className="text-cyan-300" />
           <select
             value={language}
