@@ -80,7 +80,7 @@
     "publish": {
       "provider": "github",
       "owner": "Hamodey67",
-      "repo": "kodify-system"
+      "repo": "Kodify"
     }
   }
 }
