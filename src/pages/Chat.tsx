@@ -5,7 +5,7 @@ import { translations } from '../utils/translations';
 import { 
   Send, 
   MessageCircle, 
-  Sparkles, 
+  Info, 
   User, 
   Smartphone, 
   Wifi, 
@@ -129,32 +129,32 @@ export const Chat: React.FC = () => {
   const tunnelUrl = connectionDetails.mobile_tunnel_last_url || '';
 
   return (
-    <div className="flex h-full w-full bg-[#0a0e1a] text-slate-100 overflow-hidden animate-page-in font-sans" dir={dir}>
+    <div className="flex h-full w-full bg-[#eef2f8] text-[#18212f] overflow-hidden animate-page-in font-sans" dir={dir}>
       
       {/* Left Sidebar Pane: Connection Metrics */}
-      <div className={`hidden lg:flex flex-col w-80 shrink-0 border-white/5 bg-gradient-to-b from-[#111827]/40 to-[#0a0e1a]/40 p-6 space-y-6 ${dir === 'rtl' ? 'border-l' : 'border-r'}`}>
+      <div className={`hidden lg:flex flex-col w-80 shrink-0 border-[#e3e9f1] bg-[#fbfcfe] p-6 space-y-6 ${dir === 'rtl' ? 'border-l' : 'border-r'}`}>
         
         {/* Connection Status Section */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <Smartphone className="text-indigo-400 w-5 h-5" />
-            <h3 className="text-sm font-extrabold text-slate-200 tracking-wide uppercase">
+            <Smartphone className="text-blue-600 w-5 h-5" />
+            <h3 className="text-sm font-extrabold text-[#18212f] tracking-wide uppercase">
               {language === 'ar' ? 'اتصال الموبايل' : 'Mobile Connection'}
             </h3>
           </div>
           
-          <div className="glass-card p-4 border border-white/5 rounded-2xl bg-white/2 space-y-3.5 shadow-glass">
+          <div className="bg-[#f4f7fb] p-4 border border-[#e3e9f1] rounded-lg space-y-3.5">
             <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-400">{language === 'ar' ? 'حالة البث' : 'Broadcast'}</span>
-              <span className="flex items-center gap-1.5 font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+              <span className="text-[#64748b]">{language === 'ar' ? 'حالة البث' : 'Broadcast'}</span>
+              <span className="flex items-center gap-1.5 font-bold text-[#047857] bg-[#ecfdf5] px-2 py-0.5 rounded-md ring-1 ring-emerald-200">
                 <Wifi className="w-3.5 h-3.5 animate-pulse" />
                 <span>{language === 'ar' ? 'نشط' : 'Active'}</span>
               </span>
             </div>
             
-            <div className="flex justify-between items-center text-xs border-t border-white/5 pt-3">
-              <span className="text-slate-400">{language === 'ar' ? 'منفذ الخادم' : 'Server Port'}</span>
-              <span className="font-mono font-bold text-slate-200">{managerPort}</span>
+            <div className="flex justify-between items-center text-xs border-t border-[#e3e9f1] pt-3">
+              <span className="text-[#64748b]">{language === 'ar' ? 'منفذ الخادم' : 'Server Port'}</span>
+              <span className="font-mono font-bold text-[#18212f]">{managerPort}</span>
             </div>
             
 
@@ -164,11 +164,11 @@ export const Chat: React.FC = () => {
         {/* Live Tunnel URL Card */}
         {tunnelUrl && (
           <div className="space-y-3">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-              <LinkIcon className="w-3.5 h-3.5 text-indigo-400" />
+            <h4 className="text-xs font-bold text-[#64748b] uppercase tracking-wider flex items-center gap-1.5">
+              <LinkIcon className="w-3.5 h-3.5 text-blue-600" />
               <span>{language === 'ar' ? 'رابط البث السحابي' : 'Cloud Access URL'}</span>
             </h4>
-            <div className="glass-card p-3.5 border border-white/5 rounded-2xl bg-slate-950/40 select-all font-mono text-[11px] break-all leading-relaxed text-indigo-300 hover:text-indigo-200 transition-colors shadow-inner">
+            <div className="bg-[#f4f7fb] p-3.5 border border-[#e3e9f1] rounded-lg select-all font-mono text-[11px] break-all leading-relaxed text-[#2563eb] hover:text-[#1d4ed8] transition-colors">
               {tunnelUrl}
             </div>
           </div>
@@ -176,9 +176,9 @@ export const Chat: React.FC = () => {
 
         {/* Dynamic Help Tips */}
         <div className="flex-1 flex flex-col justify-end">
-          <div className="p-4 rounded-2xl bg-white/2 border border-white/5 text-[11px] leading-relaxed text-slate-400 space-y-2">
-            <div className="font-extrabold text-slate-300 flex items-center gap-1">
-              <Sparkles size={12} className="text-teal-400" />
+          <div className="p-4 rounded-lg bg-[#f4f7fb] border border-[#e3e9f1] text-[11px] leading-relaxed text-[#64748b] space-y-2">
+            <div className="font-extrabold text-[#334155] flex items-center gap-1">
+              <Info size={12} className="text-blue-600" />
               <span>{language === 'ar' ? 'تعليمات الاتصال' : 'Connection Info'}</span>
             </div>
             <p>
@@ -192,19 +192,16 @@ export const Chat: React.FC = () => {
       </div>
 
       {/* Right Sidebar Pane: The Chat Component */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#0d111d]/90 relative">
+      <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#eef2f8] relative">
         
-        {/* Decorative subtle header background glow */}
-        <div className="absolute top-0 left-1/4 right-1/4 h-24 bg-indigo-500/5 blur-[80px] rounded-full pointer-events-none" />
-
         {/* Header Bar */}
-        <div className="flex items-center justify-between border-b border-white/5 px-6 py-4 shrink-0 bg-slate-900/25 relative z-10">
+        <div className="flex items-center justify-between border-b border-[#e3e9f1] px-6 py-4 shrink-0 bg-[#fbfcfe] relative z-10">
           <div>
-            <h1 className="text-lg font-black text-white flex items-center gap-2 tracking-wide">
-              <MessageCircle className="text-indigo-400 w-5 h-5" />
+            <h1 className="text-lg font-black text-[#18212f] flex items-center gap-2 tracking-wide">
+              <MessageCircle className="text-blue-600 w-5 h-5" />
               <span>{language === 'ar' ? 'محادثة الإدارة والموبايل' : (language === 'ku' ? 'نامەکان' : 'Manager & Mobile Chat')}</span>
             </h1>
-            <p className="text-[11px] text-slate-400 mt-0.5">
+            <p className="text-[11px] text-[#64748b] mt-0.5">
               {language === 'ar' ? 'تواصل مباشر مع تطبيق الموبايل' : 'Live chat with Mobile App'}
             </p>
           </div>
@@ -212,13 +209,13 @@ export const Chat: React.FC = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={handleClearChat}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-300 rounded-xl text-xs font-bold transition-all active:scale-[0.98]"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#fff1f2] hover:bg-rose-100 border border-rose-200 text-[#dc2626] rounded-md text-xs font-bold transition-colors active:scale-[0.98]"
             >
               <Trash2 size={13} />
               <span>{language === 'ar' ? 'مسح المحادثة' : (language === 'ku' ? 'سڕینەوەی نامەکان' : 'Clear Chat')}</span>
             </button>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider hidden sm:inline">
+              <span className="text-[10px] text-[#64748b] font-bold uppercase tracking-wider hidden sm:inline">
                 {language === 'ar' ? 'المزامنة التلقائية' : 'Auto Sync'}
               </span>
               <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></div>
@@ -227,11 +224,11 @@ export const Chat: React.FC = () => {
         </div>
 
         {/* Scrollable Conversation Stream */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-5 bg-gradient-to-b from-transparent to-[#0a0e1a]/20">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-5 bg-[#eef2f8]">
           {messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-slate-500/60 space-y-3">
-              <div className="w-16 h-16 rounded-full bg-slate-900 border border-white/5 flex items-center justify-center shadow-lg shadow-black/10">
-                <MessageCircle size={28} className="text-slate-400 stroke-1" />
+            <div className="h-full flex flex-col items-center justify-center text-[#94a3b8] space-y-3">
+              <div className="w-16 h-16 rounded-lg bg-[#fbfcfe] border border-[#e3e9f1] flex items-center justify-center">
+                <MessageCircle size={28} className="text-[#94a3b8] stroke-1" />
               </div>
               <p className="text-xs font-bold tracking-wide">
                 {language === 'ar' ? 'لا توجد رسائل سابقة' : 'No messages yet.'}
@@ -250,7 +247,7 @@ export const Chat: React.FC = () => {
                 >
                   {/* Incoming Manager Avatar (left-aligned) */}
                   {!isOutgoing && (
-                    <div className="w-8 h-8 rounded-full bg-slate-800 border border-white/8 flex items-center justify-center font-bold text-xs text-indigo-300 shadow shrink-0">
+                    <div className="w-8 h-8 rounded-md bg-[#fbfcfe] border border-[#e3e9f1] flex items-center justify-center font-bold text-xs text-blue-600 shrink-0">
                       MN
                     </div>
                   )}
@@ -258,20 +255,20 @@ export const Chat: React.FC = () => {
                   <div className={`flex flex-col max-w-[70%] ${isOutgoing ? 'items-end' : 'items-start'}`}>
                     
                     {/* Message Bubble container */}
-                    <div className={`px-4 py-3 rounded-2xl shadow-lg border relative min-w-[140px] ${
+                    <div className={`px-4 py-3 rounded-2xl border relative min-w-[140px] ${
                       isOutgoing 
-                        ? 'bg-gradient-to-br from-indigo-600 to-indigo-500 text-white rounded-br-none border-indigo-500/10' 
-                        : 'bg-slate-800/95 text-slate-100 rounded-bl-none border-white/5'
+                        ? 'bg-[#2563eb] text-white rounded-br-none border-[#1d4ed8]' 
+                        : 'bg-[#fbfcfe] text-[#18212f] rounded-bl-none border-[#e3e9f1]'
                     }`}>
                       {/* Sender Name tag */}
-                      <span className={`text-[10px] font-black block mb-1 opacity-70 tracking-wide ${isOutgoing ? 'text-indigo-200' : 'text-slate-300'}`}>
+                      <span className={`text-[10px] font-black block mb-1 opacity-80 tracking-wide ${isOutgoing ? 'text-blue-100' : 'text-[#64748b]'}`}>
                         {msg.senderName}
                       </span>
                       
                       <p className="text-[13px] leading-relaxed whitespace-pre-wrap select-text font-medium">{msg.message}</p>
                       
                       {/* Timestamp */}
-                      <div className={`text-[9px] mt-1.5 font-mono opacity-65 flex items-center gap-1 ${isOutgoing ? 'justify-end text-indigo-200' : 'justify-start text-slate-400'}`}>
+                      <div className={`text-[9px] mt-1.5 font-mono opacity-75 flex items-center gap-1 ${isOutgoing ? 'justify-end text-blue-100' : 'justify-start text-[#94a3b8]'}`}>
                         <Clock size={8} />
                         <span>{formatTime(msg.timestamp)}</span>
                       </div>
@@ -280,7 +277,7 @@ export const Chat: React.FC = () => {
 
                   {/* Outgoing Cashier Avatar (right-aligned) */}
                   {isOutgoing && (
-                    <div className="w-8 h-8 rounded-full bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center font-bold text-xs text-indigo-400 shadow shrink-0">
+                    <div className="w-8 h-8 rounded-md bg-[#eff6ff] border border-[#bfdbfe] flex items-center justify-center font-bold text-xs text-blue-600 shrink-0">
                       {msg.sender === 'admin' ? 'AD' : 'CS'}
                     </div>
                   )}
@@ -293,18 +290,18 @@ export const Chat: React.FC = () => {
         </div>
 
         {/* Footer Input Bar */}
-        <div className="p-4 bg-slate-900/60 border-t border-white/5 shrink-0 relative z-10 backdrop-blur-md">
+        <div className="p-4 bg-[#fbfcfe] border-t border-[#e3e9f1] shrink-0 relative z-10">
           <form onSubmit={handleSendMessage} className="flex gap-3 max-w-4xl mx-auto items-center">
             
             {/* Input field wrapper */}
-            <div className="relative flex-1 bg-slate-950/80 rounded-2xl border border-white/6 focus-within:border-indigo-500/30 transition-all p-1.5 flex items-center shadow-inner">
+            <div className="relative flex-1 bg-[#fbfcfe] rounded-xl border border-[#e3e9f1] focus-within:border-[#2563eb] focus-within:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] transition-all p-1.5 flex items-center">
               <textarea
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder={language === 'ar' ? 'اكتب رسالة هنا...' : (language === 'ku' ? 'لێرە بنووسە...' : 'Type a message here...')}
                 rows={1}
-                className="flex-1 bg-transparent border-none text-slate-100 text-xs py-2 px-3 focus:outline-none resize-none custom-scrollbar outline-none max-h-24 font-medium"
+                className="flex-1 bg-transparent border-none text-[#18212f] text-xs py-2 px-3 focus:outline-none resize-none custom-scrollbar outline-none max-h-24 font-medium placeholder:text-[#94a3b8]"
                 style={{ minHeight: '36px' }}
               />
             </div>
@@ -313,10 +310,10 @@ export const Chat: React.FC = () => {
             <button
               type="submit"
               disabled={!inputText.trim() || isSending}
-              className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
+              className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
                 !inputText.trim() || isSending
-                  ? 'bg-slate-800 text-slate-600 cursor-not-allowed border border-white/5'
-                  : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/20 active:scale-95 border border-indigo-500/20'
+                  ? 'bg-[#eef2f7] text-[#cbd5e1] cursor-not-allowed border border-[#e3e9f1]'
+                  : 'bg-[#2563eb] hover:bg-[#1d4ed8] text-white active:scale-95 shadow-[0_8px_20px_rgba(37,99,235,0.24)]'
               }`}
             >
               <Send size={16} className={dir === 'rtl' ? 'rotate-180' : ''} />

@@ -1,6 +1,6 @@
 {
   "name": "kodify-system",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Premium Bilingual POS & Retail Management Desktop Application",
   "main": "dist-electron/main.js",
   "author": "Yaqoot Team",
@@ -16,8 +16,11 @@
     "dist": "npm run build && electron-builder -p always"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.110.8",
+    "@types/ws": "^8.18.1",
     "bcryptjs": "^2.4.3",
     "better-sqlite3": "^11.0.0",
+    "bufferutil": "^4.1.0",
     "chart.js": "^4.4.3",
     "drizzle-orm": "^0.30.10",
     "electron-store": "^8.2.0",
@@ -30,6 +33,8 @@
     "react": "^18.3.1",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.3.1",
+    "utf-8-validate": "^6.0.6",
+    "ws": "^8.21.1",
     "zustand": "^4.5.2"
   },
   "devDependencies": {
@@ -62,7 +67,8 @@
       "dist-electron"
     ],
     "extraResources": [
-      "drizzle"
+      "drizzle",
+      "cloudflared.exe"
     ],
     "asar": true,
     "asarUnpack": [

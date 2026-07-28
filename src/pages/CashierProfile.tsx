@@ -37,43 +37,37 @@ export const CashierProfile: React.FC<{ setActivePage: (page: string) => void }>
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-      className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-pos-bg space-y-6"
+      className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-[#eef2f8] space-y-6"
     >
       {/* Hero */}
-      <div className="glass-card overflow-hidden border border-white/8 shadow-glass relative">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(99,102,241,0.25),transparent_45%),radial-gradient(circle_at_80%_60%,rgba(6,182,212,0.18),transparent_45%)]" />
+      <div className="relative overflow-hidden rounded-2xl border border-[#e3e9f1] bg-[#fbfcfe] shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
         <div className="relative p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <div className="absolute -inset-2 rounded-3xl bg-[linear-gradient(135deg,rgba(99,102,241,0.55),rgba(6,182,212,0.35))] blur-xl opacity-60" />
-              <div className="relative w-16 h-16 rounded-3xl border border-white/10 bg-white/5 glass flex items-center justify-center text-xl font-black text-slate-100">
+              <div className="relative w-16 h-16 rounded-2xl bg-[#eff6ff] border border-[#bfdbfe] flex items-center justify-center text-xl font-black text-[#2563eb]">
                 {initials}
               </div>
             </div>
             <div className="text-right">
-              <h1 className="text-2xl font-black text-slate-100">
+              <h1 className="text-2xl font-black text-[#18212f]">
                 {language === 'ar' ? 'لوحة حساب الكاشير' : 'Cashier Profile Dashboard'}
               </h1>
-              <p className="text-sm text-slate-300/70 mt-1">
+              <p className="text-sm text-[#64748b] mt-1">
                 {language === 'ar'
                   ? 'نظرة سريعة على حسابك وإجراءات النظام السريعة'
                   : 'Quick overview of your account and system shortcuts.'}
               </p>
               <div className="mt-3 flex items-center gap-2">
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-extrabold ${
-                  user.role === 'admin'
-                    ? 'bg-indigo-500/15 text-indigo-200 border-indigo-400/20 shadow-glow-indigo'
-                    : 'bg-cyan-500/15 text-cyan-100 border-cyan-400/20 shadow-glow-cyan'
-                }`}>
-                  <Dot size={16} className={user.role === 'admin' ? 'text-indigo-200' : 'text-cyan-200'} />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ring-1 text-xs font-extrabold bg-[#eff6ff] text-[#2563eb] ring-[#bfdbfe]">
+                  <Dot size={16} className="text-[#2563eb]" />
                   {user.role === 'admin'
                     ? (language === 'ar' ? 'مدير النظام' : 'Administrator')
                     : (language === 'ar' ? 'كاشير' : 'Cashier')}
                 </span>
-                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 glass text-xs text-slate-200/80">
-                  <Calendar size={14} className="text-slate-300/70" />
+                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#e3e9f1] bg-[#f4f7fb] text-xs text-[#64748b]">
+                  <Calendar size={14} className="text-[#94a3b8]" />
                   {language === 'ar' ? 'انضم: ' : 'Joined: '}
-                  <span className="font-bold text-slate-100">{formattedDate}</span>
+                  <span className="font-bold text-[#18212f]">{formattedDate}</span>
                 </span>
               </div>
             </div>
@@ -82,13 +76,13 @@ export const CashierProfile: React.FC<{ setActivePage: (page: string) => void }>
       </div>
 
       {/* Card 2: Quick Navigation Shortcuts */}
-      <div className="glass-card p-6 border border-white/8 shadow-glass space-y-4">
-        <div className="flex items-center justify-between border-b border-white/6 pb-3">
-          <h3 className="text-sm font-black text-slate-100 flex items-center gap-2">
-            <Settings size={16} className="text-cyan-200" />
+      <div className="rounded-2xl border border-[#e3e9f1] bg-[#fbfcfe] p-6 shadow-[0_1px_2px_rgba(16,24,40,0.04)] space-y-4">
+        <div className="flex items-center justify-between border-b border-[#e8edf4] pb-3">
+          <h3 className="text-sm font-black text-[#18212f] flex items-center gap-2">
+            <Settings size={16} className="text-blue-600" />
             <span>{language === 'ar' ? 'إجراءات سريعة' : 'Quick Actions'}</span>
           </h3>
-          <span className="text-[10px] text-slate-300/60 font-mono">KODIFY</span>
+          <span className="text-[10px] text-[#94a3b8] font-mono">KODIFY</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -96,10 +90,10 @@ export const CashierProfile: React.FC<{ setActivePage: (page: string) => void }>
             whileTap={{ scale: 0.97 }}
             whileHover={{ scale: 1.02 }}
             onClick={() => setActivePage('pos')}
-            className="p-5 rounded-2xl border border-white/8 bg-[linear-gradient(135deg,rgba(6,182,212,0.16),rgba(99,102,241,0.10))] hover:shadow-glow-cyan text-slate-100 font-extrabold flex flex-col items-center justify-center gap-3 transition-all"
+            className="p-5 rounded-2xl border border-[#e3e9f1] bg-[#fbfcfe] hover:border-[#bfdbfe] hover:shadow-[0_12px_24px_rgba(16,24,40,0.08)] text-[#18212f] font-extrabold flex flex-col items-center justify-center gap-3 transition-all"
           >
-            <div className="w-12 h-12 rounded-2xl border border-cyan-400/25 bg-cyan-500/10 flex items-center justify-center shadow-glow-cyan">
-              <ShoppingBag size={22} className="text-cyan-200" />
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+              <ShoppingBag size={22} />
             </div>
             <span className="text-xs">{language === 'ar' ? 'فتح نقطة البيع' : 'Open POS Register'}</span>
           </motion.button>
@@ -108,10 +102,10 @@ export const CashierProfile: React.FC<{ setActivePage: (page: string) => void }>
             whileTap={{ scale: 0.97 }}
             whileHover={{ scale: 1.02 }}
             onClick={() => setActivePage('settings')}
-            className="p-5 rounded-2xl border border-white/8 bg-[linear-gradient(135deg,rgba(99,102,241,0.16),rgba(6,182,212,0.08))] hover:shadow-glow-indigo text-slate-100 font-extrabold flex flex-col items-center justify-center gap-3 transition-all"
+            className="p-5 rounded-2xl border border-[#e3e9f1] bg-[#fbfcfe] hover:border-[#bfdbfe] hover:shadow-[0_12px_24px_rgba(16,24,40,0.08)] text-[#18212f] font-extrabold flex flex-col items-center justify-center gap-3 transition-all"
           >
-            <div className="w-12 h-12 rounded-2xl border border-indigo-400/25 bg-indigo-500/10 flex items-center justify-center shadow-glow-indigo">
-              <Settings size={22} className="text-indigo-200" />
+            <div className="w-12 h-12 rounded-2xl bg-cyan-50 text-cyan-600 flex items-center justify-center">
+              <Settings size={22} />
             </div>
             <span className="text-xs">{language === 'ar' ? 'إعدادات المتجر' : 'Store Settings'}</span>
           </motion.button>
@@ -120,10 +114,10 @@ export const CashierProfile: React.FC<{ setActivePage: (page: string) => void }>
             whileTap={{ scale: 0.97 }}
             whileHover={{ scale: 1.02 }}
             onClick={logout}
-            className="p-5 rounded-2xl border border-rose-400/20 bg-rose-500/10 hover:bg-rose-500/14 text-rose-100 font-extrabold flex flex-col items-center justify-center gap-3 transition-all"
+            className="p-5 rounded-2xl border border-[#e3e9f1] bg-[#fbfcfe] hover:border-rose-200 hover:bg-[#fff1f2] hover:shadow-[0_12px_24px_rgba(16,24,40,0.08)] text-[#dc2626] font-extrabold flex flex-col items-center justify-center gap-3 transition-all"
           >
-            <div className="w-12 h-12 rounded-2xl border border-rose-400/25 bg-rose-500/10 flex items-center justify-center">
-              <LogOut size={22} className="text-rose-200" />
+            <div className="w-12 h-12 rounded-2xl bg-[#fff1f2] text-[#dc2626] flex items-center justify-center">
+              <LogOut size={22} />
             </div>
             <span className="text-xs">{language === 'ar' ? 'تسجيل الخروج' : 'Logout'}</span>
           </motion.button>

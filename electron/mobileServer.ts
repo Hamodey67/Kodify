@@ -1,11 +1,10 @@
 import http from 'http';
-import https from 'https';
 import os from 'os';
 import { and, desc, asc, eq, sql } from 'drizzle-orm';
 import { db } from './db';
 import * as schema from './schema';
 
-let server: https.Server | null = null;
+let server: http.Server | null = null;
 
 const DEFAULT_MOBILE_PORT = 8787;
 
@@ -64,7 +63,7 @@ async function isAuthorized(pin: string | null) {
   const managerPin = await getSetting('mobile_manager_pin', '1010');
   const adminPin = await getSetting('admin_override_pin', '1010');
   const adminPinGeneral = await getSetting('admin_pin', '1010');
-  return pin === managerPin || pin === adminPin || pin === adminPinGeneral || pin === '1010';
+  return pin === managerPin || pin === adminPin || pin === adminPinGeneral;
 }
 
 function getTodayRange() {
@@ -186,7 +185,6 @@ async function getTodaySummary() {
   const storeNameEn = await getSetting('store_name_en', '1OF1 Store');
   const storePhone = await getSetting('store_phone', '+964 000 000 0000');
   const storeAddress = await getSetting('store_address', '');
-  const managerPin = await getSetting('mobile_manager_pin', '2020');
 
   return {
     generatedAt: new Date().toISOString(),
@@ -206,7 +204,6 @@ async function getTodaySummary() {
       store_name_en: storeNameEn,
       store_phone: storePhone,
       store_address: storeAddress,
-      mobile_manager_pin: managerPin
     }
   };
 }
@@ -218,7 +215,7 @@ function getLocalNetworkUrls(port: number) {
   for (const entries of Object.values(nets)) {
     for (const entry of entries || []) {
       if (entry.family === 'IPv4' && !entry.internal) {
-        urls.push(`https://${entry.address}:${port}`);
+        urls.push(`http://${entry.address}:${port}`);
       }
     }
   }
@@ -1985,7 +1982,7 @@ function getMobileDashboardHtml() {
                 '<strong>' + esc(s.invoiceNumber) + '</strong>' +
                 '<div style="font-size:9px; color:var(--text-muted); margin-top:2px;">' + time(s.createdAt) + ' - ' + esc(s.cashierName || '-') + '</div>' +
               '</td>' +
-              '<td><span class="pill ' + s.paymentMethod + '">' + method(s.paymentMethod) + '</span></td>' +
+              '<td><span class="pill ' + esc(s.paymentMethod) + '">' + method(s.paymentMethod) + '</span></td>' +
               '<td class="num-col" style="color:#fff;">' + money(s.totalAmount) + '</td>' +
             '</tr>';
           }).join('')
@@ -2508,12 +2505,9 @@ export async function startMobileManagerServer() {
   const portValue = await getSetting('mobile_manager_port', String(DEFAULT_MOBILE_PORT));
   const port = Number(portValue) || DEFAULT_MOBILE_PORT;
 
-  server = https.createServer({
-    pfx: PFX_BUFFER,
-    passphrase: 'kodify123'
-  }, async (req, res) => {
+  server = http.createServer(async (req, res) => {
     try {
-      const requestUrl = new URL(req.url || '/', `https://${req.headers.host || 'localhost'}`);
+      const requestUrl = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
 
       if (req.method !== 'GET' && req.method !== 'POST') {
         jsonResponse(res, 405, { error: 'method_not_allowed' });
@@ -2706,8 +2700,17 @@ export async function startMobileManagerServer() {
           return;
         }
 
+        const ALLOWED_SETTINGS_KEYS = new Set([
+          'store_name_ar',
+          'store_name_en',
+          'store_phone',
+          'store_address',
+          'mobile_manager_pin',
+        ]);
+
         try {
           for (const [key, value] of Object.entries(data.settings)) {
+            if (!ALLOWED_SETTINGS_KEYS.has(key)) continue;
             const exists = await db.select().from(schema.settings).where(eq(schema.settings.key, key)).limit(1);
             if (exists.length > 0) {
               await db.update(schema.settings).set({ value: String(value) }).where(eq(schema.settings.key, key));
@@ -2779,7 +2782,7 @@ export async function startMobileManagerServer() {
 
   server.listen(port, '0.0.0.0', () => {
     const urls = getLocalNetworkUrls(port);
-    console.log(`Mobile manager dashboard is available on: ${urls.join(', ') || `https://localhost:${port}`}`);
+    console.log(`Mobile manager dashboard is available on: ${urls.join(', ') || `http://localhost:${port}`}`);
   });
 }
 

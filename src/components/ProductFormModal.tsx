@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLanguageStore } from '../store/languageStore';
 import { useAuthStore } from '../store/authStore';
 import { translations } from '../utils/translations';
-import { AlertCircle, Sparkles } from 'lucide-react';
+import { AlertCircle, Package } from 'lucide-react';
 import { InputRecoveryButton } from './InputRecoveryButton';
 
 interface ProductFormModalProps {
@@ -149,11 +149,13 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
   return (
     <div className="fixed inset-0 glass z-[100] flex items-center justify-center p-4" dir={dir}>
-      <div id="product-form-modal" className="glass-card rounded-2xl border border-white/10 shadow-glass w-full max-w-lg flex flex-col overflow-hidden animate-fade-in">
+      <div id="product-form-modal" className="bg-[#fbfcfe] rounded-2xl border border-[#e3e9f1] shadow-[0_24px_60px_rgba(15,23,42,0.12)] w-full max-w-lg flex flex-col overflow-hidden animate-fade-in">
         {/* Header */}
-        <div className="p-4 border-b border-white/8 flex justify-between items-center bg-white/3">
-          <h3 className="font-black text-slate-100 text-sm flex items-center gap-1.5">
-            <Sparkles size={16} className="text-cyan-200" />
+        <div className="p-4 px-5 py-4 border-b border-[#e3e9f1] flex justify-between items-center bg-[#f4f7fb]">
+          <h3 className="font-extrabold text-[#18212f] text-sm flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+              <Package size={16} />
+            </span>
             <span>{isEditMode ? t.editProduct : t.addProduct}</span>
           </h3>
           <div className="flex items-center gap-2">
@@ -165,7 +167,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
             <button 
               type="button"
               onClick={onClose}
-              className="text-slate-300/70 hover:text-white"
+              className="h-8 w-8 flex items-center justify-center rounded-lg text-[#94a3b8] hover:bg-[#eef2f7] hover:text-[#18212f] transition-colors"
             >
               ✕
             </button>
@@ -174,7 +176,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
         {/* Error alerts */}
         {errorMsg && (
-          <div className="mx-5 mt-4 bg-rose-500/10 border border-rose-400/20 text-rose-200 text-xs py-2.5 px-3 rounded-2xl flex items-center gap-2">
+          <div className="mx-5 mt-4 bg-rose-50 border border-rose-200 text-rose-700 text-xs py-2.5 px-3 rounded-lg flex items-center gap-2">
             <AlertCircle size={12} className="shrink-0" />
             <span>{errorMsg}</span>
           </div>
@@ -186,23 +188,23 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           {/* Row 1: Barcode & SKU */}
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold text-slate-400">{t.barcode} (GTIN)</label>
+              <label className="text-xs font-bold text-[#64748b]">{t.barcode} (GTIN)</label>
               <input
                 type="text"
                 autoFocus
                 value={barcode}
                 onChange={(e) => setBarcode(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 text-slate-200 px-3 py-2 rounded-lg text-xs focus:border-teal-500"
+                className="w-full rounded-xl border border-[#e3e9f1] bg-[#fbfcfe] text-[#18212f] px-3 py-2 text-xs outline-none transition-all focus:border-[#2563eb] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)]"
                 placeholder="e.g. 6281000..."
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold text-slate-400">{t.sku} / الرمز</label>
+              <label className="text-xs font-bold text-[#64748b]">{t.sku} / الرمز</label>
               <input
                 type="text"
                 value={sku}
                 onChange={(e) => setSku(e.target.value)}
-                className="bg-slate-900 border border-slate-700 text-slate-200 px-3 py-2 rounded-lg text-xs focus:border-teal-500 font-mono"
+                className="rounded-xl border border-[#e3e9f1] bg-[#fbfcfe] text-[#18212f] px-3 py-2 text-xs font-mono outline-none transition-all focus:border-[#2563eb] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)]"
                 placeholder="PRD-001"
               />
             </div>
@@ -210,54 +212,54 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
           {/* Row 2: Name Arabic */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[11px] font-semibold text-slate-400">{t.productName} (بالعربية)</label>
+            <label className="text-xs font-bold text-[#64748b]">{t.productName} (بالعربية)</label>
             <input
               type="text"
               value={nameAr}
               onChange={(e) => setNameAr(e.target.value)}
-              className="bg-slate-900 border border-slate-700 text-slate-200 px-3 py-2 rounded-lg text-xs focus:border-teal-500"
+              className="rounded-xl border border-[#e3e9f1] bg-[#fbfcfe] text-[#18212f] px-3 py-2 text-xs outline-none transition-all focus:border-[#2563eb] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)]"
             />
           </div>
 
           {/* Row 3: Name English */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[11px] font-semibold text-slate-400">Product Name (English)</label>
+            <label className="text-xs font-bold text-[#64748b]">Product Name (English)</label>
             <input
               type="text"
               value={nameEn}
               onChange={(e) => setNameEn(e.target.value)}
-              className="bg-slate-900 border border-slate-700 text-slate-200 px-3 py-2 rounded-lg text-xs focus:border-teal-500"
+              className="rounded-xl border border-[#e3e9f1] bg-[#fbfcfe] text-[#18212f] px-3 py-2 text-xs outline-none transition-all focus:border-[#2563eb] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)]"
             />
           </div>
 
           {/* Row 3b: Name Kurdish */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[11px] font-semibold text-slate-400">
+            <label className="text-xs font-bold text-[#64748b]">
               {language === 'ar' ? 'اسم المنتج (بالكردية)' : language === 'ku' ? 'ناوی کاڵا (بەکوردی)' : 'Product Name (Kurdish)'}
             </label>
             <input
               type="text"
               value={nameKu}
               onChange={(e) => setNameKu(e.target.value)}
-              className="bg-slate-900 border border-slate-700 text-slate-200 px-3 py-2 rounded-lg text-xs focus:border-teal-500"
+              className="rounded-xl border border-[#e3e9f1] bg-[#fbfcfe] text-[#18212f] px-3 py-2 text-xs outline-none transition-all focus:border-[#2563eb] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)]"
             />
           </div>
 
           {/* Row 4: Category & Card Color */}
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold text-slate-400">{t.category}</label>
+              <label className="text-xs font-bold text-[#64748b]">{t.category}</label>
               <input
                 type="text"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="bg-slate-900 border border-slate-700 text-slate-200 px-3 py-2 rounded-lg text-xs focus:border-teal-500 w-full"
+                className="rounded-xl border border-[#e3e9f1] bg-[#fbfcfe] text-[#18212f] px-3 py-2 text-xs outline-none transition-all focus:border-[#2563eb] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] w-full"
                 placeholder="e.g. Dairy / ألبان"
                 required
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold text-slate-400">
+              <label className="text-xs font-bold text-[#64748b]">
                 {language === 'ar' ? 'لون مربع المنتج' : 'Product Card Color'}
               </label>
               <div className="flex gap-2 items-center">
@@ -265,14 +267,14 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   type="color"
                   value={color || '#ec4899'}
                   onChange={(e) => setColor(e.target.value)}
-                  className="bg-slate-900 border border-slate-700 h-8 w-12 rounded-lg cursor-pointer p-0.5"
+                  className="border border-[#e3e9f1] bg-[#fbfcfe] h-8 w-12 rounded-lg cursor-pointer p-0.5"
                 />
                 <input
                   type="text"
                   value={color || ''}
                   onChange={(e) => setColor(e.target.value)}
                   placeholder="#ec4899"
-                  className="bg-slate-900 border border-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs focus:border-teal-500 font-mono w-full"
+                  className="rounded-xl border border-[#e3e9f1] bg-[#fbfcfe] text-[#18212f] px-3 py-1.5 text-xs font-mono outline-none transition-all focus:border-[#2563eb] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] w-full"
                 />
               </div>
             </div>
@@ -280,23 +282,23 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
           {/* Row 4.5: Product Image */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[11px] font-semibold text-slate-400">
+            <label className="text-xs font-bold text-[#64748b]">
               {language === 'ar' ? 'صورة المنتج' : 'Product Image'}
             </label>
-            <div className="flex gap-4 items-center bg-slate-900/40 p-3 rounded-lg border border-slate-700">
+            <div className="flex gap-4 items-center bg-[#f4f7fb] p-3 rounded-xl border border-[#e3e9f1]">
               {/* Image Preview / Placeholder */}
-              <div className="w-16 h-16 rounded-xl border border-slate-700 bg-slate-950 flex items-center justify-center overflow-hidden shrink-0">
+              <div className="w-16 h-16 rounded-xl border border-[#e3e9f1] bg-[#fbfcfe] flex items-center justify-center overflow-hidden shrink-0">
                 {image ? (
                   <img src={image} alt="Preview" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-[10px] text-slate-600 font-bold uppercase">No Image</span>
+                  <span className="text-[10px] text-[#94a3b8] font-bold uppercase">No Image</span>
                 )}
               </div>
               
               {/* File Selector & Delete buttons */}
               <div className="flex flex-col gap-2 w-full">
                 <div className="flex gap-2">
-                  <label className="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-bold text-center cursor-pointer transition-all active:scale-[0.98]">
+                  <label className="flex-1 bg-[#fbfcfe] hover:bg-[#eff6ff] border border-[#e3e9f1] hover:border-[#bfdbfe] text-[#64748b] hover:text-[#2563eb] px-3 py-1.5 rounded-xl text-xs font-bold text-center cursor-pointer transition-all active:translate-y-px">
                     <span>{language === 'ar' ? 'اختر صورة' : 'Choose Image'}</span>
                     <input
                       type="file"
@@ -323,13 +325,13 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setImage(null)}
-                      className="bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-300 px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-[0.98]"
+                      className="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-[#dc2626] px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:translate-y-px"
                     >
                       {language === 'ar' ? 'حذف' : 'Remove'}
                     </button>
                   )}
                 </div>
-                <span className="text-[10px] text-slate-500">
+                <span className="text-[10px] text-[#94a3b8]">
                   {language === 'ar' ? 'أقصى حجم: 1.5 ميجابايت. يُفضل صور بنسب متساوية (مربّعة).' : 'Max size: 1.5MB. Square aspect ratio recommended.'}
                 </span>
               </div>
@@ -337,27 +339,27 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           </div>
 
           {/* Row 5: Pricing (Cost & Selling Price) */}
-          <div className="grid grid-cols-2 gap-4 bg-slate-900/40 p-3 rounded-lg border border-slate-700">
+          <div className="grid grid-cols-2 gap-4 bg-[#f4f7fb] p-3 rounded-xl border border-[#e3e9f1]">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold text-slate-400">{t.cost} (Cost Price)</label>
+              <label className="text-xs font-bold text-[#64748b]">{t.cost} (Cost Price)</label>
               <input
                 type="number"
                 step="any"
                 value={cost || ''}
                 onChange={(e) => setCost(Number(e.target.value))}
-                className="bg-slate-800 border border-slate-700 text-amber-400 px-3 py-2 rounded-lg text-xs focus:border-teal-500 font-mono font-bold"
+                className="rounded-xl border border-[#e3e9f1] bg-[#fbfcfe] text-[#b45309] px-3 py-2 text-xs outline-none transition-all focus:border-[#2563eb] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] font-mono font-bold"
                 required
                 placeholder="0"
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold text-slate-400">{t.priceWithTax} (Selling Price)</label>
+              <label className="text-xs font-bold text-[#64748b]">{t.priceWithTax} (Selling Price)</label>
               <input
                 type="number"
                 step="any"
                 value={price || ''}
                 onChange={(e) => setPrice(Number(e.target.value))}
-                className="bg-slate-800 border border-slate-700 text-teal-400 px-3 py-2 rounded-lg text-xs focus:border-teal-500 font-mono font-bold"
+                className="rounded-xl border border-[#e3e9f1] bg-[#fbfcfe] text-[#2563eb] px-3 py-2 text-xs outline-none transition-all focus:border-[#2563eb] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] font-mono font-bold"
                 required
                 placeholder="0"
               />
@@ -365,27 +367,27 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           </div>
 
           {/* Row 6: Stock & Min Stock Alert */}
-          <div className="grid grid-cols-2 gap-4 bg-slate-900/40 p-3 rounded-lg border border-slate-700">
+          <div className="grid grid-cols-2 gap-4 bg-[#f4f7fb] p-3 rounded-xl border border-[#e3e9f1]">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold text-slate-400">{t.stockCount} (Stock Qty)</label>
+              <label className="text-xs font-bold text-[#64748b]">{t.stockCount} (Stock Qty)</label>
               <input
                 type="number"
                 step="any"
                 value={stock || ''}
                 onChange={(e) => setStock(Number(e.target.value))}
-                className="bg-slate-800 border border-slate-700 text-slate-200 px-3 py-2 rounded-lg text-xs focus:border-teal-500 font-mono"
+                className="rounded-xl border border-[#e3e9f1] bg-[#fbfcfe] text-[#18212f] px-3 py-2 text-xs outline-none transition-all focus:border-[#2563eb] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] font-mono"
                 required
                 placeholder="0"
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold text-slate-400">{t.stockMin} (Min Stock Alert)</label>
+              <label className="text-xs font-bold text-[#64748b]">{t.stockMin} (Min Stock Alert)</label>
               <input
                 type="number"
                 step="any"
                 value={minStock || ''}
                 onChange={(e) => setMinStock(Number(e.target.value))}
-                className="bg-slate-800 border border-slate-700 text-slate-200 px-3 py-2 rounded-lg text-xs focus:border-teal-500 font-mono"
+                className="rounded-xl border border-[#e3e9f1] bg-[#fbfcfe] text-[#18212f] px-3 py-2 text-xs outline-none transition-all focus:border-[#2563eb] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] font-mono"
                 required
                 placeholder="0"
               />
@@ -393,18 +395,18 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           </div>
 
           {/* Form Actions */}
-          <div className="flex gap-3 pt-3 border-t border-slate-700 mt-4">
+          <div className="flex gap-3 -mx-5 -mb-5 mt-4 px-5 py-4 border-t border-[#e3e9f1] bg-[#f4f7fb]">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-400 py-2.5 rounded-lg text-xs font-bold transition-all"
+              className="flex-1 bg-[#fbfcfe] hover:bg-[#eff6ff] border border-[#e3e9f1] hover:border-[#bfdbfe] text-[#64748b] hover:text-[#2563eb] py-2.5 rounded-xl text-xs font-bold transition-all"
             >
               {t.cancel}
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all shadow-lg ${isSubmitting ? 'bg-teal-400/50 cursor-not-allowed text-white/70' : 'bg-primary text-primary-foreground hover:bg-teal-400 hover-scale glow-teal'}`}
+              className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all active:translate-y-px ${isSubmitting ? 'bg-[#cbd5e1] cursor-not-allowed text-white' : 'bg-[#2563eb] hover:bg-[#1d4ed8] text-white'}`}
             >
               {isSubmitting ? (language === 'ar' ? 'جاري الحفظ...' : 'Saving...') : t.save}
             </button>

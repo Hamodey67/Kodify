@@ -79,22 +79,25 @@ export const PriceEditModal: React.FC<PriceEditModalProps> = ({
 
   return (
     <div className="fixed inset-0 glass z-[100] flex items-center justify-center p-4" dir={dir}>
-      <div className="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
-        <div className="p-4 border-b border-slate-700 flex items-center justify-between">
-          <h3 className="text-sm font-extrabold text-slate-200">{t.editItemPrice}</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-white">✕</button>
+      <div className="bg-[#fbfcfe] rounded-2xl border border-[#e3e9f1] shadow-[0_24px_60px_rgba(15,23,42,0.12)] w-full max-w-md overflow-hidden animate-fade-in">
+        <div className="px-5 py-4 border-b border-[#e3e9f1] bg-[#f4f7fb] flex items-center justify-between">
+          <h3 className="text-sm font-extrabold text-[#18212f] flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 text-base">$</span>
+            <span>{t.editItemPrice}</span>
+          </h3>
+          <button onClick={onClose} className="h-8 w-8 flex items-center justify-center rounded-lg text-[#94a3b8] hover:bg-[#eef2f7] hover:text-[#18212f] transition-colors">✕</button>
         </div>
 
-        <div className="p-4 space-y-4">
-          <div className={`bg-slate-900/60 border border-slate-700 rounded-xl p-3 ${dir === 'rtl' ? 'text-right' : 'text-left'}`}>
-            <p className="text-xs text-slate-500 mb-1">{t.item}</p>
-            <p className="text-sm font-bold text-slate-200">{itemName}</p>
-            <p className="text-xs text-slate-400 mt-1">{t.currentPrice}: {Math.round(currentPrice).toLocaleString()}</p>
+        <div className="p-5 space-y-4">
+          <div className={`bg-[#f4f7fb] border border-[#e3e9f1] rounded-xl p-3 ${dir === 'rtl' ? 'text-right' : 'text-left'}`}>
+            <p className="text-xs font-bold text-[#94a3b8] mb-1">{t.item}</p>
+            <p className="text-sm font-bold text-[#18212f]">{itemName}</p>
+            <p className="text-xs text-[#64748b] mt-1">{t.currentPrice}: {Math.round(currentPrice).toLocaleString()}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-xs text-slate-400">{t.discountPercentage}</label>
+              <label className="text-xs font-bold text-[#64748b]">{t.discountPercentage}</label>
               <div className="relative flex items-center">
                 <input
                   type="number"
@@ -103,34 +106,34 @@ export const PriceEditModal: React.FC<PriceEditModalProps> = ({
                   step="any"
                   value={discountPercent}
                   onChange={(e) => handleDiscountPercentChange(e.target.value)}
-                  className={`w-full bg-slate-900 border border-slate-700 text-slate-200 py-2 rounded-xl text-sm outline-none focus:border-teal-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${dir === 'rtl' ? 'pl-8 pr-3' : 'pr-8 pl-3'}`}
+                  className={`w-full rounded-xl border border-[#e3e9f1] bg-[#fbfcfe] text-[#18212f] py-2 text-sm outline-none transition-all focus:border-[#2563eb] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${dir === 'rtl' ? 'pl-8 pr-3' : 'pr-8 pl-3'}`}
                   placeholder="0"
                 />
-                <span className={`absolute text-slate-500 font-bold text-xs pointer-events-none ${dir === 'rtl' ? 'left-3' : 'right-3'}`}>
+                <span className={`absolute text-[#94a3b8] font-bold text-xs pointer-events-none ${dir === 'rtl' ? 'left-3' : 'right-3'}`}>
                   %
                 </span>
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs text-slate-400">{t.newPrice}</label>
+              <label className="text-xs font-bold text-[#64748b]">{t.newPrice}</label>
               <input
                 type="number"
                 min={0}
                 step="any"
                 value={newPrice}
                 onChange={(e) => handleNewPriceChange(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 text-slate-200 px-3 py-2 rounded-xl text-sm outline-none focus:border-teal-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="w-full rounded-xl border border-[#e3e9f1] bg-[#fbfcfe] text-[#18212f] px-3 py-2 text-sm outline-none transition-all focus:border-[#2563eb] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs text-slate-400">{t.reasonForEdit}</label>
+            <label className="text-xs font-bold text-[#64748b]">{t.reasonForEdit}</label>
             <select
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 text-slate-200 px-3 py-2 rounded-xl text-sm outline-none focus:border-teal-500"
+              className="w-full rounded-xl border border-[#e3e9f1] bg-[#fbfcfe] text-[#18212f] px-3 py-2 text-sm outline-none transition-all focus:border-[#2563eb] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)]"
             >
               <option value="">{t.chooseReason}</option>
               {REASONS.map((val) => (
@@ -139,18 +142,18 @@ export const PriceEditModal: React.FC<PriceEditModalProps> = ({
             </select>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 -mx-5 -mb-5 mt-2 px-5 py-4 border-t border-[#e3e9f1] bg-[#f4f7fb]">
             <button
               onClick={onClose}
               disabled={isSaving}
-              className="flex-1 bg-slate-900 border border-slate-700 text-slate-400 hover:text-white py-2.5 rounded-xl text-xs font-bold transition-all disabled:opacity-50"
+              className="flex-1 bg-[#fbfcfe] border border-[#e3e9f1] hover:border-[#bfdbfe] hover:bg-[#eff6ff] text-[#64748b] hover:text-[#2563eb] py-2.5 rounded-xl text-xs font-bold transition-all disabled:opacity-50"
             >
               {t.cancel}
             </button>
             <button
               onClick={save}
               disabled={isSaving}
-              className="flex-1 bg-primary text-primary-foreground hover:bg-teal-400 py-2.5 rounded-xl text-xs font-bold transition-all disabled:opacity-50"
+              className="flex-1 bg-[#2563eb] text-white hover:bg-[#1d4ed8] py-2.5 rounded-xl text-xs font-bold transition-all active:translate-y-px disabled:bg-[#cbd5e1] disabled:opacity-100"
             >
               {isSaving ? t.saving : t.save}
             </button>

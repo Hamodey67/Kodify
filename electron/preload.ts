@@ -49,6 +49,8 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.invoke('db:get-sale-items', saleId),
   refundSale: (saleId: number) =>
     ipcRenderer.invoke('db:refund-sale', saleId),
+  returnSaleItem: (saleId: number, saleItemId: number, quantityToReturn: number) =>
+    ipcRenderer.invoke('db:return-sale-item', saleId, saleItemId, quantityToReturn),
   getSalesSummary: (startDate: string, endDate: string) =>
     ipcRenderer.invoke('db:sales-summary', startDate, endDate),
   logPriceOverride: (payload: {
@@ -134,4 +136,21 @@ contextBridge.exposeInMainWorld('api', {
   },
   restartAppForUpdate: () => ipcRenderer.send('auto-updater:restart'),
   checkForUpdates: () => ipcRenderer.send('auto-updater:check'),
+
+  // Supabase Online Orders
+  getOnlineOrders: () => ipcRenderer.invoke('supabase:get-orders'),
+  updateOnlineOrderStatus: (orderId: string, status: string) =>
+    ipcRenderer.invoke('supabase:update-order-status', orderId, status),
+  testSupabaseConnection: (url?: string, key?: string) =>
+    ipcRenderer.invoke('supabase:test-connection', url, key),
+  onNewOnlineOrder: (callback: (order: any) => void) => {
+    const listener = (_event: any, order: any) => callback(order);
+    ipcRenderer.on('supabase:new-order-received', listener);
+    return () => ipcRenderer.removeListener('supabase:new-order-received', listener);
+  },
+  onOnlineOrderStatusChanged: (callback: (data: { orderId: string; status: string }) => void) => {
+    const listener = (_event: any, data: { orderId: string; status: string }) => callback(data);
+    ipcRenderer.on('supabase:order-status-changed', listener);
+    return () => ipcRenderer.removeListener('supabase:order-status-changed', listener);
+  },
 });

@@ -8,7 +8,6 @@ import {
   Edit3, 
   Trash2, 
   AlertCircle, 
-  Sparkles,
   TrendingDown,
   Info,
   Camera
@@ -120,10 +119,10 @@ export const Inventory: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-pos-bg text-slate-300/70">
+      <div className="flex h-full w-full items-center justify-center bg-[#eef2f8] text-[#64748b]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-indigo-400 border-r-2 border-white/10 mx-auto mb-4"></div>
-          <p>{t.loading}</p>
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-[3px] border-[#e3e9f1] border-t-[#2563eb]" />
+          <p className="text-sm font-semibold">{t.loading}</p>
         </div>
       </div>
     );
@@ -135,7 +134,7 @@ export const Inventory: React.FC = () => {
   const totalExpectedProfit = totalRetailValue - totalCostValue;
 
   return (
-    <div className="flex h-full w-full bg-pos-bg overflow-hidden" dir={dir}>
+    <div className="flex h-full w-full bg-[#eef2f8] overflow-hidden" dir={dir}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -144,16 +143,16 @@ export const Inventory: React.FC = () => {
       >
         
         {/* Page Header */}
-        <div className="flex items-center justify-between border-b border-white/6 pb-4 shrink-0">
+        <div className="flex flex-col justify-between gap-4 shrink-0 sm:flex-row sm:items-center">
           <div>
-            <h1 className="text-2xl font-black gradient-text">{t.inventory}</h1>
-            <p className="text-sm text-slate-300/70 mt-1">
+            <h1 className="text-2xl font-extrabold tracking-tight text-[#18212f]">{t.inventory}</h1>
+            <p className="mt-1 text-xs font-medium text-[#64748b]">
               {language === 'ar' ? 'إدارة وتعديل المنتجات ومستويات المخازن' : 'Manage retail product catalog and stock levels'}
             </p>
           </div>
           <button
             onClick={handleOpenAdd}
-            className="px-5 py-3 rounded-2xl text-xs font-extrabold text-white border border-white/10 btn-primary btn-shimmer inline-flex items-center gap-2 active:scale-[0.98]"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#2563eb] px-5 py-3 text-xs font-bold text-white shadow-[0_8px_20px_rgba(37,99,235,0.24)] transition-all duration-150 hover:bg-[#1d4ed8] active:translate-y-px"
           >
             <Plus size={14} />
             <span>{t.addProduct}</span>
@@ -161,7 +160,7 @@ export const Inventory: React.FC = () => {
         </div>
 
       {/* Search & Category Filter bar */}
-      <div className="flex flex-col sm:flex-row gap-4 glass-card p-4 rounded-2xl border border-white/8 shrink-0 shadow-glass">
+      <div className="flex flex-col gap-4 rounded-2xl border border-[#e3e9f1] bg-[#fbfcfe] p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] shrink-0 sm:flex-row">
         {/* Search */}
         <div className="relative flex-1">
           <input
@@ -169,10 +168,9 @@ export const Inventory: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t.search}
-            style={{ backgroundColor: '#1e293b', color: '#f1f5f9' }}
-            className="w-full bg-slate-800/90 border border-white/8 focus:border-indigo-400/35 text-slate-100 pl-11 pr-4 py-3 rounded-2xl text-sm transition-all outline-none focus:ring-1 focus:ring-indigo-500/20"
+            className={`w-full rounded-xl border border-[#e3e9f1] bg-[#fbfcfe] py-3 text-sm font-medium text-[#18212f] outline-none transition-all duration-150 placeholder:font-normal placeholder:text-[#94a3b8] focus:border-[#2563eb] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] ${dir === 'rtl' ? 'pr-11 pl-4' : 'pl-11 pr-4'}`}
           />
-          <Search size={16} className={`absolute top-1/2 -translate-y-1/2 text-slate-300/70 ${dir === 'rtl' ? 'left-4' : 'right-4'}`} />
+          <Search size={16} className={`absolute top-1/2 -translate-y-1/2 text-[#94a3b8] ${dir === 'rtl' ? 'left-4' : 'right-4'}`} />
         </div>
 
         {/* Category Selector */}
@@ -180,27 +178,26 @@ export const Inventory: React.FC = () => {
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            style={{ backgroundColor: '#1e293b', color: '#f1f5f9' }}
-            className="w-full bg-slate-800/90 border border-white/8 text-slate-100 px-4 py-3 rounded-2xl text-sm focus:border-indigo-400/35 outline-none focus:ring-1 focus:ring-indigo-500/20 cursor-pointer"
+            className="w-full cursor-pointer rounded-xl border border-[#e3e9f1] bg-[#fbfcfe] px-4 py-3 text-sm font-medium text-[#18212f] outline-none transition-all duration-150 focus:border-[#2563eb] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)]"
           >
-            <option value="All" className="bg-slate-900 text-slate-100">{t.allCategories}</option>
+            <option value="All">{t.allCategories}</option>
             {categories.filter(c => c !== 'All').map(cat => (
-              <option key={cat} value={cat} className="bg-slate-900 text-slate-100">{cat}</option>
+              <option key={cat} value={cat}>{cat}</option>
             ))}
           </select>
         </div>
       </div>
 
       {/* Products Table */}
-      <div className="glass-card rounded-2xl border border-white/8 overflow-hidden shadow-glass">
+      <div className="overflow-hidden rounded-2xl border border-[#e3e9f1] bg-[#fbfcfe] shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
         <div className="overflow-x-auto custom-scrollbar">
           {filteredProducts.length === 0 ? (
-            <div className="text-center py-16 text-slate-300/60 text-sm">
+            <div className="text-center py-16 text-[#94a3b8] text-sm font-semibold">
               {language === 'ar' ? 'لا توجد منتجات مسجلة في المخزن تطابق الفلترة' : 'No items match your criteria.'}
             </div>
           ) : (
-            <table className="w-full text-sm text-slate-200/90 select-text">
-              <thead className="bg-white/3 border-b border-white/8 text-slate-300/70 font-extrabold">
+            <table className="w-full text-sm text-[#334155] select-text">
+              <thead className="bg-[#f4f7fb] border-b border-[#e3e9f1] text-[#64748b] font-bold">
                 <tr>
                   <th className="p-3.5 text-center w-12">#</th>
                   <th className={`p-3.5 ${dir === 'rtl' ? 'text-right' : 'text-left'}`}>{t.productName}</th>
@@ -213,7 +210,7 @@ export const Inventory: React.FC = () => {
                   <th className="p-3.5 text-center">{t.actions}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/6">
+              <tbody className="divide-y divide-[#e8edf4]">
                 {filteredProducts.slice(0, 50).map((p, idx) => {
                   const profit = (p.price || 0) - (p.cost || 0);
                   
@@ -224,46 +221,46 @@ export const Inventory: React.FC = () => {
                         setSelectedProduct(p);
                         setIsStatsOpen(true);
                       }}
-                      className={`cursor-pointer hover:bg-white/3 transition-colors ${selectedProduct?.id === p.id ? 'bg-indigo-500/10 hover:bg-indigo-500/15 border-l-2 border-indigo-500' : (idx % 2 === 0 ? 'bg-white/[0.015]' : '')}`}
+                      className={`cursor-pointer hover:bg-[#f4f7fb] transition-colors ${selectedProduct?.id === p.id ? 'bg-[#eff6ff] hover:bg-[#eff6ff]' : ''}`}
                     >
-                      <td className="p-3.5 text-center text-slate-300/50 font-mono">{idx + 1}</td>
+                      <td className="p-3.5 text-center text-[#94a3b8] font-mono">{idx + 1}</td>
                       <td className={`p-3.5 ${dir === 'rtl' ? 'text-right' : 'text-left'}`}>
                         <div className="flex items-center gap-3">
                           {p.image ? (
-                            <img src={p.image} className="w-9 h-9 rounded-lg object-cover border border-white/10 shrink-0 shadow-sm" />
+                            <img src={p.image} className="w-9 h-9 rounded-lg object-cover border border-[#e3e9f1] shrink-0 shadow-sm" />
                           ) : (
-                            <div className="w-9 h-9 rounded-lg border border-dashed border-white/10 bg-white/3 flex items-center justify-center text-slate-500 shrink-0" style={{ borderTopColor: p.color || undefined, borderTopWidth: p.color ? '2px' : undefined }}>
+                            <div className="w-9 h-9 rounded-lg border border-dashed border-[#e3e9f1] bg-[#f4f7fb] flex items-center justify-center text-[#94a3b8] shrink-0" style={{ borderTopColor: p.color || undefined, borderTopWidth: p.color ? '2px' : undefined }}>
                               <Camera size={14} />
                             </div>
                           )}
                           <div className="flex flex-col">
-                            <span className="font-extrabold text-slate-100">
+                            <span className="font-bold text-[#18212f]">
                               {language === 'ar' ? p.nameAr : language === 'ku' ? (p.nameKu || p.nameAr) : p.nameEn}
                             </span>
-                            <span className="text-[11px] text-slate-300/50 mt-0.5">
+                            <span className="text-[11px] text-[#94a3b8] mt-0.5">
                               {language === 'ar' ? p.nameEn : p.nameAr}
                             </span>
                           </div>
                         </div>
                       </td>
-                      <td className="p-3.5 text-center font-mono text-slate-300/70">{p.barcode || '-'}</td>
+                      <td className="p-3.5 text-center font-mono text-[#64748b]">{p.barcode || '-'}</td>
                       <td className="p-3.5 text-center">
-                        <span className="bg-white/3 border border-white/8 px-2.5 py-1 rounded-full text-[11px] text-slate-100/80 font-bold">
+                        <span className="bg-[#f4f7fb] border border-[#e3e9f1] px-2.5 py-1 rounded-md text-[11px] text-[#334155] font-bold">
                           {p.category}
                         </span>
                       </td>
                       <td className="p-3.5 text-center">
-                        <span className={`font-mono font-bold px-2.5 py-1 rounded-full text-[11px] ${p.stock <= p.minStock ? 'bg-rose-500/15 text-rose-400 border border-rose-500/20' : 'bg-slate-800/80 text-slate-200 border border-white/6'}`}>
+                        <span className={`font-mono font-bold px-2.5 py-1 rounded-full text-[11px] ring-1 ${p.stock <= p.minStock ? 'bg-rose-50 text-rose-600 ring-rose-200' : 'bg-[#f4f7fb] text-[#334155] ring-[#e3e9f1]'}`}>
                           {p.stock}
                         </span>
                       </td>
-                      <td className="p-3.5 text-center font-mono font-bold text-amber-200">
+                      <td className="p-3.5 text-center font-mono font-bold text-amber-600">
                         {Math.round(p.cost || 0).toLocaleString()}
                       </td>
-                      <td className="p-3.5 text-center font-mono font-bold text-teal-200">
+                      <td className="p-3.5 text-center font-mono font-bold text-[#2563eb]">
                         {Math.round(p.price || 0).toLocaleString()}
                       </td>
-                      <td className={`p-3.5 text-center font-mono font-black ${profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      <td className={`p-3.5 text-center font-mono font-black ${profit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                         {Math.round(profit).toLocaleString()}
                       </td>
                       <td className="p-3.5 text-center shrink-0">
@@ -273,7 +270,7 @@ export const Inventory: React.FC = () => {
                               e.stopPropagation();
                               handleOpenEdit(p);
                             }}
-                            className="p-2 bg-white/3 border border-white/8 text-slate-100/70 hover:text-white rounded-xl hover:bg-white/6 transition-colors"
+                            className="p-2 bg-[#fbfcfe] border border-[#e3e9f1] text-[#64748b] rounded-lg hover:border-[#bfdbfe] hover:bg-[#eff6ff] hover:text-[#2563eb] transition-colors"
                           >
                             <Edit3 size={12} />
                           </button>
@@ -282,7 +279,7 @@ export const Inventory: React.FC = () => {
                               e.stopPropagation();
                               handleDelete(p.id);
                             }}
-                            className="p-2 bg-rose-500/10 border border-rose-400/20 text-rose-200/80 hover:text-rose-100 rounded-xl hover:bg-rose-500/15 transition-colors"
+                            className="p-2 bg-[#fbfcfe] border border-[#e3e9f1] text-[#64748b] rounded-lg hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 transition-colors"
                           >
                             <Trash2 size={12} />
                           </button>
@@ -295,7 +292,7 @@ export const Inventory: React.FC = () => {
             </table>
           )}
           {filteredProducts.length > 50 && (
-            <div className="text-center py-4 text-slate-400 text-sm font-medium">
+            <div className="text-center py-4 text-[#64748b] text-sm font-medium">
               {language === 'ar' ? `يتم عرض أول 50 نتيجة من أصل ${filteredProducts.length}. يرجى تحسين البحث لرؤية المزيد.` : `Showing top 50 results out of ${filteredProducts.length}. Please refine your search.`}
             </div>
           )}

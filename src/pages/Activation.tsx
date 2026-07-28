@@ -45,43 +45,45 @@ export const Activation: React.FC<ActivationProps> = ({ machineId, onActivated }
   };
 
   return (
-    <div className="h-screen w-screen flex items-center justify-center bg-slate-900 font-sans p-6 overflow-y-auto">
-      <div className="w-full max-w-lg glass-card border border-slate-700 rounded-2xl shadow-2xl p-8 flex flex-col gap-6 relative overflow-hidden">
-        {/* Background glow lines */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-1 bg-gradient-to-r from-blue-500 via-cyan-400 to-teal-400 blur-sm"></div>
+    <div className="flex h-screen w-screen items-center justify-center overflow-y-auto bg-[#eef2f8] p-6 font-sans">
+      <div className="relative flex w-full max-w-lg flex-col gap-6 overflow-hidden rounded-2xl border border-[#e3e9f1] bg-[#fbfcfe] p-8 shadow-[0_24px_60px_rgba(15,23,42,0.12)]">
+        <div className="absolute inset-x-0 top-0 h-1.5 bg-[linear-gradient(155deg,#0b2455_0%,#12408f_55%,#1d4ed8_100%)]" />
 
-        {/* Brand Header */}
         <div className="flex flex-col items-center gap-3 text-center">
-          <Logo size={55} className="glow-teal-strong shadow-lg rounded-2xl" />
-          <h1 className="text-2xl font-black tracking-wider text-slate-100 mt-2">نظام كوديفاي | Kodify System</h1>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-[10px] text-amber-400 font-bold uppercase tracking-wider">
+          <div className="flex h-16 w-16 items-center justify-center rounded-xl border border-[#e3e9f1] bg-[#f4f7fb]">
+            <Logo size={40} />
+          </div>
+          <h1 className="mt-1 text-2xl font-black tracking-tight text-[#18212f]">
+            نظام كوديفاي | Kodify System
+          </h1>
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-[#fffbeb] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#b45309] ring-1 ring-amber-200">
             <ShieldAlert size={12} />
             <span>تفعيل رخصة التشغيل | System Activation Required</span>
           </div>
         </div>
 
-        <p className="text-slate-400 text-xs text-center leading-relaxed max-w-md mx-auto">
-          مرحباً بك! هذا النظام محمي بموجب حقوق الملكية ويجب تفعيله للعمل على هذا الجهاز تحديداً. يرجى نسخ "معرف الجهاز" أدناه وإرساله للموزع المعتمد للحصول على مفتاح التفعيل.
+        <p className="mx-auto max-w-md text-center text-xs leading-relaxed text-[#64748b]">
+          مرحباً بك! هذا النظام محمي بموجب حقوق الملكية ويجب تفعيله للعمل على هذا الجهاز تحديداً. يرجى نسخ
+          &quot;معرف الجهاز&quot; أدناه وإرساله للموزع المعتمد للحصول على مفتاح التفعيل.
         </p>
 
-        {/* Machine ID Display Box */}
-        <div className="bg-slate-800/60 border border-slate-700 p-4 rounded-xl flex flex-col gap-2 relative">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+        <div className="relative flex flex-col gap-2 rounded-xl border border-[#e3e9f1] bg-[#f4f7fb] p-4">
+          <span className="text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">
             معرّف الجهاز الفريد | Unique Machine ID
           </span>
           <div className="flex items-center justify-between gap-3">
-            <span className="text-lg font-black font-mono text-teal-400 tracking-widest uppercase select-all">
+            <span className="select-all font-mono text-lg font-black uppercase tracking-widest text-[#2563eb]">
               {machineId}
             </span>
             <button
               type="button"
               onClick={handleCopy}
-              className="p-2 bg-slate-900 border border-slate-700 hover:border-teal-500/40 text-slate-400 hover:text-teal-400 rounded-lg transition-all duration-200 shrink-0 flex items-center gap-1.5 active:scale-95 text-xs font-bold"
+              className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[#e3e9f1] bg-[#fbfcfe] p-2 text-xs font-bold text-[#64748b] transition-colors hover:border-[#bfdbfe] hover:bg-[#eff6ff] hover:text-[#2563eb] active:translate-y-px"
             >
               {copied ? (
                 <>
-                  <Check size={14} className="text-emerald-400" />
-                  <span className="text-emerald-400 text-[10px]">تم النسخ!</span>
+                  <Check size={14} className="text-emerald-500" />
+                  <span className="text-[10px] text-[#047857]">تم النسخ!</span>
                 </>
               ) : (
                 <>
@@ -93,14 +95,13 @@ export const Activation: React.FC<ActivationProps> = ({ machineId, onActivated }
           </div>
         </div>
 
-        {/* Activation Input Form */}
         <form onSubmit={handleActivate} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+            <label className="text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">
               أدخل مفتاح التفعيل | Enter Activation Key
             </label>
             <div className="relative">
-              <KeyRound className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+              <KeyRound className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#94a3b8]" size={16} />
               <input
                 type="text"
                 required
@@ -108,20 +109,20 @@ export const Activation: React.FC<ActivationProps> = ({ machineId, onActivated }
                 placeholder="ACT-XXXX-XXXX-XXXX-XXXX"
                 value={activationKey}
                 onChange={(e) => setActivationKey(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 focus:border-teal-500 rounded-xl py-3.5 pr-11 pl-4 text-center font-mono font-bold text-slate-200 tracking-wider placeholder-slate-600 focus:outline-none transition-all duration-200"
+                className="w-full rounded-xl border border-[#e3e9f1] bg-[#fbfcfe] py-3.5 pl-4 pr-11 text-center font-mono font-bold tracking-wider text-[#18212f] transition-all placeholder:text-[#94a3b8] focus:border-[#2563eb] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] focus:outline-none"
               />
             </div>
           </div>
 
           {error && (
-            <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs px-4 py-3 rounded-xl flex items-start gap-2.5">
-              <ShieldAlert className="shrink-0 mt-0.5" size={16} />
+            <div className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-[#fff1f2] px-4 py-3 text-xs text-[#dc2626]">
+              <ShieldAlert className="mt-0.5 shrink-0" size={16} />
               <span className="font-semibold leading-relaxed">{error}</span>
             </div>
           )}
 
           {success && (
-            <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs px-4 py-3 rounded-xl flex items-center gap-2.5">
+            <div className="flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-[#ecfdf5] px-4 py-3 text-xs text-[#047857]">
               <Check className="shrink-0" size={16} />
               <span className="font-semibold">تم التفعيل بنجاح! جاري تشغيل النظام...</span>
             </div>
@@ -130,10 +131,10 @@ export const Activation: React.FC<ActivationProps> = ({ machineId, onActivated }
           <button
             type="submit"
             disabled={isSubmitting || success || !activationKey.trim()}
-            className="w-full bg-primary hover:bg-primary/95 disabled:bg-slate-800 disabled:text-slate-600 disabled:border-slate-700 text-primary-foreground font-black text-sm py-4 rounded-xl shadow-lg hover:shadow-primary/10 transition-all duration-200 flex items-center justify-center gap-2.5 glow-teal border border-teal-500/20 active:scale-[0.98] cursor-pointer"
+            className="flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-xl bg-[#2563eb] py-3.5 text-sm font-black text-white shadow-[0_8px_20px_rgba(37,99,235,0.24)] transition-all hover:bg-[#1d4ed8] active:translate-y-px disabled:cursor-not-allowed disabled:bg-[#cbd5e1] disabled:text-white disabled:shadow-none"
           >
             {isSubmitting ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-primary-foreground border-r-2 border-slate-500"></div>
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/25 border-t-white" />
             ) : (
               <>
                 <Power size={16} />
@@ -143,10 +144,9 @@ export const Activation: React.FC<ActivationProps> = ({ machineId, onActivated }
           </button>
         </form>
 
-        {/* Footer Details */}
-        <div className="text-center text-[10px] text-slate-500 flex flex-col gap-0.5 mt-2 border-t border-slate-800 pt-4">
+        <div className="mt-1 flex flex-col gap-0.5 border-t border-[#e3e9f1] pt-4 text-center text-[10px] text-[#94a3b8]">
           <span>&copy; {new Date().getFullYear()} نظام كوديفاي لنقاط البيع. جميع الحقوق محفوظة.</span>
-          <span className="font-mono text-slate-600">Secure DRM Version 1.0.0</span>
+          <span className="font-mono text-[#94a3b8]">SECURE DRM · v1.0.0</span>
         </div>
       </div>
     </div>

@@ -8,39 +8,24 @@ interface ThemeState {
   toggleTheme: () => void;
 }
 
-const getInitialTheme = (): Theme => {
-  const saved = localStorage.getItem('theme');
-  if (saved === 'dark' || saved === 'light') return saved;
-  return 'dark'; // Default to premium dark theme
-};
+const getInitialTheme = (): Theme => 'light';
 
-const applyTheme = (theme: Theme) => {
+const applyTheme = (_theme: Theme) => {
   const html = document.documentElement;
-  if (theme === 'light') {
-    html.classList.add('light');
-    html.classList.remove('dark');
-  } else {
-    html.classList.add('dark');
-    html.classList.remove('light');
-  }
+  html.classList.add('light');
+  html.classList.remove('dark');
 };
 
-// Apply on load
 applyTheme(getInitialTheme());
 
 export const useThemeStore = create<ThemeState>((set) => ({
   theme: getInitialTheme(),
   setTheme: (theme) => {
-    localStorage.setItem('theme', theme);
     applyTheme(theme);
-    set({ theme });
+    set({ theme: 'light' });
   },
   toggleTheme: () => {
-    set((state) => {
-      const nextTheme = state.theme === 'dark' ? 'light' : 'dark';
-      localStorage.setItem('theme', nextTheme);
-      applyTheme(nextTheme);
-      return { theme: nextTheme };
-    });
+    applyTheme('light');
+    set({ theme: 'light' });
   },
 }));

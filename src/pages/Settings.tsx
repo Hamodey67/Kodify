@@ -6,7 +6,7 @@ import { translations } from '../utils/translations';
 import { 
   Building, 
   Printer, 
-  Sparkles,
+  Save,
   Smartphone,
   Wifi,
   Copy,
@@ -16,7 +16,8 @@ import {
   Square,
   Database,
   FolderOpen,
-  HardDriveDownload
+  HardDriveDownload,
+  Globe
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -45,6 +46,13 @@ export const Settings: React.FC = () => {
   const [backupStatus, setBackupStatus] = useState<any>(null);
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [backupMessage, setBackupMessage] = useState<string | null>(null);
+
+  // Supabase Online Store Configuration
+  const [supabaseEnabled, setSupabaseEnabled] = useState('true');
+  const [supabaseUrl, setSupabaseUrl] = useState('');
+  const [supabaseKey, setSupabaseKey] = useState('');
+  const [testingSupabase, setTestingSupabase] = useState(false);
+  const [supabaseTestResult, setSupabaseTestResult] = useState<{ success: boolean; message: string } | null>(null);
 
   const loadBackupStatus = async () => {
     if (!window.api?.getBackupStatus) return;
@@ -85,6 +93,10 @@ export const Settings: React.FC = () => {
       
       setTunnelEnabled(settings['mobile_tunnel_enabled'] || 'false');
       setTunnelPort(settings['mobile_manager_port'] || '8787');
+
+      setSupabaseEnabled(settings['supabase_enabled'] || 'true');
+      setSupabaseUrl(settings['supabase_url'] || 'https://zutqverlqobsrmodlqwq.supabase.co');
+      setSupabaseKey(settings['supabase_service_role_key'] || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1dHF2ZXJscW9ic3Jtb2RscXdxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NTAwNDM2MiwiZXhwIjoyMTAwNTgwMzYyfQ.w1Kq8xae0csl62hroWHD8BIXz4db9GLvRMSqGZu1NCM');
     }
   }, [settings]);
 
@@ -100,6 +112,9 @@ export const Settings: React.FC = () => {
       'hardware_printer_ip': printerConnection,
       'mobile_tunnel_enabled': tunnelEnabled,
       'mobile_manager_port': tunnelPort,
+      'supabase_enabled': supabaseEnabled,
+      'supabase_url': supabaseUrl,
+      'supabase_service_role_key': supabaseKey,
     };
 
     const success = await saveSettings(payload);
@@ -115,6 +130,21 @@ export const Settings: React.FC = () => {
       }
     } else {
       alert(t.error);
+    }
+  };
+
+  const handleTestSupabase = async () => {
+    setTestingSupabase(true);
+    setSupabaseTestResult(null);
+    try {
+      if (window.api && window.api.testSupabaseConnection) {
+        const res = await window.api.testSupabaseConnection(supabaseUrl, supabaseKey);
+        setSupabaseTestResult(res);
+      }
+    } catch (err: any) {
+      setSupabaseTestResult({ success: false, message: err?.message || 'تعذر الاتصال' });
+    } finally {
+      setTestingSupabase(false);
     }
   };
 
@@ -198,19 +228,25 @@ export const Settings: React.FC = () => {
     }
   };
 
+  const inputBase =
+    'w-full rounded-xl border border-[#e3e9f1] bg-[#fbfcfe] px-3 py-2.5 text-[#18212f] outline-none transition-all duration-150 placeholder:text-[#94a3b8] focus:border-[#2563eb] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)]';
+  const labelBase = 'font-bold text-[#334155]';
+  const cardBase = 'rounded-2xl border border-[#e3e9f1] bg-[#fbfcfe] p-6 shadow-[0_1px_2px_rgba(16,24,40,0.04)]';
+  const sectionHeading = 'mb-5 flex items-center gap-2 border-b border-[#e8edf4] pb-3 text-sm font-bold text-[#18212f]';
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-      className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-pos-bg space-y-6"
+      className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-[#eef2f8] space-y-6"
     >
       
       {/* Page Header */}
-      <div className="flex items-center justify-between border-b border-white/6 pb-4 shrink-0">
+      <div className="flex items-center justify-between shrink-0">
         <div>
-          <h1 className="text-2xl font-black gradient-text">{t.settings}</h1>
-          <p className="text-sm text-slate-300/70 mt-1">
+          <h1 className="text-2xl font-extrabold tracking-tight text-[#18212f]">{t.settings}</h1>
+          <p className="text-xs font-medium text-[#64748b] mt-1">
             {language === 'ar' ? 'إعدادات النظام وأجهزة الطابعات الخاصة بالمتجر' : 'Configure POS terminals, printers and store information'}
           </p>
         </div>
@@ -218,51 +254,52 @@ export const Settings: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {/* STORE PROFILE SETTINGS */}
-        <div className="glass-card p-6 rounded-xl border border-slate-800 animate-fade-in">
-          <h3 className="text-sm font-bold text-slate-200 flex items-center gap-1.5 border-b border-slate-700/60 pb-3 mb-5">
-            <Building size={15} className="text-indigo-400" />
+        <div className={cardBase}>
+          <h3 className={sectionHeading}>
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+              <Building size={16} />
+            </span>
             <span>{t.storeSettings}</span>
           </h3>
 
           <form id="settings-form" onSubmit={handleStoreSettingsSubmit} className="space-y-4 text-xs">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="font-semibold text-slate-400">{t.storeNameEn}</label>
+                <label className={labelBase}>{t.storeNameEn}</label>
                 <input
                   type="text"
                   value={storeNameEn}
                   onChange={(e) => setStoreNameEn(e.target.value)}
-                  className="bg-slate-900 border border-slate-700 text-slate-200 px-3 py-2 rounded-lg"
+                  className={inputBase}
                   required
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="font-semibold text-slate-400">{t.phone}</label>
+                <label className={labelBase}>{t.phone}</label>
                 <input
                   type="text"
                   value={storePhone}
                   onChange={(e) => setStorePhone(e.target.value)}
-                  className="bg-slate-900 border border-slate-700 text-slate-200 px-3 py-2 rounded-lg font-mono"
+                  className={`${inputBase} font-mono`}
                   required
                 />
               </div>
             </div>
 
-            <div className="border-t border-slate-800 my-4"></div>
+            <div className="border-t border-[#e8edf4] my-4"></div>
             
-            <h4 className="font-bold text-slate-300 text-xs flex items-center gap-1.5 mb-2">
-              <Printer size={13} className="text-teal-400" />
+            <h4 className="font-bold text-[#334155] text-xs flex items-center gap-1.5 mb-2">
+              <Printer size={13} className="text-blue-600" />
               <span>{t.printerSettings}</span>
             </h4>
 
-            <div className="grid grid-cols-1 gap-4 bg-slate-900/40 p-4 rounded-xl border border-slate-700">
+            <div className="grid grid-cols-1 gap-4 bg-[#f4f7fb] p-4 rounded-xl border border-[#e3e9f1]">
               <div className="flex flex-col gap-1.5">
-                <label className="font-semibold text-slate-400">{t.mockHardwareMode}</label>
+                <label className={labelBase}>{t.mockHardwareMode}</label>
                 <select
                   value={mockHardware}
                   onChange={(e) => setMockHardware(e.target.value)}
-                  style={{ backgroundColor: '#1e293b', color: '#cbd5e1' }}
-                  className="bg-slate-800 border border-slate-700 text-slate-300 px-3 py-2 rounded-lg"
+                  className={`${inputBase} cursor-pointer`}
                 >
                   <option value="true">{language === 'ar' ? 'نعم (محاكاة وحفظ كملف نصي)' : 'Yes (Mock - Save receipt as text)'}</option>
                   <option value="false">{language === 'ar' ? 'لا (طابعة فعلية ESC/POS)' : 'No (Connect to physical ESC/POS)'}</option>
@@ -270,12 +307,12 @@ export const Settings: React.FC = () => {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="font-semibold text-slate-400">{t.printerConnection} (IP address)</label>
+                <label className={labelBase}>{t.printerConnection} (IP address)</label>
                 <input
                   type="text"
                   value={printerConnection}
                   onChange={(e) => setPrinterConnection(e.target.value)}
-                  className="bg-slate-800 border border-slate-700 text-slate-200 px-3 py-2 rounded-lg font-mono"
+                  className={`${inputBase} font-mono`}
                   placeholder="192.168.1.100"
                 />
               </div>
@@ -284,15 +321,17 @@ export const Settings: React.FC = () => {
         </div>
 
         {/* MOBILE APP TUNNEL SETTINGS */}
-        <div className="glass-card p-6 rounded-xl border border-slate-800 animate-fade-in flex flex-col gap-4">
-          <h3 className="text-sm font-bold text-slate-200 flex items-center justify-between border-b border-slate-700/60 pb-3 mb-1">
-            <div className="flex items-center gap-1.5">
-              <Smartphone size={15} className="text-pink-400" />
+        <div className={`${cardBase} flex flex-col gap-4`}>
+          <h3 className={`${sectionHeading} justify-between mb-1`}>
+            <div className="flex items-center gap-2">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                <Smartphone size={16} />
+              </span>
               <span>{t.mobileAppAccess}</span>
             </div>
             
             {tunnelStatus && (
-              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${tunnelStatus.running ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ring-1 ${tunnelStatus.running ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' : 'bg-rose-50 text-rose-600 ring-rose-200'}`}>
                 {tunnelStatus.running ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
                 {tunnelStatus.running ? t.tunnelRunning : t.tunnelStopped}
               </div>
@@ -300,7 +339,7 @@ export const Settings: React.FC = () => {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="font-semibold text-slate-400">{t.enableMobileApp}</label>
+                <label className={labelBase}>{t.enableMobileApp}</label>
                 <select
                   value={tunnelEnabled}
                   onChange={async (e) => {
@@ -324,8 +363,7 @@ export const Settings: React.FC = () => {
                       window.api.stopManagerTunnel();
                     }
                   }}
-                  style={{ backgroundColor: '#1e293b', color: '#cbd5e1' }}
-                  className="bg-slate-800 border border-slate-700 text-slate-300 px-3 py-2 rounded-lg"
+                  className={`${inputBase} cursor-pointer text-xs`}
                   form="settings-form"
                 >
                   <option value="false">{language === 'ar' ? 'معطل' : (language === 'ku' ? 'ناچالاک' : 'Disabled')}</option>
@@ -334,12 +372,12 @@ export const Settings: React.FC = () => {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="font-semibold text-slate-400">{t.managerPort}</label>
+                <label className={labelBase}>{t.managerPort}</label>
                 <input
                   type="text"
                   value={tunnelPort}
                   onChange={(e) => setTunnelPort(e.target.value)}
-                  className="bg-slate-900 border border-slate-700 text-slate-200 px-3 py-2 rounded-lg font-mono"
+                  className={`${inputBase} font-mono text-xs`}
                   placeholder="8787"
                   form="settings-form"
                 />
@@ -347,9 +385,9 @@ export const Settings: React.FC = () => {
             </div>
 
             {(tunnelStatus?.url && tunnelStatus?.running) && (
-              <div className="bg-slate-900/60 border border-slate-700 p-3 rounded-lg flex flex-col gap-2 mt-4">
-                <label className="font-semibold text-slate-400 flex items-center gap-1">
-                  <Wifi size={12} className="text-blue-400" />
+              <div className="bg-[#f4f7fb] border border-[#e3e9f1] p-3 rounded-xl flex flex-col gap-2 mt-4">
+                <label className={`${labelBase} flex items-center gap-1`}>
+                  <Wifi size={12} className="text-blue-600" />
                   {t.tunnelUrl}
                 </label>
                 <div className="flex items-center gap-2">
@@ -357,7 +395,7 @@ export const Settings: React.FC = () => {
                     type="text" 
                     readOnly 
                     value={tunnelStatus.url}
-                    className="bg-slate-950 border border-slate-800 text-blue-300 px-3 py-2 rounded-lg font-mono flex-1 outline-none"
+                    className="bg-[#fbfcfe] border border-[#e3e9f1] text-[#2563eb] px-3 py-2 rounded-xl font-mono flex-1 outline-none text-xs"
                   />
                   <button 
                     type="button"
@@ -366,21 +404,21 @@ export const Settings: React.FC = () => {
                       setCopied(true);
                       setTimeout(() => setCopied(false), 2000);
                     }}
-                    className="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg transition-colors"
+                    className="bg-[#fbfcfe] border border-[#e3e9f1] hover:border-[#bfdbfe] hover:bg-[#eff6ff] p-2 rounded-xl transition-colors"
                     title="Copy URL"
                   >
-                    {copied ? <CheckCircle2 size={16} className="text-green-400" /> : <Copy size={16} className="text-slate-300" />}
+                    {copied ? <CheckCircle2 size={16} className="text-emerald-600" /> : <Copy size={16} className="text-[#64748b]" />}
                   </button>
                 </div>
-                <div className="flex flex-col items-center justify-center mt-3 bg-white p-2 rounded-xl self-center shadow-lg">
+                <div className="flex flex-col items-center justify-center mt-3 bg-[#fbfcfe] border border-[#e3e9f1] p-2 rounded-xl self-center shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
                   <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(tunnelStatus.url)}`} alt="QR Code" width={150} height={150} className="rounded-md" />
-                  <span className="text-slate-800 text-[10px] font-bold mt-1">امسح الكود بهاتفك</span>
+                  <span className="text-[#334155] text-[10px] font-bold mt-1">امسح الكود بهاتفك</span>
                 </div>
               </div>
             )}
             
             {tunnelStatus?.error && (
-              <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg text-[11px]">
+              <div className="bg-rose-50 border border-rose-200 text-rose-600 p-3 rounded-xl text-[11px] font-semibold">
                 {tunnelStatus.error}
               </div>
             )}
@@ -391,10 +429,10 @@ export const Settings: React.FC = () => {
                 type="button"
                 disabled={isConnecting}
                 onClick={toggleTunnelState}
-                className={`py-2 px-4 rounded-lg font-bold transition-all flex items-center gap-1.5 text-xs ${
+                className={`py-2 px-4 rounded-xl font-bold transition-all flex items-center gap-1.5 text-xs ring-1 ${
                   tunnelStatus?.running 
-                    ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' 
-                    : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                    ? 'bg-rose-50 text-rose-600 ring-rose-200 hover:bg-rose-100' 
+                    : 'bg-emerald-50 text-emerald-700 ring-emerald-200 hover:bg-emerald-100'
                 } ${isConnecting ? 'opacity-60 cursor-not-allowed' : ''}`}
               >
                 {tunnelStatus?.running ? (
@@ -418,46 +456,137 @@ export const Settings: React.FC = () => {
         </div>
       </div>
 
+      {/* ONLINE STORE SYNC */}
+      <div className={cardBase}>
+        <h3 className={sectionHeading}>
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+            <Globe size={16} />
+          </span>
+          <span>ربط المتجر الإلكتروني</span>
+        </h3>
+
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className={labelBase}>حالة الربط أونلاين</label>
+              <select
+                value={supabaseEnabled}
+                onChange={(e) => setSupabaseEnabled(e.target.value)}
+                className={`${inputBase} cursor-pointer text-xs`}
+                form="settings-form"
+              >
+                <option value="true">مفعل (تلقي الطلبات أونلاين 🌐)</option>
+                <option value="false">معطل</option>
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className={labelBase}>عنوان الخادم السحابي</label>
+              <input
+                type="password"
+                value={supabaseUrl}
+                onChange={(e) => setSupabaseUrl(e.target.value)}
+                className={`${inputBase} font-mono dir-ltr text-left text-xs`}
+                placeholder="••••••••••••••••"
+                form="settings-form"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className={labelBase}>مفتاح الوصول</label>
+            <input
+              type="password"
+              value={supabaseKey}
+              onChange={(e) => setSupabaseKey(e.target.value)}
+              className={`${inputBase} font-mono dir-ltr text-left text-xs`}
+              placeholder="••••••••••••••••"
+              form="settings-form"
+            />
+          </div>
+
+          {supabaseTestResult && (
+            <div
+              className={`p-3 rounded-xl text-xs font-semibold flex items-center gap-2 ring-1 ${
+                supabaseTestResult.success
+                  ? 'bg-emerald-50 text-emerald-700 ring-emerald-200'
+                  : 'bg-rose-50 text-rose-600 ring-rose-200'
+              }`}
+            >
+              {supabaseTestResult.success ? (
+                <CheckCircle2 size={16} className="text-emerald-600 flex-shrink-0" />
+              ) : (
+                <XCircle size={16} className="text-rose-600 flex-shrink-0" />
+              )}
+              <span>{supabaseTestResult.message}</span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-end pt-2">
+            <button
+              type="button"
+              disabled={testingSupabase}
+              onClick={handleTestSupabase}
+              className="py-2 px-4 bg-[#fbfcfe] hover:border-[#bfdbfe] hover:bg-[#eff6ff] hover:text-[#2563eb] text-[#64748b] border border-[#e3e9f1] rounded-xl font-bold text-xs transition-all flex items-center gap-2 disabled:opacity-50"
+            >
+              {testingSupabase ? (
+                <>
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current" />
+                  <span>جاري اختبار الاتصال...</span>
+                </>
+              ) : (
+                <>
+                  <Wifi size={14} />
+                  <span>اختبار الاتصال</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* DATA BACKUP */}
-      <div className="glass-card p-6 rounded-xl border border-slate-800 animate-fade-in">
-        <h3 className="text-sm font-bold text-slate-200 flex items-center gap-1.5 border-b border-slate-700/60 pb-3 mb-5">
-          <Database size={15} className="text-cyan-300" />
+      <div className={cardBase}>
+        <h3 className={sectionHeading}>
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+            <Database size={16} />
+          </span>
           <span>{t.dataBackup}</span>
         </h3>
 
-        <p className="text-xs text-slate-400 mb-5">{t.dataBackupDesc}</p>
+        <p className="text-xs text-[#64748b] mb-5">{t.dataBackupDesc}</p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
-          <div className="rounded-xl border border-white/8 bg-white/[0.03] p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{t.autoBackupEnabled}</p>
-            <p className="mt-2 text-sm font-bold text-emerald-300">{t.autoBackupInterval}</p>
+          <div className="rounded-xl border border-[#e3e9f1] bg-[#f4f7fb] p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">{t.autoBackupEnabled}</p>
+            <p className="mt-2 text-sm font-bold text-emerald-700">{t.autoBackupInterval}</p>
           </div>
-          <div className="rounded-xl border border-white/8 bg-white/[0.03] p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{t.lastAutoBackup}</p>
-            <p className="mt-2 text-sm font-semibold text-slate-200">{formatBackupDate(backupStatus?.lastAutoBackupAt ?? null)}</p>
+          <div className="rounded-xl border border-[#e3e9f1] bg-[#f4f7fb] p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">{t.lastAutoBackup}</p>
+            <p className="mt-2 text-sm font-semibold text-[#18212f]">{formatBackupDate(backupStatus?.lastAutoBackupAt ?? null)}</p>
           </div>
-          <div className="rounded-xl border border-white/8 bg-white/[0.03] p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{t.lastManualBackup}</p>
-            <p className="mt-2 text-sm font-semibold text-slate-200">{formatBackupDate(backupStatus?.lastManualBackupAt ?? null)}</p>
+          <div className="rounded-xl border border-[#e3e9f1] bg-[#f4f7fb] p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">{t.lastManualBackup}</p>
+            <p className="mt-2 text-sm font-semibold text-[#18212f]">{formatBackupDate(backupStatus?.lastManualBackupAt ?? null)}</p>
           </div>
-          <div className="rounded-xl border border-white/8 bg-white/[0.03] p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{t.totalBackups}</p>
-            <p className="mt-2 text-sm font-semibold text-slate-200">{backupStatus?.totalBackups ?? 0}</p>
+          <div className="rounded-xl border border-[#e3e9f1] bg-[#f4f7fb] p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">{t.totalBackups}</p>
+            <p className="mt-2 text-sm font-semibold text-[#18212f]">{backupStatus?.totalBackups ?? 0}</p>
           </div>
         </div>
 
         {backupStatus?.backupDir && (
-          <div className="mb-5 rounded-xl border border-slate-700 bg-slate-900/50 p-3">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-1">{t.backupFolder}</p>
-            <p className="text-[11px] font-mono text-cyan-200 break-all">{backupStatus.backupDir}</p>
+          <div className="mb-5 rounded-xl border border-[#e3e9f1] bg-[#f4f7fb] p-3">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[#94a3b8] mb-1">{t.backupFolder}</p>
+            <p className="text-[11px] font-mono text-[#2563eb] break-all">{backupStatus.backupDir}</p>
           </div>
         )}
 
         {backupMessage && (
           <div className={`mb-4 rounded-xl border px-3 py-2 text-xs font-semibold ${
             backupMessage === t.backupSuccess
-              ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-200'
-              : 'border-rose-400/25 bg-rose-500/10 text-rose-200'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+              : 'border-rose-200 bg-rose-50 text-rose-600'
           }`}>
             {backupMessage}
           </div>
@@ -468,7 +597,7 @@ export const Settings: React.FC = () => {
             type="button"
             onClick={handleManualBackup}
             disabled={isBackingUp}
-            className="bg-primary text-primary-foreground hover:bg-teal-400 py-2.5 px-5 rounded-xl font-bold transition-all hover-scale glow-teal active:scale-95 flex items-center gap-2 text-xs disabled:opacity-50"
+            className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white py-2.5 px-5 rounded-xl font-bold transition-all duration-150 active:translate-y-px shadow-[0_8px_20px_rgba(37,99,235,0.24)] flex items-center gap-2 text-xs disabled:bg-[#cbd5e1] disabled:shadow-none"
           >
             {isBackingUp ? (
               <>
@@ -486,7 +615,7 @@ export const Settings: React.FC = () => {
           <button
             type="button"
             onClick={handleOpenBackupFolder}
-            className="py-2.5 px-5 rounded-xl font-bold transition-all border border-white/10 bg-white/[0.04] text-slate-200 hover:border-cyan-400/30 hover:bg-cyan-500/10 flex items-center gap-2 text-xs"
+            className="py-2.5 px-5 rounded-xl font-bold transition-colors border border-[#e3e9f1] bg-[#fbfcfe] text-[#64748b] hover:border-[#bfdbfe] hover:bg-[#eff6ff] hover:text-[#2563eb] flex items-center gap-2 text-xs"
           >
             <FolderOpen size={14} />
             <span>{t.openBackupFolder}</span>
@@ -494,16 +623,16 @@ export const Settings: React.FC = () => {
         </div>
 
         {backupStatus?.recentBackups?.length > 0 && (
-          <div className="mt-6 border-t border-slate-800 pt-4">
-            <h4 className="text-xs font-bold text-slate-300 mb-3">{t.recentBackups}</h4>
+          <div className="mt-6 border-t border-[#e8edf4] pt-4">
+            <h4 className="text-xs font-bold text-[#334155] mb-3">{t.recentBackups}</h4>
             <div className="space-y-2">
               {backupStatus.recentBackups.slice(0, 5).map((file: any) => (
                 <div
                   key={file.fullPath}
-                  className="flex items-center justify-between gap-3 rounded-lg border border-white/8 bg-white/[0.03] px-3 py-2 text-[11px]"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-[#e3e9f1] bg-[#f4f7fb] px-3 py-2 text-[11px]"
                 >
-                  <span className="font-mono text-slate-300 truncate">{file.fileName}</span>
-                  <div className="flex items-center gap-3 shrink-0 text-slate-500">
+                  <span className="font-mono text-[#334155] truncate">{file.fileName}</span>
+                  <div className="flex items-center gap-3 shrink-0 text-[#94a3b8]">
                     <span>{formatFileSize(file.sizeBytes)}</span>
                     <span>{formatBackupDate(file.createdAt)}</span>
                   </div>
@@ -518,9 +647,9 @@ export const Settings: React.FC = () => {
         <button
           type="submit"
           form="settings-form"
-          className="bg-primary text-primary-foreground hover:bg-teal-400 py-3 px-8 rounded-xl font-bold transition-all hover-scale glow-teal active:scale-95 flex items-center justify-center gap-1.5"
+          className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white py-3 px-8 rounded-xl font-bold transition-all duration-150 active:translate-y-px shadow-[0_8px_20px_rgba(37,99,235,0.24)] flex items-center justify-center gap-1.5"
         >
-          <Sparkles size={14} />
+          <Save size={14} />
           <span>{t.save}</span>
         </button>
       </div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Lock } from 'lucide-react';
 import { useLanguageStore } from '../store/languageStore';
 import { translations } from '../utils/translations';
 
@@ -74,15 +75,20 @@ export const AdminPinModal: React.FC<AdminPinModalProps> = ({
 
   return (
     <div className="fixed inset-0 glass z-[100] flex items-center justify-center p-4" dir={dir}>
-      <div className={`bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl w-full max-w-sm overflow-hidden animate-fade-in ${shouldShake ? 'animate-shake' : ''}`}>
-        <div className="p-4 border-b border-slate-700 flex items-center justify-between">
-          <h3 className="text-sm font-extrabold text-slate-200">{t.enterSupervisorPin}</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-white">✕</button>
+      <div className={`bg-[#fbfcfe] rounded-2xl border border-[#e3e9f1] shadow-[0_24px_60px_rgba(15,23,42,0.12)] w-full max-w-sm overflow-hidden animate-fade-in ${shouldShake ? 'animate-shake' : ''}`}>
+        <div className="px-5 py-4 border-b border-[#e3e9f1] bg-[#f4f7fb] flex items-center justify-between">
+          <h3 className="text-sm font-extrabold text-[#18212f] flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+              <Lock size={16} />
+            </span>
+            <span>{t.enterSupervisorPin}</span>
+          </h3>
+          <button onClick={onClose} className="h-8 w-8 flex items-center justify-center rounded-lg text-[#94a3b8] hover:bg-[#eef2f7] hover:text-[#18212f] transition-colors">✕</button>
         </div>
 
-        <div className="p-4 space-y-4">
+        <div className="p-5 space-y-4">
           <div className="text-center">
-            <p className="text-xs text-slate-400">{t.pleaseEnter4DigitPin}</p>
+            <p className="text-xs font-medium text-[#64748b]">{t.pleaseEnter4DigitPin}</p>
           </div>
 
           <div className="flex items-center justify-center gap-2">
@@ -90,7 +96,7 @@ export const AdminPinModal: React.FC<AdminPinModalProps> = ({
               <div
                 key={slot}
                 className={`w-10 h-10 rounded-lg border flex items-center justify-center text-xl ${
-                  pin.length > slot ? 'border-teal-500 text-teal-400' : 'border-slate-700 text-slate-600'
+                  pin.length > slot ? 'border-[#2563eb] text-[#2563eb] bg-blue-50' : 'border-[#e3e9f1] text-[#cbd5e1] bg-[#fbfcfe]'
                 }`}
               >
                 {pin.length > slot ? '•' : ''}
@@ -99,13 +105,13 @@ export const AdminPinModal: React.FC<AdminPinModalProps> = ({
           </div>
 
           {isLocked ? (
-            <p className="text-xs text-center text-amber-400">
+            <p className="text-xs text-center font-semibold text-[#b45309]">
               {t.pinLockedTryIn.replace('{seconds}', String(lockSecondsLeft))}
             </p>
           ) : errorMessage ? (
-            <p className="text-xs text-center text-rose-400">{errorMessage}</p>
+            <p className="text-xs text-center font-semibold text-[#dc2626]">{errorMessage}</p>
           ) : (
-            <p className="text-xs text-center text-slate-500">{t.itemPriceProtected}</p>
+            <p className="text-xs text-center text-[#94a3b8]">{t.itemPriceProtected}</p>
           )}
 
           <div className="grid grid-cols-3 gap-2">
@@ -119,15 +125,15 @@ export const AdminPinModal: React.FC<AdminPinModalProps> = ({
                 {digit}
               </button>
             ))}
-            <button onClick={clearPin} disabled={isLocked || isSubmitting} className="numpad-btn text-sm disabled:opacity-40">{t.clear}</button>
+            <button onClick={clearPin} disabled={isLocked || isSubmitting} className="numpad-btn text-sm !border-rose-200 !bg-rose-50 !text-[#dc2626] hover:!border-rose-300 hover:!bg-rose-100 disabled:opacity-40">{t.clear}</button>
             <button onClick={() => appendDigit('0')} disabled={isLocked || isSubmitting} className="numpad-btn disabled:opacity-40">0</button>
-            <button onClick={removeDigit} disabled={isLocked || isSubmitting} className="numpad-btn text-sm disabled:opacity-40">{t.delete}</button>
+            <button onClick={removeDigit} disabled={isLocked || isSubmitting} className="numpad-btn text-sm !border-rose-200 !bg-rose-50 !text-[#dc2626] hover:!border-rose-300 hover:!bg-rose-100 disabled:opacity-40">{t.delete}</button>
           </div>
 
           <button
             onClick={submitPin}
             disabled={isLocked || isSubmitting || pin.length !== 4}
-            className="w-full bg-primary text-primary-foreground hover:bg-teal-400 py-2.5 rounded-xl text-xs font-bold transition-all disabled:opacity-50 disabled:pointer-events-none"
+            className="w-full bg-[#2563eb] text-white hover:bg-[#1d4ed8] py-2.5 rounded-xl text-xs font-bold transition-all active:translate-y-px disabled:bg-[#cbd5e1] disabled:pointer-events-none"
           >
             {isSubmitting ? t.verifying : t.confirm}
           </button>

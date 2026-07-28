@@ -31,10 +31,10 @@ export const InputRecoveryButton: React.FC<InputRecoveryButtonProps> = ({
 
   const baseClasses =
     variant === 'titlebar'
-      ? 'h-7 px-2.5 flex items-center gap-1.5 rounded-full border border-white/8 bg-white/5 text-slate-300 hover:text-cyan-200 hover:border-cyan-400/25 hover:bg-cyan-500/10 transition-colors'
+      ? 'h-7 px-2.5 flex items-center gap-1.5 rounded-lg bg-white/[0.08] text-blue-200 hover:bg-white/[0.16] hover:text-white transition-colors'
       : variant === 'modal'
-        ? 'inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-[10px] font-semibold text-slate-300 hover:border-cyan-400/30 hover:bg-cyan-500/10 hover:text-cyan-200 transition-colors'
-        : 'inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-semibold text-white/70 hover:border-indigo-400/30 hover:bg-indigo-500/10 hover:text-indigo-200 transition-colors';
+        ? 'inline-flex items-center gap-1.5 rounded-lg border border-[#e3e9f1] bg-[#fbfcfe] px-2.5 py-1.5 text-[10px] font-bold text-[#64748b] hover:border-[#bfdbfe] hover:bg-[#eff6ff] hover:text-[#2563eb] transition-colors'
+        : 'inline-flex items-center gap-2 rounded-lg border border-[#e3e9f1] bg-[#fbfcfe] px-3 py-2 text-[11px] font-bold text-[#64748b] hover:border-[#bfdbfe] hover:bg-[#eff6ff] hover:text-[#2563eb] transition-colors';
 
   return (
     <div className={`relative ${className}`}>
@@ -60,7 +60,7 @@ export const InputRecoveryButton: React.FC<InputRecoveryButtonProps> = ({
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 4 }}
-            className={`pointer-events-none absolute z-50 whitespace-nowrap rounded-lg border border-emerald-400/25 bg-emerald-500/15 px-2.5 py-1 text-[10px] font-bold text-emerald-200 shadow-lg ${
+            className={`pointer-events-none absolute z-50 whitespace-nowrap rounded-lg bg-emerald-600 px-2.5 py-1 text-[10px] font-bold text-white shadow-lg ${
               variant === 'titlebar'
                 ? 'top-full mt-2 end-0'
                 : variant === 'modal'

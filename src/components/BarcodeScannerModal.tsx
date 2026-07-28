@@ -118,34 +118,36 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-      <div className="bg-slate-900/95 border border-slate-700/50 rounded-2xl w-full max-w-sm overflow-hidden relative shadow-2xl flex flex-col animate-fade-in">
+    <div className="fixed inset-0 glass z-[200] flex items-center justify-center p-4">
+      <div className="bg-[#fbfcfe] border border-[#e3e9f1] rounded-2xl w-full max-w-sm overflow-hidden relative shadow-[0_24px_60px_rgba(15,23,42,0.12)] flex flex-col animate-fade-in">
         
         {/* Header */}
-        <div className="p-4 border-b border-slate-800/80 flex justify-between items-center bg-slate-950/20">
-          <h4 className="font-extrabold text-sm text-slate-200 flex items-center gap-2">
-            <Camera size={15} className="text-teal-400" />
+        <div className="px-5 py-4 border-b border-[#e3e9f1] flex justify-between items-center bg-[#f4f7fb]">
+          <h4 className="font-extrabold text-sm text-[#18212f] flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+              <Camera size={16} />
+            </span>
             <span>{t.cameraScannerTitle || 'Scan Barcode'}</span>
           </h4>
           <button 
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-[#94a3b8] hover:bg-[#eef2f7] hover:text-[#18212f] transition-colors"
           >
             <X size={15} />
           </button>
         </div>
 
         {/* Scanner Content */}
-        <div className="flex-1 flex flex-col items-center justify-center p-6 min-h-[320px]">
+        <div className="flex-1 flex flex-col items-center justify-center p-6 min-h-[320px] bg-[#fbfcfe]">
           {errorMsg ? (
             <div className="text-center p-4 flex flex-col items-center gap-4">
-              <AlertTriangle className="text-rose-500 w-12 h-12 animate-bounce" />
-              <p className="text-rose-200 text-xs font-semibold leading-relaxed max-w-xs">{errorMsg}</p>
+              <AlertTriangle className="text-[#dc2626] w-12 h-12 animate-bounce" />
+              <p className="text-[#334155] text-xs font-semibold leading-relaxed max-w-xs">{errorMsg}</p>
               <button
                 type="button"
                 onClick={onClose}
-                className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-bold transition-all active:scale-[0.98] border border-slate-700"
+                className="px-5 py-2 bg-[#fbfcfe] hover:bg-[#eff6ff] text-[#64748b] hover:text-[#2563eb] rounded-xl text-xs font-bold transition-all active:translate-y-px border border-[#e3e9f1] hover:border-[#bfdbfe]"
               >
                 {t.close || 'Close'}
               </button>
@@ -155,12 +157,12 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
               {/* Video rendering container */}
               <div 
                 id={elementId} 
-                className="w-full aspect-square max-w-[260px] bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 relative shadow-inner"
+                className="w-full aspect-square max-w-[260px] bg-[#18212f] rounded-2xl overflow-hidden border border-[#e3e9f1] relative shadow-inner"
               >
                 {/* Loader when camera is launching */}
                 {!isCameraReady && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-slate-400 bg-slate-950/90 z-20">
-                    <RefreshCw className="animate-spin text-teal-400 w-7 h-7" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-slate-300 bg-[#18212f]/95 z-20">
+                    <RefreshCw className="animate-spin text-blue-400 w-7 h-7" />
                     <span className="text-xs font-medium">{t.loading || 'Initializing Camera...'}</span>
                   </div>
                 )}
@@ -169,12 +171,12 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
                 {isCameraReady && (
                   <div className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center">
                     {/* Viewfinder Box Outline */}
-                    <div className="w-[182px] h-[91px] border-2 border-teal-500/80 rounded-xl relative bg-transparent shadow-[0_0_0_9999px_rgba(15,23,42,0.65)]">
+                    <div className="w-[182px] h-[91px] border-2 border-blue-400/80 rounded-xl relative bg-transparent shadow-[0_0_0_9999px_rgba(15,23,42,0.65)]">
                       {/* Corners */}
-                      <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-teal-300 rounded-tl-md" />
-                      <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-teal-300 rounded-tr-md" />
-                      <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-teal-300 rounded-bl-md" />
-                      <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-teal-300 rounded-br-md" />
+                      <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-blue-300 rounded-tl-md" />
+                      <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-blue-300 rounded-tr-md" />
+                      <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-blue-300 rounded-bl-md" />
+                      <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-blue-300 rounded-br-md" />
                       
                       {/* Scanning laser effect */}
                       <div className="w-full h-0.5 bg-rose-500 absolute top-1/2 -translate-y-1/2 shadow-[0_0_8px_rgba(244,63,94,0.9)] animate-pulse" />
@@ -184,7 +186,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
               </div>
 
               {/* Guide message */}
-              <p className="text-xs text-slate-400 mt-5 text-center max-w-xs leading-relaxed">
+              <p className="text-xs text-[#64748b] mt-5 text-center max-w-xs leading-relaxed">
                 {t.cameraScannerDesc || 'Align the barcode inside the frame to scan.'}
               </p>
             </div>

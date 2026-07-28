@@ -19,6 +19,7 @@ import {
 import { motion } from 'framer-motion';
 import { AdminPinModal } from '../components/AdminPinModal';
 import { ReceiptPreviewModal } from '../components/ReceiptPreviewModal';
+import { InvoiceDetailsModal } from '../components/InvoiceDetailsModal';
 
 export const Calendar: React.FC = () => {
   const { language, dir } = useLanguageStore();
@@ -43,9 +44,14 @@ export const Calendar: React.FC = () => {
   const [deleteLockedUntil, setDeleteLockedUntil] = useState<number | null>(null);
   const [deleteLockSecondsLeft, setDeleteLockSecondsLeft] = useState(0);
   const [saleToDelete, setSaleToDelete] = useState<any>(null);
+  type PinDeleteMode = 'invoice' | 'day' | 'month';
+  const [pinDeleteMode, setPinDeleteMode] = useState<PinDeleteMode>('invoice');
 
   const [previewReceiptData, setPreviewReceiptData] = useState<any>(null);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [selectedSaleForDetails, setSelectedSaleForDetails] = useState<any>(null);
 
   const isDeletePinLocked = !!deleteLockedUntil && deleteLockedUntil > Date.now();
 
@@ -79,8 +85,8 @@ export const Calendar: React.FC = () => {
       setDeletePinError('');
       setDeleteFailedAttempts(0);
       setIsDeletePinModalOpen(false);
-      
-      if (saleToDelete) {
+
+      if (pinDeleteMode === 'invoice' && saleToDelete) {
         try {
           const result = await window.api.refundSale(saleToDelete.id);
           if (result.success) {
@@ -95,7 +101,12 @@ export const Calendar: React.FC = () => {
         } finally {
           setSaleToDelete(null);
         }
+      } else if (pinDeleteMode === 'day') {
+        await deleteAllDaySales();
+      } else if (pinDeleteMode === 'month') {
+        await clearAllMonthSales();
       }
+
       return true;
     }
 
@@ -106,8 +117,8 @@ export const Calendar: React.FC = () => {
     if (nextFailedAttempts >= 3) {
       setDeleteLockedUntil(Date.now() + 30_000);
       setDeletePinError(
-        language === 'ar' 
-          ? 'تم تجاوز الحد المسموح. المحاولة متاحة بعد 30 ثانية' 
+        language === 'ar'
+          ? 'تم تجاوز الحد المسموح. المحاولة متاحة بعد 30 ثانية'
           : 'Too many attempts. Try again in 30 seconds'
       );
     }
@@ -130,13 +141,13 @@ export const Calendar: React.FC = () => {
   const weekDaysEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   const weekdayColors = [
-    { text: 'text-rose-600', bg: 'bg-rose-50/70 border-rose-100' },     // Sun
-    { text: 'text-blue-600', bg: 'bg-blue-50/70 border-blue-100' },     // Mon
-    { text: 'text-emerald-600', bg: 'bg-emerald-50/70 border-emerald-100' }, // Tue
-    { text: 'text-indigo-600', bg: 'bg-indigo-50/70 border-indigo-100' }, // Wed
-    { text: 'text-amber-600', bg: 'bg-amber-50/70 border-amber-100' },   // Thu
-    { text: 'text-violet-600', bg: 'bg-violet-50/70 border-violet-100' }, // Fri
-    { text: 'text-pink-600', bg: 'bg-pink-50/70 border-pink-100' }      // Sat
+    { text: 'text-rose-600', bg: 'bg-rose-50 border-rose-200' },
+    { text: 'text-[#64748b]', bg: 'bg-[#f4f7fb] border-[#e3e9f1]' },
+    { text: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
+    { text: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
+    { text: 'text-amber-600', bg: 'bg-amber-50 border-amber-200' },
+    { text: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
+    { text: 'text-[#64748b]', bg: 'bg-[#f4f7fb] border-[#e3e9f1]' }
   ];
 
   const years = Array.from({ length: 10 }, (_, i) => now.getFullYear() - 5 + i);
@@ -158,6 +169,7 @@ export const Calendar: React.FC = () => {
       sales?.forEach((sale: any) => {
         if (sale.status === 'completed') {
           const saleDate = new Date(sale.createdAt);
+          if (saleDate.getFullYear() !== currentYear || saleDate.getMonth() !== currentMonth) return;
           const day = saleDate.getDate();
           aggregated[day] = (aggregated[day] || 0) + sale.totalAmount;
           total += sale.totalAmount;
@@ -223,11 +235,26 @@ export const Calendar: React.FC = () => {
   // Calculate maximum sales in a single day for heatmap opacity scale
   const maxDaySales = Math.max(...Object.values(dailySales), 1);
 
+  // Graded blue tints for the sales heatmap
+  const getHeatColor = (daySales: number): string | null => {
+    if (daySales <= 0) return null;
+    const intensity = daySales / maxDaySales;
+    if (intensity <= 0.25) return '#eff6ff';
+    if (intensity <= 0.5) return '#dbeafe';
+    if (intensity <= 0.75) return '#bfdbfe';
+    return '#93c5fd';
+  };
+
   // Filter sales for the selected day
   const selectedDaySales = monthlySalesList.filter(s => {
     if (selectedDay === null) return false;
     const date = new Date(s.createdAt);
-    return date.getDate() === selectedDay && s.status === 'completed';
+    return (
+      date.getDate() === selectedDay &&
+      date.getMonth() === currentMonth &&
+      date.getFullYear() === currentYear &&
+      s.status === 'completed'
+    );
   });
 
   const handlePrint = async (isSummaryOnly: boolean) => {
@@ -346,6 +373,7 @@ export const Calendar: React.FC = () => {
           alert(t.error + ': ' + (result.error || 'Unknown error'));
         }
       } else {
+        setPinDeleteMode('invoice');
         setSaleToDelete(sale);
         setDeletePinError('');
         setIsDeletePinModalOpen(true);
@@ -354,6 +382,91 @@ export const Calendar: React.FC = () => {
       console.error('Failed to refund sale:', err);
       alert(t.error + ': ' + err.message);
     }
+  };
+
+  const deleteAllDaySales = async () => {
+    const toDelete = selectedDaySales.slice();
+    let successCount = 0;
+    for (const sale of toDelete) {
+      try {
+        const result = await window.api.refundSale(sale.id);
+        if (result.success) successCount++;
+      } catch (err) {
+        console.error('Failed to refund sale:', err);
+      }
+    }
+    alert(
+      language === 'ar'
+        ? `تم حذف ${successCount} من ${toDelete.length} فاتورة ليوم ${selectedDay}.`
+        : `Deleted ${successCount} of ${toDelete.length} invoices for day ${selectedDay}.`
+    );
+    await fetchMonthlySales();
+  };
+
+  const handleDeleteDaySales = async () => {
+    if (selectedDay === null || selectedDaySales.length === 0) return;
+
+    const confirmMsg =
+      language === 'ar'
+        ? `هل أنت متأكد من حذف جميع مبيعات يوم ${selectedDay}؟ (${selectedDaySales.length} فاتورة)`
+        : `Delete all ${selectedDaySales.length} invoices from day ${selectedDay}?`;
+
+    if (!window.confirm(confirmMsg)) return;
+
+    if (user?.role === 'admin') {
+      await deleteAllDaySales();
+    } else {
+      setPinDeleteMode('day');
+      setDeletePinError('');
+      setIsDeletePinModalOpen(true);
+    }
+  };
+
+  const clearAllMonthSales = async () => {
+    const toDelete = monthlySalesList.filter(s => s.status === 'completed');
+    let successCount = 0;
+    for (const sale of toDelete) {
+      try {
+        const result = await window.api.refundSale(sale.id);
+        if (result.success) successCount++;
+      } catch (err) {
+        console.error('Failed to refund sale:', err);
+      }
+    }
+    alert(
+      language === 'ar'
+        ? `تم مسح ${successCount} من ${toDelete.length} فاتورة للشهر.`
+        : `Cleared ${successCount} of ${toDelete.length} monthly invoices.`
+    );
+    await fetchMonthlySales();
+  };
+
+  const handleClearMonthSales = async () => {
+    const completedSales = monthlySalesList.filter(s => s.status === 'completed');
+    if (completedSales.length === 0) {
+      alert(language === 'ar' ? 'لا توجد مبيعات في هذا الشهر.' : 'No sales this month.');
+      return;
+    }
+
+    const confirmMsg =
+      language === 'ar'
+        ? `هل أنت متأكد من مسح جميع مبيعات الشهر؟ (${completedSales.length} فاتورة) لا يمكن التراجع عن هذه العملية.`
+        : `Clear ALL ${completedSales.length} sales from this month? This cannot be undone.`;
+
+    if (!window.confirm(confirmMsg)) return;
+
+    if (user?.role === 'admin') {
+      await clearAllMonthSales();
+    } else {
+      setPinDeleteMode('month');
+      setDeletePinError('');
+      setIsDeletePinModalOpen(true);
+    }
+  };
+
+  const handleViewDetails = (sale: any) => {
+    setSelectedSaleForDetails(sale);
+    setIsDetailsModalOpen(true);
   };
 
   const handlePreviewInvoice = async (sale: any) => {
@@ -399,17 +512,17 @@ export const Calendar: React.FC = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-      className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-pos-bg space-y-4"
+      className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-[#eef2f8] space-y-4"
     >
       
       {/* Page Header & Controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4 shrink-0">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#e3e9f1] pb-4 shrink-0">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-3">
-            <CalendarIcon className="text-teal-400" size={24} />
+          <h1 className="text-2xl font-extrabold tracking-tight text-[#18212f] flex items-center gap-3">
+            <CalendarIcon className="text-blue-600" size={24} />
             <span>{language === 'ar' ? 'تقويم المبيعات اليومية' : 'Daily Sales Calendar'}</span>
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs font-medium text-[#64748b] mt-1">
             {language === 'ar' 
               ? 'متابعة إجمالي مبيعات المتجر اليومية والافتراضية مرتبة حسب أيام الشهر' 
               : 'Monitor store checkout revenue aggregated daily across month days'}
@@ -419,10 +532,10 @@ export const Calendar: React.FC = () => {
         {/* Navigation & Controls */}
         <div className="flex flex-wrap items-center gap-3">
           {/* Month/Year Navigation */}
-          <div className="flex items-center bg-slate-800/20 border border-white/5 p-1 rounded-xl gap-2">
+          <div className="flex items-center bg-[#fbfcfe] border border-[#e3e9f1] p-1 rounded-xl gap-2 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
             <button
               onClick={dir === 'rtl' ? handleNextMonth : handlePrevMonth}
-              className="p-1.5 hover:bg-slate-800 hover:text-slate-100 text-slate-400 rounded-lg transition-colors"
+              className="p-1.5 hover:bg-[#eff6ff] hover:text-[#2563eb] text-[#64748b] rounded-lg transition-colors"
             >
               {dir === 'rtl' ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
             </button>
@@ -430,40 +543,38 @@ export const Calendar: React.FC = () => {
               <select
                 value={currentMonth}
                 onChange={(e) => setCurrentMonth(Number(e.target.value))}
-                style={{ backgroundColor: '#1e293b', color: '#f1f5f9' }}
-                className="bg-transparent text-slate-100 px-2 py-1 rounded-lg text-xs font-semibold focus:outline-none cursor-pointer border border-transparent hover:border-white/5"
+                className="bg-transparent text-[#18212f] px-2 py-1 rounded-lg text-xs font-semibold focus:outline-none cursor-pointer border border-transparent hover:border-[#e3e9f1]"
               >
                 {(language === 'ar' ? monthsAr : monthsEn).map((m, idx) => (
-                  <option key={idx} value={idx} className="bg-slate-900 text-slate-100">{m}</option>
+                  <option key={idx} value={idx} className="bg-[#fbfcfe] text-[#18212f]">{m}</option>
                 ))}
               </select>
               <select
                 value={currentYear}
                 onChange={(e) => setCurrentYear(Number(e.target.value))}
-                style={{ backgroundColor: '#1e293b', color: '#f1f5f9' }}
-                className="bg-transparent text-slate-100 px-2 py-1 rounded-lg text-xs font-semibold focus:outline-none cursor-pointer border border-transparent hover:border-white/5"
+                className="bg-transparent text-[#18212f] px-2 py-1 rounded-lg text-xs font-semibold focus:outline-none cursor-pointer border border-transparent hover:border-[#e3e9f1]"
               >
                 {years.map((y) => (
-                  <option key={y} value={y} className="bg-slate-900 text-slate-100">{y}</option>
+                  <option key={y} value={y} className="bg-[#fbfcfe] text-[#18212f]">{y}</option>
                 ))}
               </select>
             </div>
             <button
               onClick={dir === 'rtl' ? handlePrevMonth : handleNextMonth}
-              className="p-1.5 hover:bg-slate-800 hover:text-slate-100 text-slate-400 rounded-lg transition-colors"
+              className="p-1.5 hover:bg-[#eff6ff] hover:text-[#2563eb] text-[#64748b] rounded-lg transition-colors"
             >
               {dir === 'rtl' ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
             </button>
           </div>
 
           {/* View Mode Segmented Control */}
-          <div className="flex items-center bg-slate-800/20 border border-white/5 p-1 rounded-xl">
+          <div className="flex items-center bg-[#fbfcfe] border border-[#e3e9f1] p-1 rounded-xl shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
             <button
               onClick={() => setViewMode('grid')}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all ${
                 viewMode === 'grid' 
-                  ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' 
-                  : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                  ? 'bg-[#2563eb] text-white shadow-[0_4px_10px_rgba(37,99,235,0.25)]' 
+                  : 'text-[#64748b] hover:bg-[#eef2f7] hover:text-[#18212f] border border-transparent'
               }`}
             >
               <Grid size={14} />
@@ -473,8 +584,8 @@ export const Calendar: React.FC = () => {
               onClick={() => setViewMode('list')}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all ${
                 viewMode === 'list' 
-                  ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' 
-                  : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                  ? 'bg-[#2563eb] text-white shadow-[0_4px_10px_rgba(37,99,235,0.25)]' 
+                  : 'text-[#64748b] hover:bg-[#eef2f7] hover:text-[#18212f] border border-transparent'
               }`}
             >
               <List size={14} />
@@ -482,17 +593,27 @@ export const Calendar: React.FC = () => {
             </button>
           </div>
 
+          {/* Clear Month Button */}
+          <button
+            onClick={handleClearMonthSales}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#fff1f2] hover:bg-rose-100 text-[#dc2626] border border-rose-200 hover:border-rose-300 transition-all"
+            title={language === 'ar' ? 'مسح كل مبيعات الشهر' : 'Clear All Month Sales'}
+          >
+            <Trash2 size={13} />
+            <span>{language === 'ar' ? 'مسح الشهر' : 'Clear Month'}</span>
+          </button>
+
           {/* Month Total Card on the Right */}
-          <div className="flex items-center bg-slate-800/30 border border-white/5 px-3 py-1.5 rounded-xl gap-3">
+          <div className="flex items-center bg-[#fbfcfe] border border-[#e3e9f1] px-3 py-1.5 rounded-xl gap-3 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
             <div className="flex flex-col text-right">
-              <span className="text-[9px] text-slate-400 font-medium uppercase tracking-wider">
+              <span className="text-[9px] text-[#94a3b8] font-medium uppercase tracking-wider">
                 {language === 'ar' ? 'مجموع مبيعات الشهر' : 'Month Total'}
               </span>
-              <span className="text-base font-bold text-teal-400 font-mono mt-0.5">
-                {Math.round(monthlyTotal).toLocaleString()} <span className="text-[10px] font-sans font-normal text-slate-400">{t.currency}</span>
+              <span className="text-base font-bold text-[#1d4ed8] font-mono mt-0.5">
+                {Math.round(monthlyTotal).toLocaleString()} <span className="text-[10px] font-sans font-normal text-[#94a3b8]">{t.currency}</span>
               </span>
             </div>
-            <div className="p-1.5 bg-teal-500/10 text-teal-400 rounded-lg border border-teal-500/20">
+            <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg border border-blue-100">
               <TrendingUp size={16} />
             </div>
           </div>
@@ -503,22 +624,22 @@ export const Calendar: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-[65%_35%] gap-4">
         
         {/* Calendar Grid or List View (Left/Main Panel) */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-4">
+        <div className="rounded-2xl border border-[#e3e9f1] bg-[#fbfcfe] p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
           {isLoading ? (
-            <div className="py-32 flex flex-col items-center justify-center text-slate-400 gap-3">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-teal-500 border-r-2 border-slate-700"></div>
-              <p className="text-xs">{t.loading}</p>
+            <div className="py-32 flex flex-col items-center justify-center text-[#64748b] gap-3">
+              <div className="animate-spin rounded-full h-8 w-8 border-[3px] border-[#e3e9f1] border-t-[#2563eb]"></div>
+              <p className="text-xs font-semibold">{t.loading}</p>
             </div>
           ) : viewMode === 'grid' ? (
             <div className="space-y-4">
               {/* Weekdays Header: Colored badges to distinguish each day of the week */}
-              <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold py-1 border-b border-slate-100 pb-3">
+              <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold py-1 border-b border-[#e8edf4] pb-3">
                 {(language === 'ar' ? weekDaysAr : weekDaysEn).map((day, idx) => {
                   const color = weekdayColors[idx];
                   return (
                     <div 
                       key={day} 
-                      className={`py-1.5 rounded-lg border ${color.bg} ${color.text} font-bold`}
+                      className={`py-1.5 rounded-md border ${color.bg} ${color.text} font-bold`}
                     >
                       {day}
                     </div>
@@ -535,9 +656,9 @@ export const Calendar: React.FC = () => {
                     return (
                       <div 
                         key={`empty-${cellIdx}`} 
-                        className="relative p-3 flex flex-col justify-start h-20 rounded-xl border border-slate-100 bg-slate-50/40 opacity-40 select-none"
+                        className="relative p-3 flex flex-col justify-start h-20 rounded-xl border border-[#e8edf4] bg-[#f4f7fb] opacity-50 select-none"
                       >
-                        <span className="text-[13px] font-bold font-mono text-slate-400 w-6 h-6 rounded flex items-center justify-center">
+                        <span className="text-[13px] font-bold font-mono text-[#94a3b8] w-6 h-6 rounded flex items-center justify-center">
                           {day}
                         </span>
                       </div>
@@ -554,40 +675,38 @@ export const Calendar: React.FC = () => {
 
                   // Dynamic styling for days with sales
                   const hasSales = daySales > 0;
-                  const intensity = hasSales ? Math.min(1, daySales / maxDaySales) : 0;
-                  
-                  // Heatmap bg & border using subtle teal accents on white background
-                  const heatBg = hasSales ? `rgba(13, 148, 136, ${0.03 + (intensity * 0.12)})` : '';
-                  const heatBorder = hasSales ? `rgba(13, 148, 136, ${0.15 + (intensity * 0.25)})` : 'border-slate-200/60';
+                  const heatColor = getHeatColor(daySales);
 
                   return (
                     <motion.button
                       key={`day-${day}`}
                       whileTap={{ scale: 0.96 }}
                       onClick={() => setSelectedDay(isSelected ? null : day)}
-                      style={!isSelected && hasSales ? { backgroundColor: heatBg, borderColor: heatBorder } : {}}
+                      style={!isSelected && heatColor ? { backgroundColor: heatColor } : {}}
                       className={`relative p-3 flex flex-col justify-between h-20 rounded-xl transition-all duration-200 text-start group border ${
                         isSelected 
-                          ? 'border-indigo-500 bg-indigo-50/40' 
+                          ? 'border-[#2563eb] bg-[#2563eb]' 
                           : isToday 
-                            ? 'border-teal-500 border-l-[3px] bg-teal-50/20 hover:border-slate-300' 
-                            : 'border-slate-200/60 bg-white hover:border-slate-300 hover:bg-slate-50/50'
+                            ? 'border-[#e8edf4] ring-2 ring-[#2563eb] hover:border-[#bfdbfe]' 
+                            : hasSales
+                              ? 'border-[#bfdbfe] hover:border-[#93c5fd]'
+                              : 'border-[#e8edf4] bg-[#fbfcfe] hover:border-[#bfdbfe] hover:bg-[#f4f7fb]'
                       }`}
                     >
                       {/* Day Number */}
                       <div className="flex justify-between items-start w-full">
                         <span className={`text-[13px] font-semibold font-mono w-6 h-6 rounded flex items-center justify-center transition-all ${
                           isSelected 
-                            ? 'text-indigo-600 bg-indigo-100/50 font-bold' 
+                            ? 'text-white bg-white/20 font-bold' 
                             : isToday 
-                              ? 'text-teal-600 bg-teal-100/50 font-bold' 
-                              : 'text-slate-600 group-hover:text-slate-800'
+                              ? 'text-[#2563eb] bg-blue-50 font-bold' 
+                              : 'text-[#18212f] group-hover:text-[#18212f]'
                         }`}>
                           {day}
                         </span>
                         
                         {hasSales && !isSelected && (
-                          <div className="w-1.5 h-1.5 rounded-full bg-teal-500" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-[#2563eb]" />
                         )}
                       </div>
 
@@ -595,15 +714,15 @@ export const Calendar: React.FC = () => {
                       <div className="flex flex-col text-start w-full mt-auto">
                         {hasSales ? (
                           <div className="flex flex-col">
-                            <span className={`text-[18px] font-bold leading-none tracking-tight ${isSelected ? 'text-indigo-600' : 'text-teal-600 group-hover:text-teal-700'}`}>
+                            <span className={`text-[18px] font-bold leading-none tracking-tight ${isSelected ? 'text-white' : 'text-[#1d4ed8]'}`}>
                               {Math.round(daySales).toLocaleString()}
                             </span>
-                            <span className="text-[9px] text-slate-400 uppercase mt-0.5 font-medium">
+                            <span className={`text-[9px] uppercase mt-0.5 font-medium ${isSelected ? 'text-blue-100' : 'text-[#94a3b8]'}`}>
                               {t.currency}
                             </span>
                           </div>
                         ) : (
-                          <span className="text-[13px] text-slate-300 font-mono font-medium">—</span>
+                          <span className={`text-[13px] font-mono font-medium ${isSelected ? 'text-blue-100' : 'text-[#94a3b8]'}`}>—</span>
                         )}
                       </div>
                     </motion.button>
@@ -614,15 +733,15 @@ export const Calendar: React.FC = () => {
           ) : (
             /* List View mode */
             <div className="overflow-x-auto">
-              <table className="w-full text-xs text-slate-700 border-collapse">
-                <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium">
+              <table className="w-full text-xs text-[#334155] border-collapse">
+                <thead className="bg-[#f4f7fb] border-b border-[#e3e9f1] text-[#64748b] font-bold">
                   <tr>
                     <th className="p-3 text-center font-medium">{language === 'ar' ? 'اليوم' : 'Day'}</th>
                     <th className="p-3 text-center font-medium">{language === 'ar' ? 'عدد العمليات' : 'Tx Count'}</th>
                     <th className="p-3 text-center font-medium">{language === 'ar' ? 'إجمالي المبيعات' : 'Total Revenue'}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-[#e8edf4]">
                   {dayCells
                     .filter(cell => (dailySales[cell.day] || 0) > 0)
                     .map(cell => {
@@ -636,15 +755,15 @@ export const Calendar: React.FC = () => {
                         <tr 
                           key={day} 
                           onClick={() => { setSelectedDay(day); setViewMode('grid'); }}
-                          className="hover:bg-slate-50 cursor-pointer transition-colors"
+                          className="hover:bg-[#f4f7fb] cursor-pointer transition-colors"
                         >
-                          <td className="p-3 text-center font-semibold text-slate-800">
+                          <td className="p-3 text-center font-semibold text-[#18212f]">
                             {language === 'ar' ? `يوم ${day}` : `Day ${day}`}
                           </td>
-                          <td className="p-3 text-center text-slate-500 font-mono">
+                          <td className="p-3 text-center text-[#64748b] font-mono">
                             {dayTxCount}
                           </td>
-                          <td className="p-3 text-center font-mono font-bold text-teal-600">
+                          <td className="p-3 text-center font-mono font-bold text-[#1d4ed8]">
                             {Math.round(dailySales[day]).toLocaleString()} {t.currency}
                           </td>
                         </tr>
@@ -657,10 +776,10 @@ export const Calendar: React.FC = () => {
         </div>
 
         {/* Selected Day Details Panel (Right Sidebar) */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-4 space-y-4 flex flex-col h-fit sticky top-6 self-start shadow-sm">
-          <div className="border-b border-slate-100 pb-3 flex justify-between items-center">
-            <h3 className="text-[15px] font-medium text-slate-800 flex items-center gap-2">
-              <CalendarIcon size={16} className="text-teal-500" />
+        <div className="rounded-2xl border border-[#e3e9f1] bg-[#fbfcfe] p-4 space-y-4 flex flex-col h-fit sticky top-6 self-start shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+          <div className="border-b border-[#e8edf4] pb-3 flex justify-between items-center">
+            <h3 className="text-[15px] font-bold text-[#18212f] flex items-center gap-2">
+              <CalendarIcon size={16} className="text-blue-600" />
               <span>
                 {selectedDay !== null 
                   ? (language === 'ar' ? `تفاصيل مبيعات ${selectedDay} ${monthsAr[currentMonth]}` : `Sales of ${monthsEn[currentMonth]} ${selectedDay}`) 
@@ -671,7 +790,7 @@ export const Calendar: React.FC = () => {
             {selectedDay !== null && (
               <button 
                 onClick={() => setSelectedDay(null)}
-                className="text-xs px-2 py-1 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-700 transition-colors border border-slate-200"
+                className="text-xs px-2 py-1 bg-[#fbfcfe] hover:bg-[#eff6ff] rounded-md text-[#64748b] hover:text-[#2563eb] transition-colors border border-[#e3e9f1] hover:border-[#bfdbfe]"
               >
                 {language === 'ar' ? 'إلغاء' : 'Clear'}
               </button>
@@ -679,32 +798,32 @@ export const Calendar: React.FC = () => {
           </div>
 
           {selectedDay === null ? (
-            <div className="py-16 flex flex-col items-center justify-center text-center text-slate-400 text-xs italic space-y-3">
-              <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 mb-1">
-                <CalendarIcon size={20} className="text-slate-300" />
+            <div className="py-16 flex flex-col items-center justify-center text-center text-[#94a3b8] text-xs italic space-y-3">
+              <div className="w-12 h-12 rounded-xl bg-[#f4f7fb] flex items-center justify-center border border-[#e3e9f1] mb-1">
+                <CalendarIcon size={20} className="text-[#94a3b8]" />
               </div>
               <p className="max-w-[200px] leading-relaxed">
                 {language === 'ar' ? 'اضغط على أي يوم في التقويم لعرض تفاصيل الفواتير وتقارير المبيعات.' : 'Click any calendar day to inspect detailed customer invoices and reports.'}
               </p>
             </div>
           ) : selectedDaySales.length === 0 ? (
-            <div className="py-16 flex flex-col items-center justify-center text-center text-slate-400 text-xs italic space-y-2">
-              <Info size={20} className="text-slate-300" />
+            <div className="py-16 flex flex-col items-center justify-center text-center text-[#94a3b8] text-xs italic space-y-2">
+              <Info size={20} className="text-[#94a3b8]" />
               <p>{language === 'ar' ? 'لا توجد مبيعات مسجلة في هذا اليوم' : 'No invoices recorded on this day.'}</p>
             </div>
           ) : (
             <div className="flex flex-col space-y-4">
               {/* Daily KPI Summary */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 flex flex-col">
-                  <span className="text-[10px] font-semibold text-slate-500">{language === 'ar' ? 'إجمالي المبيعات' : 'Total Revenue'}</span>
-                  <span className="text-[15px] font-bold text-teal-600 font-mono mt-1">
-                    {Math.round(selectedDaySales.reduce((sum, s) => sum + s.totalAmount, 0)).toLocaleString()} <span className="text-[9px] font-sans text-slate-400">{t.currency}</span>
+                <div className="bg-[#f4f7fb] border border-[#e3e9f1] rounded-xl p-3 flex flex-col">
+                  <span className="text-[10px] font-semibold text-[#64748b]">{language === 'ar' ? 'إجمالي المبيعات' : 'Total Revenue'}</span>
+                  <span className="text-[15px] font-bold text-[#1d4ed8] font-mono mt-1">
+                    {Math.round(selectedDaySales.reduce((sum, s) => sum + s.totalAmount, 0)).toLocaleString()} <span className="text-[9px] font-sans text-[#94a3b8]">{t.currency}</span>
                   </span>
                 </div>
-                <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 flex flex-col">
-                  <span className="text-[10px] font-semibold text-slate-500">{language === 'ar' ? 'عدد الفواتير' : 'Invoices'}</span>
-                  <span className="text-[15px] font-bold text-teal-600 font-mono mt-1">
+                <div className="bg-[#f4f7fb] border border-[#e3e9f1] rounded-xl p-3 flex flex-col">
+                  <span className="text-[10px] font-semibold text-[#64748b]">{language === 'ar' ? 'عدد الفواتير' : 'Invoices'}</span>
+                  <span className="text-[15px] font-bold text-[#18212f] font-mono mt-1">
                     {selectedDaySales.length}
                   </span>
                 </div>
@@ -712,48 +831,61 @@ export const Calendar: React.FC = () => {
 
               {/* Action Buttons */}
               <div className="flex gap-2">
-                <button 
+                <button
                   onClick={() => handlePrint(true)}
-                  className="flex-1 py-2 bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 shadow-sm rounded-xl text-[11px] font-medium flex items-center justify-center gap-1.5 transition-colors"
+                  className="flex-1 py-2 bg-[#fbfcfe] hover:bg-[#eff6ff] hover:text-[#2563eb] text-[#64748b] border border-[#e3e9f1] hover:border-[#bfdbfe] rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors"
                 >
-                  <FileText size={14} className="text-slate-400" />
+                  <FileText size={14} />
                   <span>{language === 'ar' ? 'طباعة ملخص' : 'Print Summary'}</span>
                 </button>
-                <button 
+                <button
                   onClick={() => handlePrint(false)}
-                  className="flex-1 py-2 bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 shadow-sm rounded-xl text-[11px] font-medium flex items-center justify-center gap-1.5 transition-colors"
+                  className="flex-1 py-2 bg-[#fbfcfe] hover:bg-[#eff6ff] hover:text-[#2563eb] text-[#64748b] border border-[#e3e9f1] hover:border-[#bfdbfe] rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors"
                 >
-                  <Printer size={14} className="text-slate-400" />
+                  <Printer size={14} />
                   <span>{language === 'ar' ? 'طباعة كامل' : 'Print Full'}</span>
                 </button>
               </div>
+
+              {/* Delete All Day Sales Button */}
+              <button
+                onClick={handleDeleteDaySales}
+                className="w-full py-2 bg-[#fff1f2] hover:bg-rose-100 text-[#dc2626] border border-rose-200 hover:border-rose-300 rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors"
+              >
+                <Trash2 size={13} />
+                <span>
+                  {language === 'ar'
+                    ? `حذف جميع مبيعات اليوم (${selectedDaySales.length})`
+                    : `Delete All Day Sales (${selectedDaySales.length})`}
+                </span>
+              </button>
 
               {/* Invoices List */}
               <div className="space-y-2 max-h-[360px] overflow-y-auto custom-scrollbar pr-1">
                 {selectedDaySales.map((sale: any) => (
                   <div 
                     key={sale.id}
-                    onClick={() => handlePreviewInvoice(sale)}
-                    className="bg-slate-100 border border-slate-200 hover:border-teal-300 hover:shadow-md p-3 rounded-xl flex flex-col gap-2 transition-all cursor-pointer"
+                    onClick={() => handleViewDetails(sale)}
+                    className="bg-[#f4f7fb] border border-[#e3e9f1] hover:border-[#bfdbfe] hover:bg-[#fbfcfe] p-3 rounded-xl flex flex-col gap-2 transition-all cursor-pointer"
                   >
                     <div className="flex justify-between items-center">
-                      <span className="font-mono font-semibold text-teal-600 bg-teal-50 px-2 py-0.5 rounded text-[10px] border border-teal-100">
+                      <span className="font-mono font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full text-[10px] ring-1 ring-blue-200">
                         #{sale.invoiceNumber}
                       </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-400 font-mono">
+                        <span className="text-[10px] text-[#94a3b8] font-mono">
                           {new Date(sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                         <button
                           onClick={(e) => handlePrintInvoice(sale, e)}
-                          className="p-1 rounded bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors border border-slate-200"
+                          className="p-1 rounded-md bg-[#fbfcfe] hover:bg-[#eff6ff] text-[#64748b] hover:text-[#2563eb] transition-colors border border-[#e3e9f1] hover:border-[#bfdbfe]"
                           title={language === 'ar' ? 'طباعة الفاتورة' : 'Print Invoice'}
                         >
                           <Printer size={12} />
                         </button>
                         <button
                           onClick={(e) => handleDeleteSale(sale, e)}
-                          className="p-1 rounded bg-slate-50 hover:bg-rose-50 text-slate-500 hover:text-rose-600 transition-colors border border-slate-200 hover:border-rose-200"
+                          className="p-1 rounded-md bg-[#fbfcfe] hover:bg-rose-50 text-[#64748b] hover:text-[#dc2626] transition-colors border border-[#e3e9f1] hover:border-rose-200"
                           title={language === 'ar' ? 'حذف الفاتورة' : 'Delete Invoice'}
                         >
                           <Trash2 size={12} />
@@ -762,15 +894,15 @@ export const Calendar: React.FC = () => {
                     </div>
 
                     <div className="flex justify-between items-center text-[11px] pt-1">
-                      <div className="flex items-center gap-1.5 text-slate-500">
+                      <div className="flex items-center gap-1.5 text-[#64748b]">
                         <span>{language === 'ar' ? 'الدفع:' : 'Payment:'}</span>
-                        <span className="text-slate-700 capitalize font-medium">{sale.paymentMethod}</span>
+                        <span className="text-[#18212f] capitalize font-medium">{sale.paymentMethod}</span>
                       </div>
                       <div className="flex items-baseline gap-0.5">
-                        <span className="font-mono font-bold text-slate-800 text-[12px]">
+                        <span className="font-mono font-bold text-[#18212f] text-[12px]">
                           {Math.round(sale.totalAmount).toLocaleString()}
                         </span>
-                        <span className="text-[8px] text-slate-500">{t.currency}</span>
+                        <span className="text-[8px] text-[#94a3b8]">{t.currency}</span>
                       </div>
                     </div>
                   </div>
@@ -806,6 +938,19 @@ export const Calendar: React.FC = () => {
               connectionPath: getSetting('hardware_printer_ip', 'POSPrinter POS80')
             });
           }
+        }}
+      />
+
+      <InvoiceDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={() => {
+          setIsDetailsModalOpen(false);
+          setSelectedSaleForDetails(null);
+        }}
+        sale={selectedSaleForDetails}
+        onItemReturned={() => {
+          // Refresh monthly sales after return
+          fetchMonthlySales();
         }}
       />
 

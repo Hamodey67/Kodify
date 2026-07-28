@@ -12,6 +12,7 @@ import fs from 'fs';
 import { autoUpdater } from 'electron-updater';
 import { startMobileManagerServer, stopMobileManagerServer } from './mobileServer';
 import { getCloudflareTunnelStatus, startCloudflareTunnel, stopCloudflareTunnel } from './tunnelManager';
+import { initSupabaseClient, fetchOnlineOrders, updateOnlineOrderStatus, testSupabaseConnection } from './supabaseSync';
 
 autoUpdater.autoDownload = true;
 autoUpdater.autoInstallOnAppQuit = true;
@@ -379,6 +380,7 @@ app.whenReady().then(async () => {
     await runScheduledAutoBackup();
     await startMobileManagerServer();
     await startCloudflareTunnel();
+    await initSupabaseClient();
 
     updateSplashStatus('Verifying license...', 60);
     await new Promise(resolve => setTimeout(resolve, 300));
@@ -492,7 +494,11 @@ ipcMain.handle('db:verify-admin-pin', async (_, pin: string) => {
       .limit(1);
 
     if (configuredPin.length > 0) {
-      return configuredPin[0].value === pin;
+      const stored = configuredPin[0].value;
+      if (stored.startsWith('$2b$') || stored.startsWith('$2a$')) {
+        return bcrypt.compareSync(pin, stored);
+      }
+      return stored === pin;
     }
 
     const adminUsers = await db
@@ -846,6 +852,11 @@ ipcMain.handle('db:create-sale', async (_, saleData) => {
     customerBalanceChange, // negative if they paid on account (credit debt)
   } = saleData;
 
+  const ALLOWED_PAYMENT_METHODS = ['cash', 'card', 'split'];
+  if (!ALLOWED_PAYMENT_METHODS.includes(paymentMethod)) {
+    return { success: false, error: 'invalid_payment_method' };
+  }
+
   const finalUserId = currentSessionUser?.role === 'cashier' ? currentSessionUser.id : userId;
 
   try {
@@ -1104,6 +1115,134 @@ ipcMain.handle('db:refund-sale', async (_, saleId) => {
     });
   } catch (error: any) {
     console.error('IPC db:refund-sale error:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('db:return-sale-item', async (_, saleId, saleItemId, quantityToReturn) => {
+  try {
+    return db.transaction((tx) => {
+      // 1. Fetch sale data
+      const salesList = tx
+        .select()
+        .from(schema.sales)
+        .where(eq(schema.sales.id, saleId))
+        .limit(1)
+        .all();
+
+      if (salesList.length === 0) throw new Error('Sale not found');
+      const sale = salesList[0];
+      if (sale.status === 'refunded') throw new Error('Sale is already refunded');
+
+      if (currentSessionUser?.role === 'cashier' && sale.userId !== currentSessionUser.id) {
+        throw new Error('Unauthorized to return item from this sale');
+      }
+
+      // 2. Fetch sale item
+      const itemList = tx
+        .select()
+        .from(schema.saleItems)
+        .where(eq(schema.saleItems.id, saleItemId))
+        .limit(1)
+        .all();
+
+      if (itemList.length === 0) throw new Error('Sale item not found');
+      const item = itemList[0];
+
+      if (item.saleId !== saleId) throw new Error('Item does not belong to this sale');
+      if (item.quantity < quantityToReturn || quantityToReturn <= 0) {
+        throw new Error('Invalid quantity to return');
+      }
+
+      // 3. Calculate refund amounts
+      const proportion = quantityToReturn / item.quantity;
+      const refundTotal = item.totalPrice * proportion;
+      const refundTax = item.taxAmount * proportion;
+      const refundDiscount = item.discountAmount * proportion;
+
+      const newQuantity = item.quantity - quantityToReturn;
+
+      // 4. Update or Delete Sale Item
+      if (newQuantity <= 0.001) { // Floating point safety
+        tx.delete(schema.saleItems).where(eq(schema.saleItems.id, saleItemId)).run();
+      } else {
+        tx.update(schema.saleItems)
+          .set({
+            quantity: newQuantity,
+            totalPrice: item.totalPrice - refundTotal,
+            taxAmount: item.taxAmount - refundTax,
+            discountAmount: item.discountAmount - refundDiscount,
+          })
+          .where(eq(schema.saleItems.id, saleItemId))
+          .run();
+      }
+
+      // 5. Update Sale Totals
+      const newSaleTotal = sale.totalAmount - refundTotal;
+      if (newSaleTotal <= 0.001) {
+        tx.update(schema.sales)
+          .set({
+            totalAmount: 0,
+            taxAmount: 0,
+            discountAmount: 0,
+            status: 'refunded',
+          })
+          .where(eq(schema.sales.id, saleId))
+          .run();
+      } else {
+        tx.update(schema.sales)
+          .set({
+            totalAmount: newSaleTotal,
+            taxAmount: sale.taxAmount - refundTax,
+            discountAmount: sale.discountAmount - refundDiscount,
+          })
+          .where(eq(schema.sales.id, saleId))
+          .run();
+      }
+
+      // 6. Return product to inventory stock
+      tx.update(schema.products)
+        .set({
+          stock: sql`${schema.products.stock} + ${quantityToReturn}`,
+        })
+        .where(eq(schema.products.id, item.productId))
+        .run();
+
+      // 7. Reverse Customer loyalty points
+      if (sale.customerId) {
+        const pointsToDeduct = Math.floor(refundTotal / 10);
+        
+        tx.update(schema.customers)
+          .set({
+            points: sql`${schema.customers.points} - ${pointsToDeduct}`,
+          })
+          .where(eq(schema.customers.id, sale.customerId))
+          .run();
+      }
+
+      // 8. Deduct from Shift Drawer Expected cash if payment was cash/split
+      if (sale.paymentMethod === 'cash' || sale.paymentMethod === 'split') {
+        const activeShifts = tx
+          .select()
+          .from(schema.shifts)
+          .where(and(eq(schema.shifts.userId, sale.userId), eq(schema.shifts.status, 'open')))
+          .limit(1)
+          .all();
+
+        if (activeShifts.length > 0) {
+          tx.update(schema.shifts)
+            .set({
+              expectedCash: sql`${schema.shifts.expectedCash} - ${refundTotal}`,
+            })
+            .where(eq(schema.shifts.id, activeShifts[0].id))
+            .run();
+        }
+      }
+
+      return { success: true };
+    });
+  } catch (error: any) {
+    console.error('IPC db:return-sale-item error:', error);
     return { success: false, error: error.message };
   }
 });
@@ -1419,12 +1558,16 @@ ipcMain.handle('db:save-settings', async (_, settingsList) => {
   try {
     return db.transaction((tx) => {
       for (const [key, value] of Object.entries(settingsList)) {
+        let settingValue = String(value);
+        if (key === 'admin_override_pin' && !/^\$2[ab]\$/.test(settingValue)) {
+          settingValue = bcrypt.hashSync(settingValue, 10);
+        }
         tx
           .insert(schema.settings)
-          .values({ key, value: String(value) })
+          .values({ key, value: settingValue })
           .onConflictDoUpdate({
             target: schema.settings.key,
-            set: { value: String(value) },
+            set: { value: settingValue },
           })
           .run();
       }
@@ -1661,5 +1804,18 @@ ipcMain.handle('db:clear-messages', async () => {
     console.error('IPC db:clear-messages error:', error);
     return false;
   }
+});
+
+// Supabase IPC Handlers
+ipcMain.handle('supabase:get-orders', async () => {
+  return await fetchOnlineOrders();
+});
+
+ipcMain.handle('supabase:update-order-status', async (_, orderId: string, status: string) => {
+  return await updateOnlineOrderStatus(orderId, status);
+});
+
+ipcMain.handle('supabase:test-connection', async (_, customUrl?: string, customKey?: string) => {
+  return await testSupabaseConnection(customUrl, customKey);
 });
 

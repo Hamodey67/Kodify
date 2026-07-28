@@ -7,8 +7,9 @@ import {
   Receipt, 
   DollarSign, 
   AlertTriangle, 
-  Package, 
-  ArrowUpRight 
+  ArrowUpRight,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import {
   Chart as ChartJS,
@@ -36,6 +37,8 @@ ChartJS.register(
   Legend
 );
 
+import { DashboardInvoicesModal } from '../components/DashboardInvoicesModal';
+
 export const Dashboard: React.FC = () => {
   const { language, dir } = useLanguageStore();
   const t = translations[language];
@@ -52,6 +55,9 @@ export const Dashboard: React.FC = () => {
   });
   const [lowStockProducts, setLowStockProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Modal State
+  const [isInvoicesModalOpen, setIsInvoicesModalOpen] = useState(false);
 
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -135,8 +141,13 @@ export const Dashboard: React.FC = () => {
       {
         label: t.salesTrend,
         data: lineConfig.data,
-        borderColor: 'rgb(20, 184, 166)',
-        backgroundColor: 'rgba(20, 184, 166, 0.1)',
+        borderColor: '#2563eb',
+        backgroundColor: 'rgba(37, 99, 235, 0.10)',
+        pointBackgroundColor: '#2563eb',
+        pointBorderColor: '#fbfcfe',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        borderWidth: 3,
         tension: 0.4,
         fill: true,
       },
@@ -153,14 +164,14 @@ export const Dashboard: React.FC = () => {
           ? metrics.categorySales.map(c => c.total)
           : [1],
         backgroundColor: [
-          'rgba(20, 184, 166, 0.75)',
-          'rgba(245, 158, 11, 0.75)',
-          'rgba(99, 102, 241, 0.75)',
-          'rgba(239, 68, 68, 0.75)',
-          'rgba(168, 85, 247, 0.75)',
+          '#2563eb',
+          '#10b981',
+          '#f59e0b',
+          '#ef4444',
+          '#06b6d4',
         ],
-        borderWidth: 1,
-        borderColor: '#1e293b',
+        borderWidth: 2,
+        borderColor: '#fbfcfe',
       },
     ],
   };
@@ -176,11 +187,12 @@ export const Dashboard: React.FC = () => {
           ? metrics.paymentMethods.map(p => p.total)
           : [0, 0, 0],
         backgroundColor: [
-          'rgba(20, 184, 166, 0.7)',
-          'rgba(99, 102, 241, 0.7)',
-          'rgba(245, 158, 11, 0.7)',
+          '#10b981',
+          '#2563eb',
+          '#f59e0b',
         ],
-        borderRadius: 6,
+        borderRadius: 8,
+        maxBarThickness: 56,
       },
     ],
   };
@@ -192,198 +204,247 @@ export const Dashboard: React.FC = () => {
       legend: {
         position: 'bottom' as const,
         labels: {
-          color: '#cbd5e1',
-          font: { family: 'Cairo, Outfit' },
+          color: '#475569',
+          usePointStyle: true,
+          pointStyle: 'circle' as const,
+          padding: 16,
+          font: { family: 'Cairo, IBM Plex Sans', weight: 600 as const },
         },
+      },
+      tooltip: {
+        backgroundColor: '#18212f',
+        padding: 12,
+        cornerRadius: 8,
+        titleFont: { family: 'Cairo, IBM Plex Sans' },
+        bodyFont: { family: 'Cairo, IBM Plex Sans' },
       },
     },
     scales: {
       x: {
-        grid: { color: 'rgba(255, 255, 255, 0.05)' },
-        ticks: { color: '#94a3b8', font: { family: 'Cairo, Outfit' } },
+        grid: { display: false },
+        border: { display: false },
+        ticks: { color: '#64748b', font: { family: 'Cairo, IBM Plex Sans' } },
       },
       y: {
-        grid: { color: 'rgba(255, 255, 255, 0.05)' },
-        ticks: { color: '#94a3b8', font: { family: 'Cairo, Outfit' } },
+        grid: { color: '#e8edf4' },
+        border: { display: false },
+        ticks: { color: '#64748b', font: { family: 'Cairo, IBM Plex Sans' } },
       },
     },
   };
 
+  const periodOptions: Array<{ id: 'today' | 'week' | 'month'; label: string }> = [
+    { id: 'today', label: language === 'ar' ? 'اليوم' : 'Today' },
+    { id: 'week', label: language === 'ar' ? 'الأسبوع' : 'This Week' },
+    { id: 'month', label: language === 'ar' ? 'الشهر' : 'This Month' },
+  ];
+
   if (isLoading) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-slate-900 text-slate-400">
+      <div className="flex h-full w-full items-center justify-center bg-[#eef2f8] text-[#64748b]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-teal-500 border-r-2 border-slate-700 mx-auto mb-4"></div>
-          <p>{t.loading}</p>
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-[3px] border-[#e3e9f1] border-t-[#2563eb]" />
+          <p className="text-sm font-semibold">{t.loading}</p>
         </div>
       </div>
     );
   }
 
+  const cards = [
+    {
+      key: 'revenue',
+      label:
+        period === 'today'
+          ? t.todaySales
+          : period === 'week'
+            ? language === 'ar' ? 'مبيعات الأسبوع' : "This Week's Sales"
+            : language === 'ar' ? 'مبيعات الشهر' : "This Month's Sales",
+      value: `${Math.round(metrics.revenue).toLocaleString()}`,
+      unit: t.currency,
+      hint: language === 'ar' ? 'تحديث فوري' : 'Live update',
+      icon: DollarSign,
+      accent: '#2563eb',
+      chip: 'bg-blue-50 text-blue-600',
+      valueClass: 'text-[#1d4ed8]',
+      onClick: undefined as undefined | (() => void),
+    },
+    {
+      key: 'transactions',
+      label:
+        period === 'today'
+          ? t.todayTransactions
+          : period === 'week'
+            ? language === 'ar' ? 'عمليات الأسبوع' : "This Week's Invoices"
+            : language === 'ar' ? 'عمليات الشهر' : "This Month's Invoices",
+      value: `${metrics.transactions}`,
+      unit: language === 'ar' ? 'فاتورة' : 'Invoices',
+      hint: language === 'ar' ? 'اضغط لعرض التفاصيل' : 'Click to view details',
+      icon: Receipt,
+      accent: '#06b6d4',
+      chip: 'bg-cyan-50 text-cyan-600',
+      valueClass: 'text-[#18212f]',
+      onClick: () => setIsInvoicesModalOpen(true),
+    },
+    {
+      key: 'profit',
+      label:
+        period === 'today'
+          ? t.todayProfit
+          : period === 'week'
+            ? language === 'ar' ? 'أرباح الأسبوع' : "This Week's Profit"
+            : language === 'ar' ? 'أرباح الشهر' : "This Month's Profit",
+      value: `${Math.round(metrics.profit).toLocaleString()}`,
+      unit: t.currency,
+      hint: language === 'ar' ? 'صافي هامش الربح' : 'Net profit margin',
+      icon: ArrowUpRight,
+      accent: '#10b981',
+      chip: 'bg-emerald-50 text-emerald-600',
+      valueClass: 'text-[#047857]',
+      onClick: undefined,
+    },
+    {
+      key: 'stock',
+      label: t.lowStockAlerts,
+      value: `${lowStockProducts.length}`,
+      unit: language === 'ar' ? 'منتج' : 'Items',
+      hint: language === 'ar' ? 'بحاجة لإعادة الطلب' : 'Needs restocking',
+      icon: AlertTriangle,
+      accent: lowStockProducts.length > 0 ? '#f59e0b' : '#94a3b8',
+      chip: lowStockProducts.length > 0 ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-400',
+      valueClass: lowStockProducts.length > 0 ? 'text-[#b45309]' : 'text-[#94a3b8]',
+      onClick: undefined,
+    },
+  ];
+
   return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-slate-900 space-y-6">
+    <div className="flex-1 space-y-6 overflow-y-auto bg-[#eef2f8] p-6 custom-scrollbar">
       
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-700 pb-4 gap-4">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100">{t.dashboard}</h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <h1 className="text-2xl font-extrabold tracking-tight text-[#18212f]">{t.dashboard}</h1>
+          <p className="mt-1 text-xs font-medium text-[#64748b]">
             {language === 'ar' ? 'تقرير فوري ومؤشرات مبيعات نظام كوديفاي' : "Live overview of sales metrics for Kodify System"}
           </p>
         </div>
 
         {/* Period Selector Tabs */}
-        <div className="flex bg-slate-800 border border-slate-700 p-1 rounded-xl text-xs font-bold shrink-0">
-          <button
-            onClick={() => setPeriod('today')}
-            className={`px-4 py-2 rounded-lg transition-all duration-200 active:scale-95 ${
-              period === 'today'
-                ? 'bg-primary text-primary-foreground shadow-md'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            {language === 'ar' ? 'اليوم' : 'Today'}
-          </button>
-          <button
-            onClick={() => setPeriod('week')}
-            className={`px-4 py-2 rounded-lg transition-all duration-200 active:scale-95 ${
-              period === 'week'
-                ? 'bg-primary text-primary-foreground shadow-md'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            {language === 'ar' ? 'الأسبوع' : 'This Week'}
-          </button>
-          <button
-            onClick={() => setPeriod('month')}
-            className={`px-4 py-2 rounded-lg transition-all duration-200 active:scale-95 ${
-              period === 'month'
-                ? 'bg-primary text-primary-foreground shadow-md'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            {language === 'ar' ? 'الشهر' : 'This Month'}
-          </button>
+        <div className="flex shrink-0 rounded-xl border border-[#e3e9f1] bg-[#fbfcfe] p-1 text-xs font-bold shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+          {periodOptions.map((option) => (
+            <button
+              key={option.id}
+              onClick={() => setPeriod(option.id)}
+              className={`rounded-lg px-4 py-2 transition-colors duration-150 ${
+                period === option.id
+                  ? 'bg-[#2563eb] text-white shadow-[0_4px_10px_rgba(37,99,235,0.25)]'
+                  : 'text-[#64748b] hover:bg-[#eef2f7] hover:text-[#18212f]'
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Metrics Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-        
-        {/* Sales */}
-        <div className="glass-card p-5 rounded-xl flex items-center justify-between glow-teal">
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-slate-400">
-              {period === 'today' ? t.todaySales : period === 'week' ? (language === 'ar' ? 'مبيعات الأسبوع' : "This Week's Sales") : (language === 'ar' ? 'مبيعات الشهر' : "This Month's Sales")}
-            </span>
-            <div className="text-2xl font-bold text-teal-400">
-              {Math.round(metrics.revenue).toLocaleString()} <span className="text-xs">{t.currency}</span>
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
+        {cards.map((card) => {
+          const Icon = card.icon;
+          const Chevron = dir === 'rtl' ? ChevronLeft : ChevronRight;
+          return (
+            <div
+              key={card.key}
+              onClick={card.onClick}
+              className={`group relative overflow-hidden rounded-2xl border border-[#e3e9f1] bg-[#fbfcfe] p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-all duration-150 ${
+                card.onClick
+                  ? 'cursor-pointer hover:-translate-y-0.5 hover:border-[#bfdbfe] hover:shadow-[0_12px_24px_rgba(16,24,40,0.08)]'
+                  : ''
+              }`}
+            >
+              <span
+                className="absolute inset-x-0 top-0 h-1"
+                style={{ backgroundColor: card.accent }}
+              />
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 space-y-1.5">
+                  <span className="block text-xs font-bold text-[#64748b]">{card.label}</span>
+                  <div className={`text-[26px] font-extrabold leading-none tracking-tight ${card.valueClass}`}>
+                    {card.value}{' '}
+                    <span className="text-xs font-bold text-[#94a3b8]">{card.unit}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-[11px] font-semibold text-[#94a3b8]">
+                    {card.key === 'revenue' && <TrendingUp size={11} className="text-emerald-500" />}
+                    <span>{card.hint}</span>
+                    {card.onClick && (
+                      <Chevron size={12} className="opacity-0 transition-opacity group-hover:opacity-100" />
+                    )}
+                  </div>
+                </div>
+                <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${card.chip}`}>
+                  <Icon size={22} />
+                </div>
+              </div>
             </div>
-            <div className="text-[10px] text-slate-500 flex items-center gap-1">
-              <TrendingUp size={10} className="text-teal-400" />
-              <span>{language === 'ar' ? 'تحديث فوري' : 'Live Update'}</span>
-            </div>
-          </div>
-          <div className="w-12 h-12 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-400">
-            <DollarSign size={22} />
-          </div>
-        </div>
-
-        {/* Transactions / Invoices count */}
-        <div className="glass-card p-5 rounded-xl flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-slate-400">
-              {period === 'today' ? t.todayTransactions : period === 'week' ? (language === 'ar' ? 'عمليات الأسبوع' : "This Week's Invoices") : (language === 'ar' ? 'عمليات الشهر' : "This Month's Invoices")}
-            </span>
-            <div className="text-2xl font-bold text-slate-200">
-              {metrics.transactions} <span className="text-xs">{language === 'ar' ? 'فاتورة' : 'Invoices'}</span>
-            </div>
-            <div className="text-[10px] text-slate-500 flex items-center gap-1">
-              <span>{language === 'ar' ? 'العمليات المكتملة' : 'Completed operations'}</span>
-            </div>
-          </div>
-          <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400">
-            <Receipt size={22} />
-          </div>
-        </div>
-
-        {/* Profit */}
-        <div className="glass-card p-5 rounded-xl flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-slate-400">
-              {period === 'today' ? t.todayProfit : period === 'week' ? (language === 'ar' ? 'أرباح الأسبوع' : "This Week's Profit") : (language === 'ar' ? 'أرباح الشهر' : "This Month's Profit")}
-            </span>
-            <div className="text-2xl font-bold text-emerald-400">
-              {Math.round(metrics.profit).toLocaleString()} <span className="text-xs">{t.currency}</span>
-            </div>
-            <div className="text-[10px] text-slate-500">
-              <span>{language === 'ar' ? 'صافي هامش الربح' : 'Net profit margin'}</span>
-            </div>
-          </div>
-          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-            <ArrowUpRight size={22} />
-          </div>
-        </div>
-
-        {/* Stock Alerts count */}
-        <div className="glass-card p-5 rounded-xl flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-slate-400">{t.lowStockAlerts}</span>
-            <div className={`text-2xl font-bold ${lowStockProducts.length > 0 ? 'text-amber-400' : 'text-slate-400'}`}>
-              {lowStockProducts.length} <span className="text-xs">{language === 'ar' ? 'منتج' : 'Items'}</span>
-            </div>
-            <div className="text-[10px] text-slate-500">
-              <span>{language === 'ar' ? 'بحاجة لإعادة الطلب' : 'Needs restocking'}</span>
-            </div>
-          </div>
-          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${lowStockProducts.length > 0 ? 'bg-amber-500/10 text-amber-400' : 'bg-slate-700 text-slate-500'}`}>
-            <AlertTriangle size={22} />
-          </div>
-        </div>
+          );
+        })}
       </div>
 
-      {/* Analytics Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Line Chart: sales trend */}
-        <div className="glass-card p-5 rounded-xl lg:col-span-3 space-y-4">
-          <h3 className="text-sm font-semibold text-slate-300 flex items-center gap-2">
-            <TrendingUp size={16} className="text-teal-400" />
-            <span>{t.salesTrend} (24H)</span>
+      {/* Sales trend */}
+      <div className="space-y-4 rounded-2xl border border-[#e3e9f1] bg-[#fbfcfe] p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+        <div className="flex items-center justify-between">
+          <h3 className="flex items-center gap-2 text-sm font-bold text-[#18212f]">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+              <TrendingUp size={16} />
+            </span>
+            <span>{t.salesTrend}</span>
           </h3>
-          <div className="h-64 relative">
-            <Line data={lineChartData} options={chartOptions} />
-          </div>
+          <span className="rounded-lg bg-[#eef2f7] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#64748b]">
+            {periodOptions.find((o) => o.id === period)?.label}
+          </span>
+        </div>
+        <div className="relative h-64">
+          <Line data={lineChartData} options={chartOptions} />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Payment Methods Bar Chart */}
-        <div className="glass-card p-5 rounded-xl space-y-4">
-          <h3 className="text-sm font-semibold text-slate-300 flex items-center gap-2">
-            <Receipt size={16} className="text-amber-400" />
+        <div className="space-y-4 rounded-2xl border border-[#e3e9f1] bg-[#fbfcfe] p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+          <h3 className="flex items-center gap-2 text-sm font-bold text-[#18212f]">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+              <Receipt size={16} />
+            </span>
             <span>{t.paymentMethods}</span>
           </h3>
-          <div className="h-64 relative">
+          <div className="relative h-64">
             <Bar data={barChartData} options={chartOptions} />
           </div>
         </div>
 
         {/* Low Stock alerts table list */}
-        <div className="glass-card p-5 rounded-xl lg:col-span-2 space-y-4">
-          <h3 className="text-sm font-semibold text-slate-300 flex items-center gap-2">
-            <AlertTriangle size={16} className="text-amber-400" />
-            <span>{t.lowStockTitle}</span>
-          </h3>
+        <div className="space-y-4 rounded-2xl border border-[#e3e9f1] bg-[#fbfcfe] p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)] lg:col-span-2">
+          <div className="flex items-center justify-between">
+            <h3 className="flex items-center gap-2 text-sm font-bold text-[#18212f]">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                <AlertTriangle size={16} />
+              </span>
+              <span>{t.lowStockTitle}</span>
+            </h3>
+            {lowStockProducts.length > 0 && (
+              <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700 ring-1 ring-amber-200">
+                {lowStockProducts.length}
+              </span>
+            )}
+          </div>
           
           <div className="max-h-64 overflow-y-auto custom-scrollbar">
             {lowStockProducts.length === 0 ? (
-              <div className="text-center py-12 text-slate-500 text-xs">
+              <div className="py-12 text-center text-xs font-semibold text-[#94a3b8]">
                 {language === 'ar' ? 'جميع المنتجات متوفرة بمخزون كافٍ.' : 'All inventory levels are healthy.'}
               </div>
             ) : (
-              <table className="w-full text-xs text-slate-300 select-text">
-                <thead className="bg-slate-900/60 sticky top-0 text-slate-400 font-semibold border-b border-slate-700 text-right">
+              <table className="w-full select-text text-xs text-[#334155]">
+                <thead className="sticky top-0 border-b border-[#e3e9f1] bg-[#f4f7fb] font-bold text-[#64748b]">
                   <tr>
                     <th className={`p-3 ${dir === 'rtl' ? 'text-right' : 'text-left'}`}>{t.productName}</th>
                     <th className="p-3 text-center">{t.barcode}</th>
@@ -392,20 +453,20 @@ export const Dashboard: React.FC = () => {
                     <th className={`p-3 ${dir === 'rtl' ? 'text-left' : 'text-right'}`}>{t.price}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-700/50">
+                <tbody className="divide-y divide-[#e8edf4]">
                   {lowStockProducts.map((p) => (
-                    <tr key={p.id} className="hover:bg-slate-700/30">
-                      <td className={`p-3 font-semibold ${dir === 'rtl' ? 'text-right' : 'text-left'}`}>
+                    <tr key={p.id} className="transition-colors hover:bg-[#f4f7fb]">
+                      <td className={`p-3 font-bold text-[#18212f] ${dir === 'rtl' ? 'text-right' : 'text-left'}`}>
                         {language === 'ar' ? p.nameAr : language === 'ku' ? (p.nameKu || p.nameAr) : p.nameEn}
                       </td>
-                      <td className="p-3 text-center text-slate-400 font-mono">{p.barcode || 'N/A'}</td>
+                      <td className="p-3 text-center font-mono text-[#64748b]">{p.barcode || 'N/A'}</td>
                       <td className="p-3 text-center">
-                        <span className="bg-rose-500/10 text-rose-400 font-bold px-2 py-0.5 rounded border border-rose-500/20">
+                        <span className="rounded-md bg-rose-50 px-2 py-0.5 font-bold text-rose-600 ring-1 ring-rose-200">
                           {p.stock}
                         </span>
                       </td>
-                      <td className="p-3 text-center text-slate-500">{p.minStock}</td>
-                      <td className={`p-3 font-mono font-bold text-teal-400 ${dir === 'rtl' ? 'text-left' : 'text-right'}`}>
+                      <td className="p-3 text-center text-[#94a3b8]">{p.minStock}</td>
+                      <td className={`p-3 font-mono font-bold text-[#1d4ed8] ${dir === 'rtl' ? 'text-left' : 'text-right'}`}>
                         {Math.round(p.price).toLocaleString()} {t.currency}
                       </td>
                     </tr>
@@ -417,6 +478,12 @@ export const Dashboard: React.FC = () => {
         </div>
 
       </div>
+
+      <DashboardInvoicesModal
+        isOpen={isInvoicesModalOpen}
+        onClose={() => setIsInvoicesModalOpen(false)}
+        period={period}
+      />
 
     </div>
   );
