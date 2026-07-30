@@ -95,6 +95,18 @@ export const projects = [
     stack: ["E-commerce", "Stripe", "Logistics"],
     href: "https://admspoort.com/",
   },
+  {
+    id: "one-of-one-cosmetic",
+    image: "/1of1.png",
+    arTitle: "ون اوف ون للتجميل (One of One)",
+    enTitle: "One of One Cosmetic Platform",
+    kuTitle: "وەن ئۆف وەن (One of One)",
+    arDesc: "متجر إلكتروني فاخر لمستحضرات التجميل والعناية بالبشرة بتصميم عصري وأداء عالي.",
+    enDesc: "Luxury e-commerce platform for cosmetics and skincare with modern design and high performance.",
+    kuDesc: "سەکۆیەکی بازرگانی ئۆنلاین بۆ بەرهەمەکانی جوانکاری و چاودێری پێست بە دیزاینێکی سەردەمییانە.",
+    stack: ["E-commerce", "Cosmetics", "Next.js"],
+    href: "https://www.oneofonecosmetic.com",
+  },
 ];
 
 export const testimonials = [

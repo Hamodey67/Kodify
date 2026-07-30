@@ -49,6 +49,14 @@ const projects = [
   },
   {
     id: 5,
+    ar: { title: "ون اوف ون للتجميل", category: "مستحضرات تجميل", desc: "متجر إلكتروني فاخر لمستحضرات التجميل والعناية بالبشرة مع تجربة تسوق سلسة وتصميم عصري." },
+    en: { title: "One of One Cosmetic", category: "Cosmetics & Beauty", desc: "A luxury e-commerce platform for cosmetics and skincare with a seamless shopping experience and modern design." },
+    ku: { title: "وەن ئۆف وەن بۆ جوانکاری", category: "جوانکاری", desc: "سەکۆیەکی ئۆنلاینی فاخر بۆ بەرهەمەکانی جوانکاری و چاودێری پێست بە ئەزموونێکی کڕینی نەرم." },
+    images: ["/1of1.png"],
+    link: "https://www.oneofonecosmetic.com",
+  },
+  {
+    id: 6,
     ar: { title: "نظام POS", category: "مبيعات وكاشير", desc: "نظام مبيعات عالي الأداء للموبايل والتابلت مع حساب ضرائب فوري وواجهة تاتش." },
     en: { title: "Sales POS", category: "Retail & POS", desc: "High-performance POS for mobile and tablet with instant tax calculation and touch UI." },
     ku: { title: "سیستەمی POS", category: "فرۆشتن و کاشێر", desc: "سیستەمی فرۆشتنی خێرا بۆ مۆبایل و تابلێت لەگەڵ حیسابکردنی خێرای باج." },
@@ -402,7 +410,7 @@ export default function ProjectsGrid() {
         <div className="relative min-w-0">
           <div
             data-lenis-prevent
-            className="pg-projects-track flex w-full min-w-0 gap-4 overflow-x-auto pb-3 snap-x snap-proximity scrollbar-none sm:gap-5 lg:grid lg:grid-cols-5 lg:items-stretch lg:overflow-visible lg:gap-6 lg:snap-none lg:pb-0"
+            className="pg-projects-track flex w-full min-w-0 gap-4 overflow-x-auto pb-3 snap-x snap-proximity scrollbar-none sm:gap-5 lg:grid lg:grid-cols-3 xl:grid-cols-6 lg:items-stretch lg:overflow-visible lg:gap-6 lg:snap-none lg:pb-0"
             style={{ touchAction: "pan-x pan-y" }}
           >
             {projects.map((project) => (

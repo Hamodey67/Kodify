@@ -12,6 +12,7 @@ import {
   Play,
   ShoppingCart,
   ShoppingBag,
+  Sparkles,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 
@@ -103,6 +104,20 @@ export default function InteractiveSimulator() {
       glow: "rgba(225, 29, 72, 0.15)",
       image: "/admsop1.png"
     },
+    {
+      icon: Sparkles,
+      title: lang === "ar" ? "متجر ون اوف ون للتجميل" : lang === "ku" ? "فرۆشگای وەن ئۆف وەن" : "One of One Cosmetics",
+      desc:
+        lang === "ar"
+          ? "متجر إلكتروني فاخر لمستحضرات التجميل والعناية بالبشرة مع محاكاة تفاعلية مباشرة للموقع."
+          : lang === "ku"
+          ? "سەکۆیەکی ئۆنلاینی فاخر بۆ بەرهەمەکانی جوانکاری و چاودێری پێست بە سیمیولەیتەری ڕاستەوخۆ."
+          : "Luxury e-commerce store for cosmetics and skincare with live interactive website simulation.",
+      badge: "Cosmetics",
+      color: "from-pink-600 to-rose-400",
+      glow: "rgba(225, 29, 140, 0.15)",
+      image: "/1of1.png"
+    },
   ];
 
   return (
@@ -164,8 +179,8 @@ export default function InteractiveSimulator() {
           </motion.p>
         </div>
 
-        {/* 4 Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* 5 Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
           {cards.map((c, i) => (
             <motion.div
               key={i}
@@ -272,7 +287,9 @@ export default function InteractiveSimulator() {
                       ? (lang === "ar" ? "لوحة التحكم - POS" : lang === "ku" ? "کۆنترۆڵ - POS" : "dashboard - pos")
                       : activeEmulator === 2
                       ? (lang === "ar" ? "متصفح الويب - Bareza" : lang === "ku" ? "وێبگەڕ - Bareza" : "browser - barezagroup")
-                      : (lang === "ar" ? "متجر أدم سبورت - ADMSPOORT" : lang === "ku" ? "فرۆشگای ئەدم سپۆرت - ADMSPOORT" : "sports store - admspoort")}
+                      : activeEmulator === 3
+                      ? (lang === "ar" ? "متجر أدم سبورت - ADMSPOORT" : lang === "ku" ? "فرۆشگای ئەدم سپۆرت - ADMSPOORT" : "sports store - admspoort")
+                      : (lang === "ar" ? "متجر ون اوف ون - One of One" : lang === "ku" ? "فرۆشگای وەن ئۆف وەن - One of One" : "cosmetics store - one of one")}
                   </span>
                 </div>
                 <button
@@ -288,6 +305,7 @@ export default function InteractiveSimulator() {
                 {activeEmulator === 1 && <DashboardEmulator onClose={() => setActiveEmulator(null)} />}
                 {activeEmulator === 2 && <WebEmulator url="https://barezagroup.com/" title="Bareza Group" />}
                 {activeEmulator === 3 && <WebEmulator url="https://admspoort.com/" title="ADMSPOORT" />}
+                {activeEmulator === 4 && <WebEmulator url="https://www.oneofonecosmetic.com" title="One of One Cosmetic" />}
               </div>
             </motion.div>
           </div>
