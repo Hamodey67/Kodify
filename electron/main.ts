@@ -1,18 +1,19 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, session } from 'electron';
 import path from 'path';
 import { eq, and, desc, asc, sql, like, or } from 'drizzle-orm';
 import { db, initDatabase } from './db';
 import { createDatabaseBackup, getBackupDirectoryPath, getBackupStatus, runScheduledAutoBackup } from './backup';
 import * as schema from './schema';
 import bcrypt from 'bcryptjs';
-import { printReceipt, triggerCashDrawer, printShiftReport, printDailyReport, generateReceiptHtml, printProductReport } from './printers';
+import { printReceipt, triggerCashDrawer, printShiftReport, printDailyReport, generateReceiptHtml, printProductReport, printOnlineOrderReceipt } from './printers';
 import { execSync } from 'child_process';
 import crypto from 'crypto';
 import fs from 'fs';
 import { autoUpdater } from 'electron-updater';
 import { startMobileManagerServer, stopMobileManagerServer } from './mobileServer';
 import { getCloudflareTunnelStatus, startCloudflareTunnel, stopCloudflareTunnel } from './tunnelManager';
-import { initSupabaseClient, fetchOnlineOrders, updateOnlineOrderStatus, testSupabaseConnection } from './supabaseSync';
+import { initSupabaseClient, fetchOnlineOrders, updateOnlineOrderStatus, testSupabaseConnection, fetchWebCategories, fetchWebBrands, transferProductToWeb } from './supabaseSync';
+
 
 autoUpdater.autoDownload = true;
 autoUpdater.autoInstallOnAppQuit = true;
@@ -368,7 +369,36 @@ function fadeSplashToMain() {
 }
 
 app.whenReady().then(async () => {
+  // Bypass X-Frame-Options and Content Security Policy for website domains, and fix SameSite cookies for iframe persistence
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    const responseHeaders = { ...details.responseHeaders };
+    const url = details.url.toLowerCase();
+    if (url.includes('oneofonecosmetic.com')) {
+      for (const key of Object.keys(responseHeaders)) {
+        const lowerKey = key.toLowerCase();
+        if (lowerKey === 'x-frame-options' || lowerKey === 'content-security-policy') {
+          delete responseHeaders[key];
+        } else if (lowerKey === 'set-cookie') {
+          responseHeaders[key] = (responseHeaders[key] || []).map((cookieStr) => {
+            let updated = cookieStr;
+            if (!/SameSite=/i.test(updated)) {
+              updated += '; SameSite=None; Secure';
+            } else {
+              updated = updated.replace(/SameSite=(Lax|Strict)/i, 'SameSite=None');
+              if (!/Secure/i.test(updated)) {
+                updated += '; Secure';
+              }
+            }
+            return updated;
+          });
+        }
+      }
+    }
+    callback({ cancel: false, responseHeaders });
+  });
+
   createSplashWindow();
+
 
   const startTime = Date.now();
 
@@ -425,6 +455,21 @@ app.on('window-all-closed', () => {
 // ==========================================
 // WINDOW CONTROLS IPC
 // ==========================================
+ipcMain.on('window:open-admin-window', (_event, customUrl) => {
+  const adminUrl = customUrl || 'https://www.oneofonecosmetic.com/ar/admin/login';
+  const adminWin = new BrowserWindow({
+    width: 1280,
+    height: 850,
+    title: 'إدارة المتجر - One of One Cosmetic',
+    autoHideMenuBar: true,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+    },
+  });
+  adminWin.loadURL(adminUrl);
+});
+
 ipcMain.on('window:minimize', () => {
   mainWindow?.minimize();
 });
@@ -1683,6 +1728,16 @@ ipcMain.handle('hardware:print-product-report', async (_, reportData, config) =>
   }
 });
 
+ipcMain.handle('hardware:print-online-order-receipt', async (_, reportData, config) => {
+  try {
+    return await printOnlineOrderReceipt(reportData, config);
+  } catch (error: any) {
+    console.error('Hardware online order receipt print error:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+
 // ==========================================
 // LICENSING SYSTEM (HARDWARE LOCKED)
 // ==========================================
@@ -1817,5 +1872,17 @@ ipcMain.handle('supabase:update-order-status', async (_, orderId: string, status
 
 ipcMain.handle('supabase:test-connection', async (_, customUrl?: string, customKey?: string) => {
   return await testSupabaseConnection(customUrl, customKey);
+});
+
+ipcMain.handle('supabase:get-categories', async () => {
+  return await fetchWebCategories();
+});
+
+ipcMain.handle('supabase:get-brands', async () => {
+  return await fetchWebBrands();
+});
+
+ipcMain.handle('supabase:transfer-product', async (_, product: any, categoryId: string, brandId: string, webPrice: number, compareAtPrice: number | null, webStock: number) => {
+  return await transferProductToWeb(product, categoryId, brandId, webPrice, compareAtPrice, webStock);
 });
 

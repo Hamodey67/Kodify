@@ -298,3 +298,124 @@ export function setupRealtimeSubscription() {
     console.error('Error setting up Supabase Realtime subscription:', err);
   }
 }
+
+export async function fetchWebCategories() {
+  let client = getClient();
+  if (!client) {
+    client = await initSupabaseClient();
+  }
+  if (!client) {
+    return { success: false, categories: [], error: 'تعذر الاتصال بالخادم السحابي' };
+  }
+  try {
+    const { data, error } = await client.from('categories').select('*').order('sort_order', { ascending: true });
+    if (error) throw error;
+    return { success: true, categories: data || [] };
+  } catch (err: any) {
+    console.error('Failed to fetch web categories:', err);
+    return { success: false, categories: [], error: cleanMessage(err?.message) };
+  }
+}
+
+export async function fetchWebBrands() {
+  let client = getClient();
+  if (!client) {
+    client = await initSupabaseClient();
+  }
+  if (!client) {
+    return { success: false, brands: [], error: 'تعذر الاتصال بالخادم السحابي' };
+  }
+  try {
+    const { data, error } = await client.from('brands').select('*').order('slug', { ascending: true });
+    if (error) throw error;
+    return { success: true, brands: data || [] };
+  } catch (err: any) {
+    console.error('Failed to fetch web brands:', err);
+    return { success: false, brands: [], error: cleanMessage(err?.message) };
+  }
+}
+
+export async function transferProductToWeb(
+  product: any,
+  categoryId: string,
+  brandId: string,
+  webPrice: number,
+  compareAtPrice: number | null,
+  webStock: number
+) {
+  let client = getClient();
+  if (!client) {
+    client = await initSupabaseClient();
+  }
+  if (!client) {
+    return { success: false, error: 'تعذر الاتصال بالخادم السحابي' };
+  }
+  try {
+    const sku = product.sku || `1OF1-${String(product.id).padStart(3, '0')}`;
+    const slug = (product.nameEn || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '') || `product-${product.id}`;
+
+    const nameObj = {
+      ar: product.nameAr || '',
+      en: product.nameEn || '',
+      ku: product.nameKu || product.nameAr || '',
+    };
+
+    const descObj = {
+      ar: product.nameAr || '',
+      en: product.nameEn || '',
+      ku: product.nameKu || product.nameAr || '',
+    };
+
+    // Check if product exists by SKU
+    const { data: existing, error: findError } = await client
+      .from('products')
+      .select('id')
+      .eq('sku', sku)
+      .limit(1)
+      .maybeSingle();
+
+    if (findError) {
+      console.warn('Error checking existing web product:', findError);
+    }
+
+    const payload: any = {
+      slug,
+      category_id: categoryId || null,
+      brand_id: brandId || null,
+      name: nameObj,
+      description: descObj,
+      price: webPrice,
+      compare_at_price: compareAtPrice,
+      sku,
+      stock: webStock,
+      is_active: true,
+      is_featured: false,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (existing && existing.id) {
+      const { error: updateError } = await client
+        .from('products')
+        .update(payload)
+        .eq('id', existing.id);
+
+      if (updateError) throw updateError;
+      return { success: true, message: 'تم تحديث المنتج بنجاح على الموقع الإلكتروني' };
+    } else {
+      payload.created_at = new Date().toISOString();
+      const { error: insertError } = await client
+        .from('products')
+        .insert(payload);
+
+      if (insertError) throw insertError;
+      return { success: true, message: 'تمت إضافة المنتج بنجاح إلى الموقع الإلكتروني' };
+    }
+  } catch (err: any) {
+    console.error('Failed to transfer product to web:', err);
+    return { success: false, error: cleanMessage(err?.message) };
+  }
+}
+

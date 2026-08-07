@@ -10,11 +10,14 @@ import {
   AlertCircle, 
   TrendingDown,
   Info,
-  Camera
+  Camera,
+  Globe
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ProductStatsPanel } from '../components/ProductStatsPanel';
 import { ProductFormModal } from '../components/ProductFormModal';
+import { ProductTransferModal } from '../components/ProductTransferModal';
+import { CategoryTransferModal } from '../components/CategoryTransferModal';
 
 export const Inventory: React.FC = () => {
   const { language, dir } = useLanguageStore();
@@ -36,6 +39,16 @@ export const Inventory: React.FC = () => {
   // Side stats panel state
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
+
+  // Transfer modal state
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  const [productToTransfer, setProductToTransfer] = useState<any | null>(null);
+  const [isCategoryTransferModalOpen, setIsCategoryTransferModalOpen] = useState(false);
+
+  const handleOpenTransfer = (p: any) => {
+    setProductToTransfer(p);
+    setIsTransferModalOpen(true);
+  };
 
   const fetchProducts = async () => {
     setIsLoading(true);
@@ -150,13 +163,22 @@ export const Inventory: React.FC = () => {
               {language === 'ar' ? 'إدارة وتعديل المنتجات ومستويات المخازن' : 'Manage retail product catalog and stock levels'}
             </p>
           </div>
-          <button
-            onClick={handleOpenAdd}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#2563eb] px-5 py-3 text-xs font-bold text-white shadow-[0_8px_20px_rgba(37,99,235,0.24)] transition-all duration-150 hover:bg-[#1d4ed8] active:translate-y-px"
-          >
-            <Plus size={14} />
-            <span>{t.addProduct}</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsCategoryTransferModalOpen(true)}
+              className="inline-flex items-center gap-2 rounded-xl border border-[#e3e9f1] bg-[#fbfcfe] px-5 py-3 text-xs font-bold text-[#64748b] shadow-sm transition-all duration-150 hover:border-[#bfdbfe] hover:bg-[#eff6ff] hover:text-[#2563eb] active:translate-y-px"
+            >
+              <Globe size={14} />
+              <span>{language === 'ar' ? 'مزامنة قسم للموقع' : 'Sync Category to Web'}</span>
+            </button>
+            <button
+              onClick={handleOpenAdd}
+              className="inline-flex items-center gap-2 rounded-xl bg-[#2563eb] px-5 py-3 text-xs font-bold text-white shadow-[0_8px_20px_rgba(37,99,235,0.24)] transition-all duration-150 hover:bg-[#1d4ed8] active:translate-y-px"
+            >
+              <Plus size={14} />
+              <span>{t.addProduct}</span>
+            </button>
+          </div>
         </div>
 
       {/* Search & Category Filter bar */}
@@ -268,6 +290,16 @@ export const Inventory: React.FC = () => {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
+                              handleOpenTransfer(p);
+                            }}
+                            title={language === 'ar' ? 'مزامنة إلى الموقع' : 'Sync to website'}
+                            className="p-2 bg-[#fbfcfe] border border-[#e3e9f1] text-[#64748b] rounded-lg hover:border-[#bfdbfe] hover:bg-[#eff6ff] hover:text-[#2563eb] transition-colors"
+                          >
+                            <Globe size={12} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
                               handleOpenEdit(p);
                             }}
                             className="p-2 bg-[#fbfcfe] border border-[#e3e9f1] text-[#64748b] rounded-lg hover:border-[#bfdbfe] hover:bg-[#eff6ff] hover:text-[#2563eb] transition-colors"
@@ -320,6 +352,28 @@ export const Inventory: React.FC = () => {
           setIsStatsOpen(false);
           setSelectedProduct(null);
         }}
+      />
+
+      {/* Product Sync/Transfer Modal */}
+      <ProductTransferModal
+        isOpen={isTransferModalOpen}
+        product={productToTransfer}
+        onClose={() => {
+          setIsTransferModalOpen(false);
+          setProductToTransfer(null);
+        }}
+        onSuccess={fetchProducts}
+      />
+
+      {/* Category Sync/Transfer Modal */}
+      <CategoryTransferModal
+        isOpen={isCategoryTransferModalOpen}
+        localCategories={categories}
+        products={products}
+        onClose={() => {
+          setIsCategoryTransferModalOpen(false);
+        }}
+        onSuccess={fetchProducts}
       />
     </div>
   );

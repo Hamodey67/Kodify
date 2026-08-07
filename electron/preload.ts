@@ -113,6 +113,9 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.invoke('hardware:print-daily-report', reportData, config),
   printProductReport: (reportData: any, config: { mockMode: boolean; printerType: string; connectionPath: string }) =>
     ipcRenderer.invoke('hardware:print-product-report', reportData, config),
+  printOnlineOrderReceipt: (reportData: any, config: { mockMode: boolean; printerType?: string; connectionPath?: string }) =>
+    ipcRenderer.invoke('hardware:print-online-order-receipt', reportData, config),
+
 
   checkLicense: () => ipcRenderer.invoke('license:status'),
   activateLicense: (key: string) => ipcRenderer.invoke('license:activate', key),
@@ -127,6 +130,7 @@ contextBridge.exposeInMainWorld('api', {
   minimizeWindow: () => ipcRenderer.send('window:minimize'),
   maximizeWindow: () => ipcRenderer.send('window:maximize'),
   closeWindow: () => ipcRenderer.send('window:close'),
+  openAdminWindow: (url?: string) => ipcRenderer.send('window:open-admin-window', url),
 
   // Auto-Updater
   onUpdateStatus: (callback: (status: string, info: any) => void) => {
@@ -143,6 +147,10 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.invoke('supabase:update-order-status', orderId, status),
   testSupabaseConnection: (url?: string, key?: string) =>
     ipcRenderer.invoke('supabase:test-connection', url, key),
+  getWebCategories: () => ipcRenderer.invoke('supabase:get-categories'),
+  getWebBrands: () => ipcRenderer.invoke('supabase:get-brands'),
+  transferProductToWeb: (product: any, categoryId: string, brandId: string, webPrice: number, compareAtPrice: number | null, webStock: number) =>
+    ipcRenderer.invoke('supabase:transfer-product', product, categoryId, brandId, webPrice, compareAtPrice, webStock),
   onNewOnlineOrder: (callback: (order: any) => void) => {
     const listener = (_event: any, order: any) => callback(order);
     ipcRenderer.on('supabase:new-order-received', listener);

@@ -86,6 +86,38 @@ export interface DailyReportData {
   }>;
 }
 
+export interface OnlineOrderReceiptData {
+  storeName?: string;
+  storeAddress?: string;
+  storePhone?: string;
+  orderNumber: string;
+  date: string;
+  status: string;
+  statusText: string;
+  customerName: string;
+  customerPhone: string;
+  deliveryAddress: {
+    city?: string;
+    area?: string;
+    street?: string;
+    building?: string;
+    fullAddress?: string;
+    notes?: string;
+  };
+  items: Array<{
+    name: string;
+    qty: number;
+    price: number;
+    total: number;
+  }>;
+  subtotal: number;
+  shippingCost: number;
+  discount: number;
+  total: number;
+  notes?: string;
+}
+
+
 function getLogoBase64(): string {
   try {
     const paths = [
@@ -1097,3 +1129,381 @@ function printMockProductReport(data: ProductReportData) {
     return { success: false, error: error.message };
   }
 }
+
+export function generateOnlineOrderReceiptHtml(data: OnlineOrderReceiptData): string {
+  const logoBase64 = getLogoBase64();
+  const logoHtml = logoBase64 ? `<div style="text-align: center; margin: 5px auto 10px auto; width: 100%;"><img src="${logoBase64}" style="max-width: 80px; max-height: 80px; object-fit: contain; display: inline-block;" /></div>` : '';
+
+  return `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="ar">
+    <head>
+      <meta charset="utf-8">
+      <title>إيصال طلب متجر إلكتروني - ${data.orderNumber}</title>
+      <style>
+        @page {
+          margin: 0;
+        }
+        body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, 'Cairo', sans-serif;
+          width: 100%;
+          max-width: 275px;
+          box-sizing: border-box;
+          margin: 0 auto;
+          padding: 10px 10px 60px 10px;
+          font-size: 11px;
+          color: #0f172a;
+          line-height: 1.4;
+          direction: rtl;
+          background: #ffffff;
+        }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .text-left { text-align: left; }
+        .bold { font-weight: 700; }
+        
+        .brand-header {
+          text-align: center;
+          margin-bottom: 6px;
+        }
+        .store-name {
+          font-size: 15px;
+          font-weight: 900;
+          letter-spacing: 0.5px;
+          color: #0f172a;
+          margin-bottom: 2px;
+          text-transform: uppercase;
+        }
+        .order-badge {
+          display: inline-block;
+          background: #1e293b;
+          color: #ffffff;
+          font-size: 10px;
+          font-weight: 700;
+          padding: 3px 8px;
+          border-radius: 4px;
+          margin: 4px 0 6px 0;
+        }
+        .line {
+          border-top: 1px dashed #64748b;
+          margin: 6px 0;
+        }
+        .double-line {
+          border-top: 2px double #0f172a;
+          margin: 8px 0;
+        }
+        .info-card {
+          background: #f8fafc;
+          border: 1px dashed #cbd5e1;
+          border-radius: 5px;
+          padding: 6px 8px;
+          margin: 6px 0;
+        }
+        .info-row {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 3px;
+          font-size: 10.5px;
+        }
+        .info-row:last-child { margin-bottom: 0; }
+        .info-label {
+          color: #475569;
+          font-weight: 600;
+        }
+        .info-value {
+          color: #0f172a;
+          font-weight: 700;
+        }
+        .order-num-large {
+          font-size: 14px;
+          font-weight: 900;
+          color: #2563eb;
+          text-align: center;
+          margin: 2px 0 4px 0;
+          font-family: monospace;
+        }
+        .section-header {
+          font-size: 10.5px;
+          font-weight: 800;
+          color: #0f172a;
+          background: #e2e8f0;
+          padding: 3px 6px;
+          border-radius: 3px;
+          margin: 6px 0 4px 0;
+          text-align: center;
+        }
+        .items-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 4px 0;
+        }
+        .items-table th {
+          border-bottom: 1px solid #94a3b8;
+          padding: 3px 2px;
+          font-size: 9.5px;
+          color: #475569;
+          font-weight: 700;
+        }
+        .items-table td {
+          padding: 4px 2px;
+          font-size: 10.5px;
+          vertical-align: top;
+        }
+        .item-title {
+          font-weight: 700;
+          color: #0f172a;
+          line-height: 1.3;
+        }
+        .item-sub {
+          font-size: 9px;
+          color: #64748b;
+        }
+        .totals-box {
+          margin-top: 6px;
+          width: 100%;
+        }
+        .totals-row {
+          display: flex;
+          justify-content: space-between;
+          padding: 2px 0;
+          font-size: 10.5px;
+        }
+        .final-total-card {
+          background: #0f172a;
+          color: #ffffff;
+          text-align: center;
+          padding: 6px;
+          border-radius: 5px;
+          margin-top: 6px;
+        }
+        .final-total-label {
+          font-size: 10px;
+          opacity: 0.9;
+        }
+        .final-total-val {
+          font-size: 15px;
+          font-weight: 900;
+          margin-top: 1px;
+        }
+        .status-badge {
+          display: inline-block;
+          padding: 1px 5px;
+          border-radius: 3px;
+          font-size: 9.5px;
+          font-weight: 700;
+          background: #dbeafe;
+          color: #1e40af;
+        }
+        .footer {
+          text-align: center;
+          margin-top: 12px;
+          font-size: 9.5px;
+          color: #64748b;
+        }
+      </style>
+    </head>
+    <body>
+      ${logoHtml}
+      <div class="brand-header">
+        <div class="store-name">${data.storeName || '1of1 STORE'}</div>
+        ${data.storeAddress ? `<div style="font-size: 9.5px; color: #475569;">${data.storeAddress}</div>` : ''}
+        ${data.storePhone ? `<div style="font-size: 9.5px; color: #475569;">هاتف: ${data.storePhone}</div>` : ''}
+        <div class="order-badge">🌐 وصل طلب متجر إلكتروني</div>
+      </div>
+
+      <div class="info-card">
+        <div class="order-num-large">رقم الطلب: ${data.orderNumber}</div>
+        <div class="info-row">
+          <span class="info-label">تاريخ الطلب:</span>
+          <span class="info-value">${data.date}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">حالة الطلب:</span>
+          <span class="status-badge">${data.statusText || data.status}</span>
+        </div>
+      </div>
+
+      <div class="section-header">🚚 معلومات الزبون والتوصيل</div>
+      <div class="info-card">
+        <div class="info-row">
+          <span class="info-label">اسم الزبون:</span>
+          <span class="info-value">${data.customerName || 'غير محدد'}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">رقم الهاتف:</span>
+          <span class="info-value" dir="ltr" style="text-align: right;">${data.customerPhone || 'غير محدد'}</span>
+        </div>
+        ${data.deliveryAddress?.fullAddress ? `
+        <div class="info-row" style="flex-direction: column; gap: 2px; margin-top: 4px; border-top: 1px dashed #cbd5e1; padding-top: 4px;">
+          <span class="info-label">عنوان التوصيل:</span>
+          <span class="info-value" style="word-break: break-word;">${data.deliveryAddress.fullAddress}</span>
+        </div>
+        ` : ''}
+        ${data.notes ? `
+        <div class="info-row" style="flex-direction: column; gap: 2px; margin-top: 4px; border-top: 1px dashed #cbd5e1; padding-top: 4px;">
+          <span class="info-label">ملاحظات الطلب:</span>
+          <span class="info-value" style="color: #b91c1c;">${data.notes}</span>
+        </div>
+        ` : ''}
+      </div>
+
+      <div class="section-header">📦 تفاصيل المواد المطلوبة</div>
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th class="text-right" style="width: 50%;">المادة</th>
+            <th class="text-center" style="width: 15%;">العدد</th>
+            <th class="text-left" style="width: 35%;">المجموع</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.items.map(item => `
+            <tr>
+              <td class="text-right">
+                <div class="item-title">${item.name}</div>
+                <div class="item-sub">${item.price.toLocaleString('en-US')} د.ع</div>
+              </td>
+              <td class="text-center bold" style="font-size: 11px; vertical-align: middle;">x${item.qty}</td>
+              <td class="text-left bold" style="vertical-align: middle;">${item.total.toLocaleString('en-US')} د.ع</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <div class="line"></div>
+      <div class="totals-box">
+        <div class="totals-row">
+          <span>المجموع الفرعي:</span>
+          <span class="bold">${data.subtotal.toLocaleString('en-US')} د.ع</span>
+        </div>
+        <div class="totals-row">
+          <span>كلفة التوصيل:</span>
+          <span class="bold">${data.shippingCost > 0 ? `${data.shippingCost.toLocaleString('en-US')} د.ع` : 'مجاني'}</span>
+        </div>
+        ${data.discount > 0 ? `
+        <div class="totals-row" style="color: #059669;">
+          <span>الخصم:</span>
+          <span class="bold">-${data.discount.toLocaleString('en-US')} د.ع</span>
+        </div>
+        ` : ''}
+      </div>
+
+      <div class="final-total-card">
+        <div class="final-total-label">المبلغ الإجمالي النهائي</div>
+        <div class="final-total-val">${data.total.toLocaleString('en-US')} د.ع</div>
+      </div>
+
+      <div class="double-line"></div>
+      <div class="footer">
+        <div style="font-weight: 700; color: #0f172a; font-size: 10px; margin-bottom: 2px;">شكراً لطلبكم من متجرنا الإلكتروني! ❤️</div>
+        <div>KODIFY POS SYSTEM • ONLINE ORDERS</div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+export async function printOnlineOrderReceipt(data: OnlineOrderReceiptData, config: { mockMode: boolean; printerType?: string; connectionPath?: string }) {
+  if (config.mockMode) {
+    return printMockOnlineOrderReceipt(data);
+  }
+  
+  console.log(`Printing online order receipt to physical printer: Type=${config.printerType}, Connection=${config.connectionPath}`);
+  
+  const htmlContent = generateOnlineOrderReceiptHtml(data);
+
+  try {
+    const outputDir = path.join(process.cwd(), 'mock_hardware_outputs');
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir);
+    }
+    fs.writeFileSync(path.join(outputDir, 'latest_online_order_receipt.html'), htmlContent, 'utf-8');
+  } catch (err) {
+    console.error('Failed to save preview HTML online order receipt:', err);
+  }
+
+  return new Promise((resolve) => {
+    try {
+      const win = new BrowserWindow({
+        show: false,
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true,
+        }
+      });
+
+      win.loadURL("data:text/html;charset=utf-8," + encodeURIComponent(htmlContent));
+
+      win.webContents.on('did-finish-load', () => {
+        win.webContents.print({
+          silent: true,
+          deviceName: config.connectionPath || 'POSPrinter POS80',
+          margins: { marginType: 'none' },
+          pageSize: { width: 80000, height: 200000 }
+        }, (success, errorType) => {
+          win.close();
+          if (success) {
+            resolve({ success: true, message: 'Printed successfully' });
+          } else {
+            console.error(`Print failed: ${errorType}`);
+            resolve({ success: false, error: errorType });
+          }
+        });
+      });
+    } catch (e: any) {
+      console.error('Print window exception:', e);
+      resolve({ success: false, error: e.message });
+    }
+  });
+}
+
+function printMockOnlineOrderReceipt(data: OnlineOrderReceiptData) {
+  const line = '------------------------------------------';
+  const htmlContent = generateOnlineOrderReceiptHtml(data);
+  
+  let reportText = '';
+  reportText += `${line}\n`;
+  reportText += `      1of1 STORE - ONLINE ORDER\n`;
+  reportText += `        إيصال طلب متجر إلكتروني\n`;
+  reportText += `${line}\n`;
+  reportText += `Order Number:              ${data.orderNumber}\n`;
+  reportText += `Date:                      ${data.date}\n`;
+  reportText += `Status:                    ${data.statusText}\n`;
+  reportText += `${line}\n`;
+  reportText += `Customer:                  ${data.customerName}\n`;
+  reportText += `Phone:                     ${data.customerPhone}\n`;
+  if (data.deliveryAddress?.fullAddress) {
+    reportText += `Address:                   ${data.deliveryAddress.fullAddress}\n`;
+  }
+  reportText += `${line}\n`;
+  reportText += `Items:\n`;
+  data.items.forEach(it => {
+    reportText += `- ${it.name} x${it.qty} (${it.price.toLocaleString()} IQD) = ${it.total.toLocaleString()} IQD\n`;
+  });
+  reportText += `${line}\n`;
+  reportText += `Subtotal:                  ${data.subtotal.toLocaleString()} IQD\n`;
+  reportText += `Shipping:                  ${data.shippingCost.toLocaleString()} IQD\n`;
+  reportText += `Discount:                  ${data.discount.toLocaleString()} IQD\n`;
+  reportText += `TOTAL:                     ${data.total.toLocaleString()} IQD\n`;
+  reportText += `${line}\n`;
+  reportText += `            KODIFY POS SYSTEM\n`;
+  reportText += `${line}\n`;
+
+  try {
+    const outputDir = path.join(process.cwd(), 'mock_hardware_outputs');
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir);
+    }
+    const outputPath = path.join(outputDir, `online_order_${data.orderNumber || 'receipt'}.txt`);
+    fs.writeFileSync(outputPath, reportText, 'utf-8');
+    fs.writeFileSync(path.join(outputDir, 'latest_online_order_receipt.txt'), reportText, 'utf-8');
+    fs.writeFileSync(path.join(outputDir, 'latest_online_order_receipt.html'), htmlContent, 'utf-8');
+    
+    console.log(`[Mock Printer] Online order receipt printed to: ${outputPath}`);
+    return { success: true, path: outputPath, reportText, htmlContent };
+  } catch (error: any) {
+    console.error('Failed to write mock online order receipt:', error);
+    return { success: false, error: error.message };
+  }
+}
+

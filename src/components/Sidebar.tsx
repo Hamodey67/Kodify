@@ -14,6 +14,7 @@ import {
   MessageSquare,
   Info,
   Globe,
+  Laptop,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -46,6 +47,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ activePage, setActivePage }) =
       id: 'online-orders',
       label: language === 'ar' ? 'طلبات أونلاين' : 'Online Orders',
       icon: Globe,
+      roles: ['admin', 'cashier'],
+    },
+    {
+      id: 'web-store',
+      label: language === 'ar' ? 'الموقع الإلكتروني' : 'Website',
+      icon: Globe,
+      roles: ['admin', 'cashier'],
+    },
+    {
+      id: 'web-admin',
+      label: language === 'ar' ? 'إدارة الموقع' : 'Website Admin',
+      icon: Laptop,
       roles: ['admin', 'cashier'],
     },
     { id: 'inventory', label: t.inventory, icon: Boxes, roles: ['admin', 'cashier'] },

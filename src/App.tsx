@@ -16,6 +16,12 @@ import { Activation } from './pages/Activation';
 import { Chat } from './pages/Chat';
 import { About } from './pages/About';
 import { OnlineOrders } from './pages/OnlineOrders';
+import { WebStore } from './pages/WebStore';
+import { WebAdmin } from './pages/WebAdmin';
+import { SuspensionScreen } from './components/SuspensionScreen';
+
+// System suspension flag (Set to true to lock system with suspension message, false for normal operation)
+const IS_SYSTEM_SUSPENDED = true;
 
 export const App: React.FC = () => {
   const { user } = useAuthStore();
@@ -142,6 +148,10 @@ export const App: React.FC = () => {
     );
   }
 
+  if (IS_SYSTEM_SUSPENDED) {
+    return <SuspensionScreen />;
+  }
+
   if (!isActivated) {
     return (
       <Activation 
@@ -173,6 +183,8 @@ export const App: React.FC = () => {
           {activePage === 'dashboard' && <Dashboard />}
           {activePage === 'pos' && <POS />}
           {activePage === 'online-orders' && <OnlineOrders />}
+          {activePage === 'web-store' && <WebStore />}
+          {activePage === 'web-admin' && <WebAdmin />}
           {activePage === 'inventory' && <Inventory />}
           {activePage === 'calendar' && <Calendar />}
           {activePage === 'chat' && <Chat />}

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useSettingsStore } from '../store/settingsStore';
+import { useLanguageStore } from '../store/languageStore';
 import {
   Globe,
   RefreshCw,
@@ -56,7 +58,95 @@ export interface OnlineOrder {
 }
 
 export const OnlineOrders: React.FC = () => {
+  const { language } = useLanguageStore();
   const [orders, setOrders] = useState<OnlineOrder[]>([]);
+
+  const formatPhoneForWhatsApp = (phoneStr: string): string => {
+    const digits = phoneStr.replace(/\D/g, '');
+    if (digits.startsWith('07') && digits.length === 11) {
+      return '964' + digits.substring(1);
+    }
+    if (digits.startsWith('7') && digits.length === 10) {
+      return '964' + digits;
+    }
+    return digits;
+  };
+
+  const openWhatsAppMessage = (order: OnlineOrder, type: 'received' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled') => {
+    let addressObj: ShippingAddress = {};
+    if (typeof order.shipping_address === 'string') {
+      try {
+        addressObj = JSON.parse(order.shipping_address);
+      } catch (e) {
+        addressObj = { full_name: order.shipping_address };
+      }
+    } else {
+      addressObj = order.shipping_address || {};
+    }
+
+    const phone = addressObj.phone;
+    if (!phone) return;
+
+    const formattedPhone = formatPhoneForWhatsApp(phone);
+    const name = addressObj.full_name || (language === 'ar' ? 'زبوننا العزيز' : language === 'ku' ? 'کڕیاری بەڕێز' : 'Valued Customer');
+    const orderNum = order.order_number;
+    const totalVal = order.total.toLocaleString();
+
+    // Format items list
+    const itemsText = (order.items || []).map((it) => {
+      let itemName = 'منتج';
+      if (typeof it.product_name === 'object' && it.product_name !== null) {
+        itemName = it.product_name[language] || it.product_name.ar || it.product_name.en || 'منتج';
+      } else if (typeof it.product_name === 'string') {
+        itemName = it.product_name;
+      }
+      return `- ${itemName} (x${it.quantity})`;
+    }).join('\n');
+
+    let text = '';
+
+    if (language === 'ar') {
+      if (type === 'received') {
+        text = `أهلاً بك ${name}، تم استلام طلبك رقم # ${orderNum} بنجاح.\n\nتفاصيل الطلب:\n${itemsText}\n\nالمجموع الإجمالي: ${totalVal} د.ع.\nشكراً لطلبك من متجرنا! ❤️`;
+      } else if (type === 'confirmed') {
+        text = `أهلاً بك ${name}، تم تأكيد طلبك رقم # ${orderNum} وهو الآن قيد التجهيز! 📦`;
+      } else if (type === 'shipped') {
+        text = `أهلاً بك ${name}، تم شحن طلبك رقم # ${orderNum} وهو في الطريق إليك! 🚚`;
+      } else if (type === 'delivered') {
+        text = `أهلاً بك ${name}، تم توصيل طلبك رقم # ${orderNum} بنجاح. شكراً لتعاملك معنا! ✅❤️`;
+      } else if (type === 'cancelled') {
+        text = `أهلاً بك ${name}، نود إعلامك بأنه تم إلغاء طلبك رقم # ${orderNum}. ❌`;
+      }
+    } else if (language === 'ku') {
+      if (type === 'received') {
+        text = `سڵاو ${name}، داواکارییەکەت ژمارە # ${orderNum} بە سەرکەوتوویی وەرگیرا.\n\nوردەکاری داواکاری:\n${itemsText}\n\nکۆی گشتی: ${totalVal} دینار.\nسوپاس بۆ داواکارییەکەت لە فرۆشگاکەمان! ❤️`;
+      } else if (type === 'confirmed') {
+        text = `سڵاو ${name}، داواکارییەکەت ژمارە # ${orderNum} پشتڕاستکرایەوە و ئێستا لە قۆناغی ئامادەکردندایە! 📦`;
+      } else if (type === 'shipped') {
+        text = `سڵاو ${name}، داواکارییەکەت ژمارە # ${orderNum} نێردرا و لە ڕێگایە بۆ لای تۆ! 🚚`;
+      } else if (type === 'delivered') {
+        text = `سڵاو ${name}، داواکارییەکەت ژمارە # ${orderNum} بە سەرکەوتوویی گەیشت. سوپاس بۆ متمانەکەتان! ✅❤️`;
+      } else if (type === 'cancelled') {
+        text = `سڵاو ${name}، ئاگادارت دەکەینەوە کە داواکارییەکەت ژمارە # ${orderNum} هەڵوەشێندرایەوە. ❌`;
+      }
+    } else {
+      if (type === 'received') {
+        text = `Hello ${name}, your order # ${orderNum} has been received successfully.\n\nOrder Details:\n${itemsText}\n\nTotal Amount: ${totalVal} IQD.\nThank you for ordering from our store! ❤️`;
+      } else if (type === 'confirmed') {
+        text = `Hello ${name}, your order # ${orderNum} has been confirmed and is now being prepared! 📦`;
+      } else if (type === 'shipped') {
+        text = `Hello ${name}, your order # ${orderNum} has been shipped and is on its way to you! 🚚`;
+      } else if (type === 'delivered') {
+        text = `Hello ${name}, your order # ${orderNum} has been delivered successfully. Thank you! ✅❤️`;
+      } else if (type === 'cancelled') {
+        text = `Hello ${name}, your order # ${orderNum} has been cancelled. ❌`;
+      }
+    }
+
+    const encodedText = encodeURIComponent(text);
+    const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodedText}`;
+    window.open(whatsappUrl, '_blank');
+  };
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -144,6 +234,10 @@ export const OnlineOrders: React.FC = () => {
           setOrders((prev) =>
             prev.map((o) => (o.id === orderId ? { ...o, status: newStatus as any } : o))
           );
+          const targetOrder = orders.find(o => o.id === orderId);
+          if (targetOrder) {
+            openWhatsAppMessage(targetOrder, newStatus as any);
+          }
         } else {
           alert(`فشل تحديث حالة الطلب: ${res.error}`);
         }
@@ -167,52 +261,227 @@ export const OnlineOrders: React.FC = () => {
       addressObj = order.shipping_address || {};
     }
 
-    const itemsSummary = (order.items || [])
-      .map((it) => {
+    const getSetting = useSettingsStore.getState().getSetting;
+    const storeName = getSetting('store_name_ar') || getSetting('store_name_en') || '1of1 STORE';
+    const storeAddress = getSetting('store_address', '');
+    const storePhone = getSetting('store_phone', '');
+
+    const fullAddr = [addressObj.city, addressObj.area, addressObj.street, addressObj.building]
+      .filter(Boolean)
+      .join(' - ');
+
+    const receiptData = {
+      storeName,
+      storeAddress,
+      storePhone,
+      orderNumber: order.order_number,
+      date: new Date(order.created_at).toLocaleString('ar-IQ'),
+      status: order.status,
+      statusText: getStatusText(order.status),
+      customerName: addressObj.full_name || 'غير محدد',
+      customerPhone: addressObj.phone || 'غير محدد',
+      deliveryAddress: {
+        city: addressObj.city,
+        area: addressObj.area,
+        street: addressObj.street,
+        building: addressObj.building,
+        fullAddress: fullAddr,
+        notes: addressObj.notes || order.notes || undefined,
+      },
+      items: (order.items || []).map((it) => {
         let name = 'منتج';
         if (typeof it.product_name === 'object' && it.product_name !== null) {
           name = it.product_name.ar || it.product_name.en || 'منتج';
         } else if (typeof it.product_name === 'string') {
           name = it.product_name;
         }
-        return `${name} x${it.quantity} (${it.total_price.toLocaleString()} د.ع)`;
-      })
-      .join('\n');
+        return {
+          name,
+          qty: it.quantity,
+          price: it.unit_price,
+          total: it.total_price,
+        };
+      }),
+      subtotal: order.subtotal,
+      shippingCost: order.shipping_cost,
+      discount: order.discount,
+      total: order.total,
+      notes: order.notes || addressObj.notes || undefined,
+    };
 
-    const receiptContent = `
-========================================
-             1of1 STORE ONLINE ORDER
-========================================
-رقم الطلب: ${order.order_number}
-التاريخ: ${new Date(order.created_at).toLocaleString('ar-IQ')}
-الحالة: ${getStatusText(order.status)}
-----------------------------------------
-معلومات الزبون:
-الاسم: ${addressObj.full_name || 'غير محدد'}
-الهاتف: ${addressObj.phone || 'غير محدد'}
-العنوان: ${addressObj.city || ''} - ${addressObj.area || ''} - ${addressObj.street || ''}
-----------------------------------------
-تفاصيل المواد:
-${itemsSummary}
-----------------------------------------
-المجموع الفرعي: ${order.subtotal.toLocaleString()} د.ع
-كلفة التوصيل: ${order.shipping_cost.toLocaleString()} د.ع
-الخصم: ${order.discount.toLocaleString()} د.ع
-الإجمالي النهائي: ${order.total.toLocaleString()} د.ع
-========================================
-               KODIFY POS SYNC
-========================================
-    `;
+    // 1. Trigger Electron POS thermal printer if available
+    if (window.api && window.api.printOnlineOrderReceipt) {
+      const mockMode = getSetting('hardware_mock_mode', 'true') === 'true';
+      const printerIp = getSetting('hardware_printer_ip', 'POSPrinter POS80');
+      
+      window.api.printOnlineOrderReceipt(receiptData, {
+        mockMode,
+        printerType: 'windows',
+        connectionPath: printerIp,
+      });
+    }
 
-    const printWin = window.open('', '', 'width=400,height=600');
+    // 2. Open styled HTML thermal receipt window for browser printing / preview
+    const htmlContent = `<!DOCTYPE html>
+    <html dir="rtl" lang="ar">
+    <head>
+      <meta charset="utf-8">
+      <title>إيصال طلب - ${receiptData.orderNumber}</title>
+      <style>
+        @page { margin: 0; }
+        body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, 'Cairo', sans-serif;
+          width: 100%;
+          max-width: 280px;
+          box-sizing: border-box;
+          margin: 0 auto;
+          padding: 10px 10px 60px 10px;
+          font-size: 11px;
+          color: #0f172a;
+          line-height: 1.4;
+          direction: rtl;
+          background: #ffffff;
+        }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .text-left { text-align: left; }
+        .bold { font-weight: 700; }
+        .brand-header { text-align: center; margin-bottom: 6px; }
+        .store-name { font-size: 15px; font-weight: 900; letter-spacing: 0.5px; color: #0f172a; margin-bottom: 2px; text-transform: uppercase; }
+        .order-badge { display: inline-block; background: #1e293b; color: #ffffff; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; margin: 4px 0 6px 0; }
+        .line { border-top: 1px dashed #64748b; margin: 6px 0; }
+        .double-line { border-top: 2px double #0f172a; margin: 8px 0; }
+        .info-card { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 5px; padding: 6px 8px; margin: 6px 0; }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 10.5px; }
+        .info-row:last-child { margin-bottom: 0; }
+        .info-label { color: #475569; font-weight: 600; }
+        .info-value { color: #0f172a; font-weight: 700; }
+        .order-num-large { font-size: 14px; font-weight: 900; color: #2563eb; text-align: center; margin: 2px 0 4px 0; font-family: monospace; }
+        .section-header { font-size: 10.5px; font-weight: 800; color: #0f172a; background: #e2e8f0; padding: 3px 6px; border-radius: 3px; margin: 6px 0 4px 0; text-align: center; }
+        .items-table { width: 100%; border-collapse: collapse; margin: 4px 0; }
+        .items-table th { border-bottom: 1px solid #94a3b8; padding: 3px 2px; font-size: 9.5px; color: #475569; font-weight: 700; }
+        .items-table td { padding: 4px 2px; font-size: 10.5px; vertical-align: top; }
+        .item-title { font-weight: 700; color: #0f172a; line-height: 1.3; }
+        .item-sub { font-size: 9px; color: #64748b; }
+        .totals-box { margin-top: 6px; width: 100%; }
+        .totals-row { display: flex; justify-content: space-between; padding: 2px 0; font-size: 10.5px; }
+        .final-total-card { background: #0f172a; color: #ffffff; text-align: center; padding: 6px; border-radius: 5px; margin-top: 6px; }
+        .final-total-label { font-size: 10px; opacity: 0.9; }
+        .final-total-val { font-size: 15px; font-weight: 900; margin-top: 1px; }
+        .status-badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 9.5px; font-weight: 700; background: #dbeafe; color: #1e40af; }
+        .footer { text-align: center; margin-top: 12px; font-size: 9.5px; color: #64748b; }
+      </style>
+    </head>
+    <body>
+      <div class="brand-header">
+        <div class="store-name">${receiptData.storeName}</div>
+        ${receiptData.storeAddress ? `<div style="font-size: 9.5px; color: #475569;">${receiptData.storeAddress}</div>` : ''}
+        ${receiptData.storePhone ? `<div style="font-size: 9.5px; color: #475569;">هاتف: ${receiptData.storePhone}</div>` : ''}
+        <div class="order-badge">🌐 وصل طلب متجر إلكتروني</div>
+      </div>
+
+      <div class="info-card">
+        <div class="order-num-large">رقم الطلب: ${receiptData.orderNumber}</div>
+        <div class="info-row">
+          <span class="info-label">تاريخ الطلب:</span>
+          <span class="info-value">${receiptData.date}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">حالة الطلب:</span>
+          <span class="status-badge">${receiptData.statusText}</span>
+        </div>
+      </div>
+
+      <div class="section-header">🚚 معلومات الزبون والتوصيل</div>
+      <div class="info-card">
+        <div class="info-row">
+          <span class="info-label">اسم الزبون:</span>
+          <span class="info-value">${receiptData.customerName}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">رقم الهاتف:</span>
+          <span class="info-value" dir="ltr" style="text-align: right;">${receiptData.customerPhone}</span>
+        </div>
+        ${receiptData.deliveryAddress?.fullAddress ? `
+        <div class="info-row" style="flex-direction: column; gap: 2px; margin-top: 4px; border-top: 1px dashed #cbd5e1; padding-top: 4px;">
+          <span class="info-label">عنوان التوصيل:</span>
+          <span class="info-value" style="word-break: break-word;">${receiptData.deliveryAddress.fullAddress}</span>
+        </div>
+        ` : ''}
+        ${receiptData.notes ? `
+        <div class="info-row" style="flex-direction: column; gap: 2px; margin-top: 4px; border-top: 1px dashed #cbd5e1; padding-top: 4px;">
+          <span class="info-label">ملاحظات الطلب:</span>
+          <span class="info-value" style="color: #b91c1c;">${receiptData.notes}</span>
+        </div>
+        ` : ''}
+      </div>
+
+      <div class="section-header">📦 تفاصيل المواد المطلوبة</div>
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th class="text-right" style="width: 50%;">المادة</th>
+            <th class="text-center" style="width: 15%;">العدد</th>
+            <th class="text-left" style="width: 35%;">المجموع</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${receiptData.items.map(item => `
+            <tr>
+              <td class="text-right">
+                <div class="item-title">${item.name}</div>
+                <div class="item-sub">${item.price.toLocaleString('ar-IQ')} د.ع</div>
+              </td>
+              <td class="text-center bold" style="font-size: 11px; vertical-align: middle;">x${item.qty}</td>
+              <td class="text-left bold" style="vertical-align: middle;">${item.total.toLocaleString('ar-IQ')} د.ع</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <div class="line"></div>
+      <div class="totals-box">
+        <div class="totals-row">
+          <span>المجموع الفرعي:</span>
+          <span class="bold">${receiptData.subtotal.toLocaleString('ar-IQ')} د.ع</span>
+        </div>
+        <div class="totals-row">
+          <span>كلفة التوصيل:</span>
+          <span class="bold">${receiptData.shippingCost > 0 ? `${receiptData.shippingCost.toLocaleString('ar-IQ')} د.ع` : 'مجاني'}</span>
+        </div>
+        ${receiptData.discount > 0 ? `
+        <div class="totals-row" style="color: #059669;">
+          <span>الخصم:</span>
+          <span class="bold">-${receiptData.discount.toLocaleString('ar-IQ')} د.ع</span>
+        </div>
+        ` : ''}
+      </div>
+
+      <div class="final-total-card">
+        <div class="final-total-label">المبلغ الإجمالي النهائي</div>
+        <div class="final-total-val">${receiptData.total.toLocaleString('ar-IQ')} د.ع</div>
+      </div>
+
+      <div class="double-line"></div>
+      <div class="footer">
+        <div style="font-weight: 700; color: #0f172a; font-size: 10px; margin-bottom: 2px;">شكراً لطلبكم من متجرنا الإلكتروني! ❤️</div>
+        <div>KODIFY POS SYSTEM • ONLINE ORDERS</div>
+      </div>
+    </body>
+    </html>`;
+
+    const printWin = window.open('', '', 'width=450,height=700');
     if (printWin) {
-      printWin.document.write(`<pre style="font-family: monospace; font-size: 13px; padding: 16px;">${receiptContent}</pre>`);
+      printWin.document.write(htmlContent);
       printWin.document.close();
       printWin.focus();
-      printWin.print();
-      printWin.close();
+      setTimeout(() => {
+        printWin.print();
+        printWin.close();
+      }, 250);
     }
   };
+
 
   const getStatusText = (status: string) => {
     switch (status) {
@@ -532,10 +801,17 @@ ${itemsSummary}
                       <span className="font-semibold text-[#18212f]">{addr.full_name || 'زبون ضيف'}</span>
                     </div>
                     {addr.phone && (
-                      <div className="flex items-center gap-2 text-xs text-[#64748b] dir-ltr text-right">
-                        <Phone className="w-3.5 h-3.5 text-blue-600" />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openWhatsAppMessage(order, 'received');
+                        }}
+                        title={language === 'ar' ? 'إرسال رسالة واتساب للزبون' : 'Send WhatsApp message to customer'}
+                        className="flex items-center gap-2 text-xs text-emerald-600 hover:text-emerald-700 hover:underline font-bold dir-ltr text-right"
+                      >
+                        <Phone className="w-3.5 h-3.5 text-emerald-600" />
                         <span>{addr.phone}</span>
-                      </div>
+                      </button>
                     )}
                   </div>
 
