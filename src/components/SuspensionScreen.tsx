@@ -1,5 +1,5 @@
-import React from 'react';
-import { ShieldAlert, PhoneCall, AlertTriangle, Lock, X, Minus, Square } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ShieldAlert, PhoneCall, AlertTriangle, Lock, X, Minus, Square, RefreshCw } from 'lucide-react';
 import { Logo } from './Logo';
 
 interface SuspensionScreenProps {
@@ -11,6 +11,27 @@ export const SuspensionScreen: React.FC<SuspensionScreenProps> = ({
   customMessage = 'نحيطكم علماً بأنه قد تم إيقاف تشغيل نظام كوديفاي (Kodify System) مؤقتاً بسبب وجود مستحقات مالية غير مسددة. يرجى التواصل مع إدارة النظام لتسديد المستحقات وإعادة التفعيل.',
   contactNumber = 'للتواصل وتحديث الاشتراك: يرجى المراسلة أو الاتصال بالدعم الفني',
 }) => {
+  const [updateDownloaded, setUpdateDownloaded] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  useEffect(() => {
+    if (!window.api || !window.api.onUpdateStatus) return;
+    const unsubscribe = window.api.onUpdateStatus((status: string) => {
+      if (status === 'downloaded') {
+        setUpdateDownloaded(true);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleRestartForUpdate = () => {
+    setIsUpdating(true);
+    if (window.api && window.api.restartAppForUpdate) {
+      window.api.restartAppForUpdate();
+    } else {
+      if (window.api?.closeWindow) window.api.closeWindow();
+    }
+  };
   const handleMinimize = () => {
     if (window.api?.minimizeWindow) window.api.minimizeWindow();
   };
@@ -106,6 +127,23 @@ export const SuspensionScreen: React.FC<SuspensionScreenProps> = ({
               {customMessage}
             </p>
           </div>
+
+          {/* Update Downloaded Prompt */}
+          {updateDownloaded && (
+            <div className="w-full rounded-2xl border border-emerald-500/40 bg-emerald-950/40 p-4 text-center shadow-lg animate-bounce">
+              <p className="text-xs font-extrabold text-emerald-300">
+                🎉 تم تنزيل التحديث الجديد للبرنامج بنجاح!
+              </p>
+              <button
+                onClick={handleRestartForUpdate}
+                disabled={isUpdating}
+                className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-emerald-500 transition-colors"
+              >
+                <RefreshCw size={14} className={isUpdating ? 'animate-spin' : ''} />
+                <span>إعادة التشغيل الآن لتطبيق التحديث والوضع المقيد</span>
+              </button>
+            </div>
+          )}
 
           {/* Contact Box */}
           <div className="flex w-full flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-xs font-bold text-gray-300">
