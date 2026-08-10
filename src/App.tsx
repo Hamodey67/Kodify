@@ -19,9 +19,14 @@ import { OnlineOrders } from './pages/OnlineOrders';
 import { WebStore } from './pages/WebStore';
 import { WebAdmin } from './pages/WebAdmin';
 import { SuspensionScreen } from './components/SuspensionScreen';
+import { RestrictedBanner } from './components/RestrictedBanner';
+import { RestrictedPageNotice } from './components/RestrictedPageNotice';
 
-// System suspension flag (Set to true to lock system with suspension message, false for normal operation)
-const IS_SYSTEM_SUSPENDED = true;
+// System suspension & restriction flags
+// IS_SYSTEM_SUSPENDED = false: System will open normally
+// IS_SYSTEM_RESTRICTED = true: System stays open for POS selling only, displays warning banner, and locks profits/dashboard/settings
+const IS_SYSTEM_SUSPENDED = false;
+const IS_SYSTEM_RESTRICTED = true;
 
 export const App: React.FC = () => {
   const { user } = useAuthStore();
@@ -176,20 +181,32 @@ export const App: React.FC = () => {
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-[#eef2f8] text-[#18212f]" dir={dir}>
       <TitleBar />
 
+      {IS_SYSTEM_RESTRICTED && <RestrictedBanner />}
+
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar activePage={activePage} setActivePage={setActivePage} />
+        <Sidebar 
+          activePage={activePage} 
+          setActivePage={setActivePage} 
+          isRestricted={IS_SYSTEM_RESTRICTED} 
+        />
 
         <main className="flex h-full flex-1 flex-col overflow-hidden bg-[#eef2f8]">
-          {activePage === 'dashboard' && <Dashboard />}
-          {activePage === 'pos' && <POS />}
-          {activePage === 'online-orders' && <OnlineOrders />}
-          {activePage === 'web-store' && <WebStore />}
-          {activePage === 'web-admin' && <WebAdmin />}
-          {activePage === 'inventory' && <Inventory />}
-          {activePage === 'calendar' && <Calendar />}
-          {activePage === 'chat' && <Chat />}
-          {activePage === 'about' && <About />}
-          {activePage === 'settings' && <Settings />}
+          {IS_SYSTEM_RESTRICTED && activePage !== 'pos' ? (
+            <RestrictedPageNotice onGoToPos={() => setActivePage('pos')} />
+          ) : (
+            <>
+              {activePage === 'dashboard' && <Dashboard />}
+              {activePage === 'pos' && <POS />}
+              {activePage === 'online-orders' && <OnlineOrders />}
+              {activePage === 'web-store' && <WebStore />}
+              {activePage === 'web-admin' && <WebAdmin />}
+              {activePage === 'inventory' && <Inventory />}
+              {activePage === 'calendar' && <Calendar />}
+              {activePage === 'chat' && <Chat />}
+              {activePage === 'about' && <About />}
+              {activePage === 'settings' && <Settings />}
+            </>
+          )}
         </main>
       </div>
 

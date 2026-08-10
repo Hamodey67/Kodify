@@ -15,15 +15,17 @@ import {
   Info,
   Globe,
   Laptop,
+  Lock,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface SidebarProps {
   activePage: string;
   setActivePage: (page: string) => void;
+  isRestricted?: boolean;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activePage, setActivePage }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activePage, setActivePage, isRestricted }) => {
   const { user, logout } = useAuthStore();
   const { language, dir } = useLanguageStore();
   const t = translations[language];
@@ -144,6 +146,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activePage, setActivePage }) =
           {visibleMenuItems.map((item) => {
             const Icon = item.icon;
             const isActive = activePage === item.id;
+            const isItemRestricted = isRestricted && item.id !== 'pos';
 
             return (
               <button
@@ -153,21 +156,33 @@ export const Sidebar: React.FC<SidebarProps> = ({ activePage, setActivePage }) =
                 className={`group relative flex items-center gap-3 rounded-xl px-2.5 py-2.5 text-sm transition-all duration-150 ${
                   isActive
                     ? 'bg-[#2563eb] font-bold text-white shadow-[0_8px_18px_rgba(37,99,235,0.35)]'
+                    : isItemRestricted
+                    ? 'font-medium text-slate-400 opacity-80 hover:bg-white/[0.04] hover:text-slate-300'
                     : 'font-semibold text-blue-100/60 hover:bg-white/[0.07] hover:text-white'
                 } ${collapsed ? 'justify-center' : ''}`}
               >
                 <span
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                  className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
                     isActive ? 'bg-white/20 text-white' : 'bg-white/[0.06] text-blue-200/80 group-hover:text-white'
                   }`}
                 >
                   <Icon size={17} />
+                  {isItemRestricted && (
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-white border border-[#0b1a33]">
+                      <Lock size={9} />
+                    </span>
+                  )}
                 </span>
 
                 {!collapsed && (
-                  <span className={`flex-1 truncate ${dir === 'rtl' ? 'text-right' : 'text-left'}`}>
-                    {item.label}
-                  </span>
+                  <div className={`flex flex-1 items-center justify-between min-w-0 ${dir === 'rtl' ? 'text-right' : 'text-left'}`}>
+                    <span className="truncate">{item.label}</span>
+                    {isItemRestricted && (
+                      <span className="rounded bg-red-500/20 px-1 py-0.5 text-[9px] font-black text-red-400 border border-red-500/30 shrink-0">
+                        مقيد
+                      </span>
+                    )}
+                  </div>
                 )}
               </button>
             );

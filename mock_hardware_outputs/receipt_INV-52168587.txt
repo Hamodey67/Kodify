@@ -3,21 +3,20 @@
       
       Tel: 12313
 ------------------------------------------
-Date: 7/6/2026, 6:37:39 PM
-Invoice No: INV-52259480
+Date: 7/6/2026, 6:36:08 PM
+Invoice No: INV-52168587
 Cashier: الكاشير (Cashier)
 ------------------------------------------
 Item                    Qty   Price    Total
 ------------------------------------------
-1                       2       1       2
-12313                   1       1       1
+1                       1       1       1
 ------------------------------------------
-Subtotal:                  3 IQD
+Subtotal:                  1 IQD
 VAT:                       0 IQD
-TOTAL:                     3 IQD
+TOTAL:                     1 IQD
 ------------------------------------------
 Payment Method:            Cash
-Cash Received:             3 IQD
+Cash Received:             1 IQD
 Change Due:                0 IQD
 ------------------------------------------
                Thank You
