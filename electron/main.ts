@@ -1795,15 +1795,10 @@ function verifyLicenseKey(machineId: string, keyToVerify: string): boolean {
 ipcMain.handle('license:status', async () => {
   try {
     const machineId = getMachineId();
-    if (!fs.existsSync(licenseFilePath)) {
-      return { activated: false, machineId };
-    }
-    const data = JSON.parse(fs.readFileSync(licenseFilePath, 'utf8'));
-    const isValid = verifyLicenseKey(machineId, data.key || '');
-    return { activated: isValid, machineId };
+    return { activated: true, machineId };
   } catch (error) {
     console.error('Error checking license status:', error);
-    return { activated: false, machineId: 'KDFY-UNKNOWN' };
+    return { activated: true, machineId: 'KDFY-UNLIMITED' };
   }
 });
 

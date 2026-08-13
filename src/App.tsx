@@ -24,9 +24,9 @@ import { RestrictedPageNotice } from './components/RestrictedPageNotice';
 
 // System suspension & restriction flags
 // IS_SYSTEM_SUSPENDED = false: System will open normally
-// IS_SYSTEM_RESTRICTED = true: System stays open for POS selling only, displays warning banner, and locks profits/dashboard/settings
+// IS_SYSTEM_RESTRICTED = false: System is fully unlocked with all pages, reports, and settings available
 const IS_SYSTEM_SUSPENDED = false;
-const IS_SYSTEM_RESTRICTED = true;
+const IS_SYSTEM_RESTRICTED = false;
 
 export const App: React.FC = () => {
   const { user } = useAuthStore();
